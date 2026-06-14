@@ -331,7 +331,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             allPosts.unshift(result.data);
             renderPostList(allPosts);
         } else {
-            errorEl.textContent = '发布失败，请稍后再试';
+            const msg = result.message || '';
+            if (msg.includes('登录') || msg.includes('过期')) {
+                alert('登录已过期，请重新登录');
+                API.logout();
+                window.location.href = 'login.html';
+                return;
+            }
+            errorEl.textContent = msg || '发布失败，请稍后再试';
         }
     });
 
