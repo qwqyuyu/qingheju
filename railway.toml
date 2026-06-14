@@ -1,4 +1,5 @@
 [build]
+builder = "nixpacks"
 root = "server"
 
 [deploy]

@@ -1,0 +1,12 @@
+{
+  "name": "qingheju",
+  "version": "1.0.0",
+  "description": "清和居 - 智能中医文化传播平台",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "cd server && node app.js",
+    "build": "cd server && npm install"
+  }
+}
