@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1F0D0D"/>
+      <stop offset="100%" style="stop-color:#3A2020"/>
+    </linearGradient>
+    <linearGradient id="gradient_overlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(0,0,0,0)"/>
+      <stop offset="40%" style="stop-color:rgba(0,0,0,0.6)"/>
+      <stop offset="100%" style="stop-color:rgba(0,0,0,0.85)"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1000" height="500" fill="url(#bg)"/>
+  <circle cx="500" cy="220" r="120" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <circle cx="500" cy="220" r="90" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
+  <circle cx="500" cy="220" r="60" fill="rgba(255,255,255,0.05)"/>
+  <text x="500" y="250" text-anchor="middle" font-size="80" font-family="sans-serif" filter="url(#glow)">☯</text>
+  <rect x="0" y="340" width="1000" height="160" fill="url(#gradient_overlay)"/>
+  <text x="500" y="400" text-anchor="middle" font-size="38" font-family="STXingkai, KaiTi, serif" fill="#fff" filter="url(#glow)">太极养生</text>
+  <text x="500" y="440" text-anchor="middle" font-size="18" font-family="Microsoft YaHei, sans-serif" fill="rgba(255,255,255,0.85)">以柔克刚动静结合，传统养生文化瑰宝</text>
+</svg>

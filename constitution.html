@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体质自测 - 清和居</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/constitution.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html" class="active">体质自测</a>
+            <a href="login.html" id="nav_user_link">登录</a>
+        </div>
+    </nav>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>体质自测</span>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- 小清 · AI智能问诊 -->
+        <!-- ============================================ -->
+        <h1 class="section_title">小清 · AI智能问诊</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">AI智能助手，为你提供中医体质辨识与养生建议</p>
+
+        <div class="chat_section">
+            <!-- 小清形象 -->
+            <div class="chat_avatar_area">
+                <div class="chat_avatar_frame">
+                    <img class="chat_avatar_img" id="xiaoqing_avatar" src="images/constitution/ai_avatar.png" alt="小清助手">
+                </div>
+                <p class="chat_avatar_name">小清</p>
+                <p class="chat_avatar_desc">AI智能养生助手</p>
+            </div>
+
+            <!-- 聊天区域 -->
+            <div class="chat_window">
+                <div class="chat_messages" id="chat_messages">
+                    <!-- 由 JS 动态渲染 -->
+                </div>
+                <div class="chat_input_area">
+                    <input type="text" class="chat_input" id="chat_input" placeholder="输入你的问题，如「最近失眠多梦怎么办」...">
+                    <button class="chat_send_btn" id="chat_send_btn">发送</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+        <p>AI建议仅供参考，不构成医疗诊断，如有健康问题请咨询专业医师</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/constitution.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 400" width="240" height="400">
+  <!-- 人体轮廓剪影 -->
+  <ellipse cx="120" cy="32" rx="28" ry="32" fill="none" stroke="#C8B89D" stroke-width="1.5"/>
+  <line x1="120" y1="64" x2="120" y2="88" stroke="#C8B89D" stroke-width="1.5"/>
+  <ellipse cx="120" cy="145" rx="52" ry="60" fill="none" stroke="#C8B89D" stroke-width="1.5"/>
+  <ellipse cx="120" cy="145" rx="38" ry="46" fill="none" stroke="#E5DDCC" stroke-width="0.8" stroke-dasharray="4,4"/>
+  <line x1="120" y1="205" x2="120" y2="370" stroke="#C8B89D" stroke-width="1.5"/>
+  <line x1="120" y1="240" x2="75" y2="370" stroke="#C8B89D" stroke-width="1.2"/>
+  <line x1="120" y1="240" x2="165" y2="370" stroke="#C8B89D" stroke-width="1.2"/>
+  <line x1="68" y1="120" x2="30" y2="195" stroke="#C8B89D" stroke-width="1.2"/>
+  <line x1="172" y1="120" x2="210" y2="195" stroke="#C8B89D" stroke-width="1.2"/>
+  <!-- 中线 -->
+  <line x1="120" y1="85" x2="120" y2="380" stroke="#D8CFBF" stroke-width="0.5" stroke-dasharray="3,6"/>
+  <!-- 标题 -->
+  <text x="120" y="395" text-anchor="middle" font-size="11" fill="#6B5E53" font-family="sans-serif">人体经络穴位示意图</text>
+</svg>

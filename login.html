@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 中医文化日常养生</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="auth_page">
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html" class="active">登录</a>
+        </div>
+    </nav>
+
+    <!-- 登录表单区域 -->
+    <main class="auth_container">
+        <div class="auth_card">
+            <h2 class="auth_title">欢迎回来</h2>
+            <p class="auth_subtitle">登录您的账号，继续养生之旅</p>
+
+            <form id="login_form" class="auth_form">
+                <div class="form_group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" class="form_input" placeholder="请输入用户名" required>
+                </div>
+                <div class="form_group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" class="form_input" placeholder="请输入密码" required>
+                </div>
+                <div class="form_error" id="login_error"></div>
+                <button type="submit" class="btn btn_primary auth_btn">登 录</button>
+            </form>
+
+            <p class="auth_switch">还没有账号？<a href="register.html">立即注册</a></p>
+            <p class="auth_back"><a href="index.html">← 返回首页</a></p>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        /* ========== 登录页脚本 ========== */
+        document.getElementById('login_form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorEl = document.getElementById('login_error');
+
+            /* 前端校验非空 */
+            if (!username || !password) {
+                errorEl.textContent = '请填写用户名和密码';
+                return;
+            }
+
+            /* 调用模拟登录接口 */
+            const result = await API.login(username, password);
+            if (result.success) {
+                errorEl.textContent = '';
+                /* 模拟跳转到首页 */
+                window.location.href = 'index.html';
+            } else {
+                errorEl.textContent = '用户名或密码错误（请先注册）';
+            }
+        });
+
+        /* 如果已登录，直接跳转 */
+        if (API.getCurrentUser()) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

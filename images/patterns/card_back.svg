@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="540" viewBox="0 0 400 540">
+  <defs>
+    <pattern id="xiangyun" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M20 40 Q30 20 40 40 Q50 60 60 40" fill="none" stroke="rgba(184,134,11,0.15)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="540" rx="16" fill="#6B1C00"/>
+  <rect width="400" height="540" rx="16" fill="url(#xiangyun)"/>
+  <rect x="16" y="16" width="368" height="508" rx="12" fill="none" stroke="rgba(184,134,11,0.3)" stroke-width="1.5"/>
+  <rect x="24" y="24" width="352" height="492" rx="8" fill="none" stroke="rgba(184,134,11,0.15)" stroke-width="0.5"/>
+  <circle cx="200" cy="200" r="90" fill="none" stroke="rgba(184,134,11,0.2)" stroke-width="1"/>
+  <circle cx="200" cy="200" r="70" fill="none" stroke="rgba(184,134,11,0.15)" stroke-width="0.5"/>
+  <circle cx="200" cy="200" r="50" fill="rgba(184,134,11,0.05)"/>
+  <text x="200" y="220" text-anchor="middle" font-size="60" fill="rgba(184,134,11,0.4)">&#x262F;</text>
+  <text x="200" y="380" text-anchor="middle" font-size="28" font-family="STXingkai, KaiTi, serif" fill="rgba(184,134,11,0.5)" letter-spacing="6">医道养生</text>
+  <text x="200" y="420" text-anchor="middle" font-size="14" fill="rgba(184,134,11,0.3)" letter-spacing="8">每日签到</text>
+  <path d="M100 440 Q200 430 300 440" fill="none" stroke="rgba(184,134,11,0.15)" stroke-width="0.5"/>
+  <path d="M120 460 Q200 450 280 460" fill="none" stroke="rgba(184,134,11,0.1)" stroke-width="0.5"/>
+</svg>

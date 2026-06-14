@@ -1,0 +1,499 @@
+/* ==========================================
+   common.css — 全局通用样式
+   定义：CSS变量、重置样式、导航栏、页脚、通用组件
+   ========================================== */
+
+/* === CSS 变量（色彩体系） === */
+:root {
+    --color-primary:      #8B2500;   /* 中国红（沉稳版），强调色、按钮 */
+    --color-primary-light:#A0522D;   /* 浅红棕，hover 状态 */
+    --color-gold:         #B8860B;   /* 暗金色，装饰线、标题点缀 */
+    --color-gold-light:   #D4A745;   /* 浅金 */
+    --color-bg:           #F5F0E8;   /* 米纸色，主背景 */
+    --color-bg-dark:      #EBE5D9;   /* 略深背景，卡片底色 */
+    --color-bg-darker:    #D8CFBF;   /* 更深背景 */
+    --color-text:         #2C2C2C;   /* 墨色，正文 */
+    --color-text-light:   #6B5E53;   /* 浅棕，辅助文字 */
+    --color-border:       #C8B89D;   /* 边框色 */
+    --color-jade:         #2E6B4A;   /* 玉色，成功/养生标识 */
+    --color-white:        #FEFCF7;   /* 偏暖白 */
+    --font-calligraphy:   'STXingkai', '华文行楷', 'KaiTi', 'STKaiti', serif;
+    --font-body:          'Microsoft YaHei', '微软雅黑', 'PingFang SC', 'SimSun', sans-serif;
+    --nav-height:         64px;
+    --max-width:          1200px;
+    --shadow-card:        0 2px 12px rgba(44, 44, 44, 0.08);
+    --shadow-card-hover:  0 6px 24px rgba(44, 44, 44, 0.14);
+    --radius:             8px;
+    --transition:         0.3s ease;
+}
+
+/* === 重置样式 === */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 20px;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    line-height: 1.8;
+    min-height: 100vh;
+    /* 国风纹理背景 */
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(139, 37, 0, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(184, 134, 11, 0.04) 0%, transparent 50%);
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+button {
+    cursor: pointer;
+    font-family: var(--font-body);
+    border: none;
+    outline: none;
+}
+
+input, textarea {
+    font-family: var(--font-body);
+    outline: none;
+}
+
+/* === 导航栏 === */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: var(--nav-height);
+    background: rgba(62, 39, 21, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(184, 134, 11, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+}
+
+.nav_logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav_logo_icon {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+}
+
+.nav_logo_text {
+    font-family: var(--font-calligraphy);
+    font-size: 32px;
+    color: var(--color-gold-light);
+    letter-spacing: 2px;
+}
+
+.nav_links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav_links a {
+    display: block;
+    padding: 8px 16px;
+    color: #D8CFBF;
+    font-size: 19px;
+    border-radius: 4px;
+    transition: all var(--transition);
+    position: relative;
+}
+
+.nav_links a::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--color-gold);
+    transition: width var(--transition);
+}
+
+.nav_links a:hover,
+.nav_links a.active {
+    color: var(--color-gold-light);
+}
+
+.nav_links a:hover::after,
+.nav_links a.active::after {
+    width: 60%;
+}
+
+/* 移动端汉堡菜单按钮 */
+.nav_toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+}
+
+.nav_toggle span {
+    display: block;
+    width: 26px;
+    height: 2px;
+    background: var(--color-gold-light);
+    transition: all var(--transition);
+}
+
+/* === 页脚 === */
+.footer {
+    background: rgba(62, 39, 21, 0.06);
+    border-top: 1px solid var(--color-border);
+    padding: 30px 40px;
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 18px;
+    margin-top: 60px;
+}
+
+.footer p {
+    margin: 4px 0;
+}
+
+/* === 页面通用容器 === */
+.page_container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+}
+
+/* === 章节标题 === */
+.section_title {
+    font-family: var(--font-calligraphy);
+    font-size: 38px;
+    color: var(--color-primary);
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 3px;
+}
+
+.section_subtitle {
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 19px;
+    margin-bottom: 36px;
+    letter-spacing: 1px;
+}
+
+/* 装饰线 */
+.section_divider {
+    width: 60px;
+    height: 2px;
+    background: var(--color-gold);
+    margin: 0 auto 30px;
+    position: relative;
+}
+
+.section_divider::before {
+    content: '◆';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 8px;
+    color: var(--color-gold);
+    background: var(--color-bg);
+    padding: 0 8px;
+}
+
+/* === 通用卡片样式 === */
+.card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+
+/* === 通用按钮样式 === */
+.btn {
+    display: inline-block;
+    padding: 10px 28px;
+    font-size: 19px;
+    border-radius: 4px;
+    transition: all var(--transition);
+    letter-spacing: 1px;
+    border: 1px solid transparent;
+}
+
+.btn_primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.btn_primary:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+}
+
+.btn_outline {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn_outline:hover {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn_gold {
+    background: var(--color-gold);
+    color: var(--color-white);
+    border-color: var(--color-gold);
+}
+
+.btn_gold:hover {
+    background: var(--color-gold-light);
+}
+
+/* === 通用表单样式 === */
+.form_group {
+    margin-bottom: 20px;
+}
+
+.form_group label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-text);
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.form_input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 19px;
+    border: none;
+    border-bottom: 2px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    transition: border-color var(--transition);
+}
+
+.form_input:focus {
+    border-bottom-color: var(--color-gold);
+}
+
+.form_input::placeholder {
+    color: #B8A89A;
+}
+
+/* === 面包屑导航 === */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    color: var(--color-text-light);
+    margin-bottom: 20px;
+}
+
+.breadcrumb a {
+    color: var(--color-primary-light);
+    transition: color var(--transition);
+}
+
+.breadcrumb a:hover {
+    color: var(--color-primary);
+}
+
+.breadcrumb span {
+    color: var(--color-text-light);
+}
+
+/* === 确认弹窗 === */
+.confirm_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.confirm_overlay.show {
+    opacity: 1;
+}
+
+.confirm_box {
+    background: var(--color-white);
+    border: 1px solid var(--color-gold);
+    border-radius: 12px;
+    padding: 36px 40px 28px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    transform: translateY(-12px);
+    transition: transform 0.3s ease;
+}
+
+.confirm_overlay.show .confirm_box {
+    transform: translateY(0);
+}
+
+.confirm_title {
+    font-family: var(--font-calligraphy);
+    font-size: 28px;
+    color: var(--color-primary);
+    margin-bottom: 18px;
+    letter-spacing: 3px;
+}
+
+.confirm_body {
+    font-size: 19px;
+    color: var(--color-text);
+    line-height: 1.9;
+    margin-bottom: 28px;
+    white-space: pre-line;
+}
+
+.confirm_actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.confirm_btn_cancel {
+    padding: 9px 32px;
+    font-size: 18px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-light);
+    transition: all var(--transition);
+    cursor: pointer;
+    font-family: var(--font-body);
+}
+
+.confirm_btn_cancel:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.confirm_btn_danger {
+    padding: 9px 32px;
+    font-size: 18px;
+    border-radius: 4px;
+    border: 1px solid #C44;
+    background: transparent;
+    color: #C44;
+    transition: all var(--transition);
+    cursor: pointer;
+    font-family: var(--font-body);
+}
+
+.confirm_btn_danger:hover {
+    background: #C44;
+    color: #fff;
+}
+
+/* === 响应式设计 === */
+
+/* 平板：768px - 1199px */
+@media (max-width: 1199px) {
+    .navbar {
+        padding: 0 24px;
+    }
+
+    .nav_links a {
+        padding: 8px 10px;
+        font-size: 18px;
+    }
+
+    .page_container {
+        padding: 24px 16px 48px;
+    }
+}
+
+/* 手机：< 768px */
+@media (max-width: 767px) {
+    .nav_toggle {
+        display: flex;
+    }
+
+    .nav_links {
+        position: fixed;
+        top: var(--nav-height);
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: rgba(62, 39, 21, 0.96);
+        backdrop-filter: blur(8px);
+        padding: 16px 0;
+        transform: translateY(-120%);
+        transition: transform 0.4s ease;
+        border-bottom: 1px solid rgba(184, 134, 11, 0.25);
+    }
+
+    .nav_links.open {
+        transform: translateY(0);
+    }
+
+    .nav_links a {
+        padding: 12px 24px;
+        text-align: center;
+    }
+
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .nav_logo_text {
+        font-size: 24px;
+    }
+
+    .page_container {
+        padding: 16px 12px 40px;
+    }
+
+    .section_title {
+        font-size: 32px;
+    }
+}

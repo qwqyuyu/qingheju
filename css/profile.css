@@ -1,0 +1,361 @@
+/* ==========================================
+   profile.css — 个人中心 & 关于页样式
+   ========================================== */
+
+/* === 个人信息头部 === */
+.profile_header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 30px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 24px;
+}
+
+.profile_avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--color-gold);
+    background: var(--color-bg-dark);
+}
+
+.profile_info {
+    flex: 1;
+}
+
+.profile_name {
+    font-family: var(--font-calligraphy);
+    font-size: 30px;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+}
+
+.profile_since {
+    font-size: 17px;
+    color: var(--color-text-light);
+}
+
+/* 未登录提示 */
+.login_prompt {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+}
+
+.login_prompt p {
+    font-size: 20px;
+    color: var(--color-text-light);
+    margin-bottom: 20px;
+}
+
+/* === 统计区块 === */
+.profile_section {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.profile_section_title {
+    font-family: var(--font-calligraphy);
+    font-size: 24px;
+    color: var(--color-primary);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+    letter-spacing: 2px;
+}
+
+/* 统计卡片网格 */
+.profile_stats_grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.profile_stat_card {
+    text-align: center;
+    padding: 20px;
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+}
+
+.profile_stat_num {
+    display: block;
+    font-family: var(--font-calligraphy);
+    font-size: 36px;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+}
+
+.profile_stat_label {
+    font-size: 17px;
+    color: var(--color-text-light);
+}
+
+/* === 我的帖子 === */
+.profile_post_list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile_post_item {
+    padding: 12px 16px;
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    transition: all var(--transition);
+}
+
+.profile_post_item:hover {
+    border-color: var(--color-gold);
+}
+
+.profile_post_item h4 {
+    font-size: 19px;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.post_meta {
+    font-size: 16px;
+    color: var(--color-text-light);
+}
+
+.no_data {
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 18px;
+    padding: 20px;
+}
+
+/* === 关于页面 === */
+.about_section {
+    max-width: 800px;
+    margin: 0 auto 30px;
+    padding: 28px 30px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+}
+
+.about_section h2 {
+    font-family: var(--font-calligraphy);
+    font-size: 26px;
+    color: var(--color-primary);
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.about_section p {
+    font-size: 19px;
+    line-height: 2;
+    color: var(--color-text);
+    text-indent: 2em;
+    margin-bottom: 10px;
+}
+
+.about_section ul {
+    list-style: disc;
+    padding-left: 2em;
+    margin-bottom: 10px;
+}
+
+.about_section ul li {
+    font-size: 18px;
+    line-height: 2;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.about_section ul li strong {
+    color: var(--color-primary);
+}
+
+/* === 头像编辑 === */
+.profile_avatar_wrap {
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.profile_avatar_overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition);
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.profile_avatar_wrap:hover .profile_avatar_overlay {
+    opacity: 1;
+}
+
+/* === 设置区块 === */
+.settings_section {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.settings_section_title {
+    font-family: var(--font-calligraphy);
+    font-size: 24px;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+    letter-spacing: 2px;
+}
+
+.settings_row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.settings_row:last-child {
+    margin-bottom: 0;
+}
+
+.settings_label {
+    width: 90px;
+    flex-shrink: 0;
+    font-size: 18px;
+    color: var(--color-text);
+    letter-spacing: 1px;
+}
+
+.settings_input {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 18px;
+    border: none;
+    border-bottom: 2px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    transition: border-color var(--transition);
+}
+
+.settings_input:focus {
+    border-bottom-color: var(--color-gold);
+}
+
+.settings_hint {
+    font-size: 15px;
+    color: var(--color-text-light);
+    margin-top: -12px;
+    margin-bottom: 18px;
+    margin-left: 106px;
+}
+
+.settings_actions {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border);
+    text-align: right;
+}
+
+.settings_msg {
+    font-size: 17px;
+    text-align: center;
+    margin-top: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    display: none;
+}
+
+.settings_msg.success {
+    color: var(--color-jade);
+    background: rgba(46, 107, 74, 0.08);
+    display: block;
+}
+
+.settings_msg.error {
+    color: #C44;
+    background: rgba(204, 68, 68, 0.06);
+    display: block;
+}
+
+/* === 设置显示/编辑模式 === */
+.settings_display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.settings_value {
+    font-size: 19px;
+    color: var(--color-text);
+    letter-spacing: 1px;
+}
+
+.settings_edit {
+    margin-top: 4px;
+}
+
+.btn_sm {
+    padding: 6px 20px;
+    font-size: 17px;
+}
+
+/* === 响应式 === */
+@media (max-width: 767px) {
+    .profile_header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile_stats_grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings_row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .settings_label {
+        width: auto;
+    }
+
+    .settings_hint {
+        margin-left: 0;
+    }
+
+    .about_section {
+        padding: 20px 16px;
+    }
+
+    .about_section p {
+        text-indent: 1em;
+    }
+}

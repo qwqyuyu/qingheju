@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 清和居</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="profile.html" class="active" id="nav_user_link">我的</a>
+        </div>
+    </nav>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>个人中心</span>
+        </div>
+
+        <!-- 用户信息卡片 -->
+        <div class="profile_header" id="profile_header">
+            <div class="profile_avatar_wrap" id="avatar_wrap">
+                <img class="profile_avatar" id="profile_avatar" src="images/ui/default_avatar.svg" alt="头像">
+                <div class="profile_avatar_overlay">更换头像</div>
+            </div>
+            <input type="file" id="avatar_input" accept="image/*" style="display:none;">
+            <div class="profile_info">
+                <h2 class="profile_name" id="profile_name">未登录</h2>
+                <p class="profile_since" id="profile_since"></p>
+            </div>
+            <button class="btn btn_outline" id="logout_btn" style="display:none;">退出登录</button>
+        </div>
+
+        <!-- 未登录提示 -->
+        <div class="login_prompt" id="login_prompt">
+            <p>请先登录以查看个人中心</p>
+            <a href="login.html" class="btn btn_primary">去登录</a>
+        </div>
+
+        <!-- 签到统计 -->
+        <div class="profile_section" id="profile_stats" style="display:none;">
+            <h3 class="profile_section_title">签到统计</h3>
+            <div class="profile_stats_grid">
+                <div class="profile_stat_card">
+                    <span class="profile_stat_num" id="p_streak">0</span>
+                    <span class="profile_stat_label">连续签到（天）</span>
+                </div>
+                <div class="profile_stat_card">
+                    <span class="profile_stat_num" id="p_total">0</span>
+                    <span class="profile_stat_label">累计签到（天）</span>
+                </div>
+                <div class="profile_stat_card">
+                    <span class="profile_stat_num" id="p_posts">0</span>
+                    <span class="profile_stat_label">已发帖子</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 账号设置：用户名 -->
+        <div class="settings_section" id="settings_username" style="display:none;">
+            <h3 class="settings_section_title">用户名</h3>
+            <!-- 显示模式 -->
+            <div class="settings_display" id="username_display">
+                <span class="settings_value" id="current_username"></span>
+                <button class="btn btn_outline btn_sm" id="edit_username_btn">修改</button>
+            </div>
+            <!-- 编辑模式（默认隐藏） -->
+            <div class="settings_edit" id="username_edit" style="display:none;">
+                <div class="settings_row">
+                    <span class="settings_label">新用户名</span>
+                    <input type="text" class="settings_input" id="input_username" placeholder="请输入新用户名" maxlength="20">
+                </div>
+                <p class="settings_hint">修改后，已发布的帖子和评论将同步更新</p>
+                <div class="settings_actions">
+                    <button class="btn btn_outline btn_sm" id="cancel_username">取消</button>
+                    <button class="btn btn_primary btn_sm" id="save_username">保存</button>
+                </div>
+                <div class="settings_msg" id="msg_username"></div>
+            </div>
+        </div>
+
+        <!-- 账号设置：密码 -->
+        <div class="settings_section" id="settings_password" style="display:none;">
+            <h3 class="settings_section_title">密码</h3>
+            <!-- 显示模式 -->
+            <div class="settings_display" id="password_display">
+                <span class="settings_value">********</span>
+                <button class="btn btn_outline btn_sm" id="edit_password_btn">修改</button>
+            </div>
+            <!-- 编辑模式（默认隐藏） -->
+            <div class="settings_edit" id="password_edit" style="display:none;">
+                <div class="settings_row">
+                    <span class="settings_label">旧密码</span>
+                    <input type="password" class="settings_input" id="input_old_pwd" placeholder="请输入当前密码">
+                </div>
+                <div class="settings_row">
+                    <span class="settings_label">新密码</span>
+                    <input type="password" class="settings_input" id="input_new_pwd" placeholder="请输入新密码" minlength="6">
+                </div>
+                <div class="settings_row">
+                    <span class="settings_label">确认密码</span>
+                    <input type="password" class="settings_input" id="input_confirm_pwd" placeholder="请再次输入新密码">
+                </div>
+                <div class="settings_actions">
+                    <button class="btn btn_outline btn_sm" id="cancel_password">取消</button>
+                    <button class="btn btn_primary btn_sm" id="save_password">保存</button>
+                </div>
+                <div class="settings_msg" id="msg_password"></div>
+            </div>
+        </div>
+
+        <!-- 我的帖子 -->
+        <div class="profile_section" id="profile_posts_section" style="display:none;">
+            <h3 class="profile_section_title">我的帖子</h3>
+            <div class="profile_post_list" id="profile_post_list">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+            <p class="no_data" id="no_posts">暂无帖子</p>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = API.getCurrentUser();
+
+            if (!user) {
+                document.getElementById('login_prompt').style.display = 'block';
+                document.getElementById('profile_name').textContent = '未登录';
+                return;
+            }
+
+            /* 已登录：显示各区块 */
+            document.getElementById('login_prompt').style.display = 'none';
+            document.getElementById('profile_stats').style.display = 'block';
+            document.getElementById('settings_username').style.display = 'block';
+            document.getElementById('settings_password').style.display = 'block';
+            document.getElementById('logout_btn').style.display = 'inline-block';
+            document.getElementById('profile_name').textContent = user.username;
+            document.getElementById('profile_avatar').src = user.avatar || 'images/ui/default_avatar.svg';
+            document.getElementById('profile_since').textContent = '养生修行者';
+            document.getElementById('current_username').textContent = user.username;
+            document.getElementById('input_username').value = user.username;
+
+            /* === 用户名：显示/编辑切换 === */
+            document.getElementById('edit_username_btn').addEventListener('click', () => {
+                document.getElementById('username_display').style.display = 'none';
+                document.getElementById('username_edit').style.display = 'block';
+                document.getElementById('input_username').value = document.getElementById('current_username').textContent;
+            });
+            document.getElementById('cancel_username').addEventListener('click', () => {
+                document.getElementById('username_edit').style.display = 'none';
+                document.getElementById('username_display').style.display = 'flex';
+                document.getElementById('msg_username').className = 'settings_msg';
+            });
+
+            /* === 密码：显示/编辑切换 === */
+            document.getElementById('edit_password_btn').addEventListener('click', () => {
+                document.getElementById('password_display').style.display = 'none';
+                document.getElementById('password_edit').style.display = 'block';
+            });
+            document.getElementById('cancel_password').addEventListener('click', () => {
+                document.getElementById('password_edit').style.display = 'none';
+                document.getElementById('password_display').style.display = 'flex';
+                document.getElementById('input_old_pwd').value = '';
+                document.getElementById('input_new_pwd').value = '';
+                document.getElementById('input_confirm_pwd').value = '';
+                document.getElementById('msg_password').className = 'settings_msg';
+            });
+
+            /* 加载签到统计 */
+            try {
+                const history = await API.getCheckinHistory();
+                if (history.success) {
+                    document.getElementById('p_streak').textContent = history.data.streak || 0;
+                    document.getElementById('p_total').textContent = history.data.total || 0;
+                }
+            } catch (e) {}
+
+            /* 加载我的帖子 */
+            try {
+                const result = await API.getPosts();
+                const allPosts = result.data || [];
+                const myPosts = allPosts.filter(p => p.username === user.username);
+                document.getElementById('p_posts').textContent = myPosts.length;
+
+                if (myPosts.length > 0) {
+                    document.getElementById('profile_posts_section').style.display = 'block';
+                    document.getElementById('no_posts').style.display = 'none';
+                    document.getElementById('profile_post_list').innerHTML = myPosts.map(p => `
+                        <div class="profile_post_item">
+                            <h4>${escapeHtml(p.title)}</h4>
+                            <span class="post_meta">${p.time} · ♥ ${p.likes || 0} · 💬 ${p.commentCount || 0}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('profile_posts_section').style.display = 'block';
+                    document.getElementById('no_posts').style.display = 'block';
+                }
+            } catch (e) {}
+
+            /* ========== 头像更换 ========== */
+            const avatarWrap = document.getElementById('avatar_wrap');
+            const avatarInput = document.getElementById('avatar_input');
+            const avatarImg = document.getElementById('profile_avatar');
+
+            avatarWrap.addEventListener('click', () => avatarInput.click());
+
+            avatarInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    const imageData = ev.target.result;
+                    const result = await API.updateAvatar(imageData);
+                    if (result.success) {
+                        avatarImg.src = imageData;
+                        showMsg('msg_username', '头像已更新', 'success');
+                    } else {
+                        showMsg('msg_username', '更新失败，请重试', 'error');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            /* ========== 用户名修改 ========== */
+            document.getElementById('save_username').addEventListener('click', async () => {
+                const newUsername = document.getElementById('input_username').value.trim();
+                if (!newUsername) { showMsg('msg_username', '用户名不能为空', 'error'); return; }
+                if (newUsername === user.username) { showMsg('msg_username', '新用户名与当前用户名相同', 'error'); return; }
+                if (newUsername.length < 2) { showMsg('msg_username', '用户名至少2个字符', 'error'); return; }
+
+                const result = await API.updateUsername(newUsername);
+                if (result.success) {
+                    document.getElementById('profile_name').textContent = newUsername;
+                    document.getElementById('current_username').textContent = newUsername;
+                    /* 更新 nav 中的用户名显示 */
+                    const navLink = document.getElementById('nav_user_link');
+                    if (navLink) navLink.textContent = '我的';
+                    /* 切回显示模式 */
+                    document.getElementById('username_edit').style.display = 'none';
+                    document.getElementById('username_display').style.display = 'flex';
+                    showMsg('msg_username', '用户名已更新', 'success');
+                } else {
+                    showMsg('msg_username', '用户名已被占用或更新失败', 'error');
+                }
+            });
+
+            /* ========== 密码修改 ========== */
+            document.getElementById('save_password').addEventListener('click', async () => {
+                const oldPwd = document.getElementById('input_old_pwd').value;
+                const newPwd = document.getElementById('input_new_pwd').value;
+                const confirmPwd = document.getElementById('input_confirm_pwd').value;
+
+                if (!oldPwd) { showMsg('msg_password', '请输入当前密码', 'error'); return; }
+                if (!newPwd) { showMsg('msg_password', '请输入新密码', 'error'); return; }
+                if (newPwd.length < 6) { showMsg('msg_password', '新密码至少6位', 'error'); return; }
+                if (newPwd !== confirmPwd) { showMsg('msg_password', '两次输入的新密码不一致', 'error'); return; }
+
+                const result = await API.updatePassword(oldPwd, newPwd);
+                if (result.success) {
+                    document.getElementById('input_old_pwd').value = '';
+                    document.getElementById('input_new_pwd').value = '';
+                    document.getElementById('input_confirm_pwd').value = '';
+                    /* 切回显示模式 */
+                    document.getElementById('password_edit').style.display = 'none';
+                    document.getElementById('password_display').style.display = 'flex';
+                    showMsg('msg_password', '密码已更新', 'success');
+                } else {
+                    showMsg('msg_password', '当前密码错误', 'error');
+                }
+            });
+
+            /* ========== 退出登录 ========== */
+            document.getElementById('logout_btn').addEventListener('click', () => {
+                API.logout();
+                window.location.reload();
+            });
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMsg(id, text, type) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.className = 'settings_msg ' + type;
+            setTimeout(() => { el.className = 'settings_msg'; }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+.claude/
+*.docx
+replaceImages/
+generate_docx.py
+deploy.sh
+qingheju_deploy.tar.gz

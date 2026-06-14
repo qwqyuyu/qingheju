@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="main" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2C1810"/>
+      <stop offset="30%" style="stop-color:#3D2B1F"/>
+      <stop offset="60%" style="stop-color:#3A2010"/>
+      <stop offset="100%" style="stop-color:#2C1810"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="25%" cy="40%" r="40%">
+      <stop offset="0%" style="stop-color:rgba(184,134,11,0.08)"/>
+      <stop offset="100%" style="stop-color:rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="60%" r="35%">
+      <stop offset="0%" style="stop-color:rgba(139,37,0,0.06)"/>
+      <stop offset="100%" style="stop-color:rgba(0,0,0,0)"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#main)"/>
+  <rect width="1920" height="1080" fill="url(#glow1)"/>
+  <rect width="1920" height="1080" fill="url(#glow2)"/>
+  <path d="M0 800 Q200 650 400 720 Q600 600 800 680 Q1000 550 1200 650 Q1400 580 1600 620 Q1800 560 1920 640 L1920 1080 L0 1080Z" fill="rgba(0,0,0,0.3)"/>
+  <path d="M0 880 Q300 780 500 830 Q700 750 900 810 Q1100 720 1300 790 Q1500 740 1700 780 Q1850 760 1920 800 L1920 1080 L0 1080Z" fill="rgba(0,0,0,0.2)"/>
+</svg>

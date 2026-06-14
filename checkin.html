@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日签到 - 中医文化日常养生</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/checkin.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html" class="active">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html" id="nav_user_link">登录</a>
+        </div>
+    </nav>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>每日签到</span>
+        </div>
+
+        <!-- 页面标题 -->
+        <h1 class="section_title">每日签到</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">每天坚持签到，获取节气智慧与中药知识</p>
+
+        <!-- 签到主体区域：左右布局 -->
+        <div class="checkin_layout">
+            <!-- 左侧：日历 -->
+            <div class="checkin_left">
+                <div class="calendar_wrap">
+                    <!-- 日历头部（年月+翻页） -->
+                    <div class="calendar_header">
+                        <button class="cal_nav" id="cal_prev">‹</button>
+                        <span class="cal_title" id="cal_title">2026年 6月</span>
+                        <button class="cal_nav" id="cal_next">›</button>
+                    </div>
+                    <!-- 星期表头 -->
+                    <div class="calendar_weekdays">
+                        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                    </div>
+                    <!-- 日期网格 -->
+                    <div class="calendar_grid" id="calendar_grid">
+                        <!-- 由 JS 动态渲染 -->
+                    </div>
+                </div>
+
+                <!-- 签到统计 -->
+                <div class="sign_stats">
+                    <div class="stat_item">
+                        <span class="stat_num" id="stat_streak">0</span>
+                        <span class="stat_label">连续签到（天）</span>
+                    </div>
+                    <div class="stat_item">
+                        <span class="stat_num" id="stat_total">0</span>
+                        <span class="stat_label">累计签到（天）</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：签到按钮 -->
+            <div class="checkin_right">
+                <div class="checkin_btn_area">
+                    <button class="checkin_btn" id="checkin_btn">
+                        <span class="checkin_btn_text">今日签到</span>
+                        <span class="checkin_btn_icon">☯</span>
+                    </button>
+                    <p class="checkin_status" id="checkin_status"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 签到卡片弹出层 -->
+    <div class="card_overlay" id="card_overlay">
+        <div class="flip_card" id="flip_card">
+            <!-- 卡片背面（国风纹理） -->
+            <div class="flip_card_back">
+                <div class="back_pattern">
+                    <div class="pattern_circle"></div>
+                </div>
+            </div>
+            <!-- 卡片正面（节气/药材知识） -->
+            <div class="flip_card_front">
+                <button class="card_close_btn" id="card_close">&times;</button>
+                <img class="card_image" id="card_image" src="" alt="">
+                <div class="card_info">
+                    <h3 class="card_title" id="card_title"></h3>
+                    <p class="card_text" id="card_text"></p>
+                    <p class="card_tip" id="card_tip"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/checkin.js"></script>
+</body>
+</html>

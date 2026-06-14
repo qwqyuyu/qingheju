@@ -1,0 +1,784 @@
+/* ==========================================
+   culture.css — 药屉百宝格 + 国风水墨背景
+   ========================================== */
+
+/* === 页面全屏背景 === */
+body {
+    position: relative;
+    overflow-x: hidden;
+    background-image: url('../images/background/culture_bg1.jpg');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #F5EDE0;
+}
+
+/* ==========================================
+   背景装饰层
+   ========================================== */
+.culture_bg_decor {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* ── 水墨远山（3层，覆盖下半部分）── */
+.ink_mountain {
+    position: absolute;
+    bottom: 0;
+    opacity: 0.14;
+}
+
+.ink_mt_1 {
+    height: 55%;
+    right: -20%;
+    width: 100%;
+    background: radial-gradient(ellipse 140% 100% at 60% 100%, #3A2A1A 0%, #5A4A3A 20%, transparent 75%);
+}
+
+.ink_mt_2 {
+    height: 40%;
+    left: -10%;
+    width: 90%;
+    background: radial-gradient(ellipse 120% 100% at 40% 100%, #4A3A2A 0%, #6A5A4A 25%, transparent 70%);
+    opacity: 0.11;
+}
+
+.ink_mt_3 {
+    height: 30%;
+    left: 25%;
+    width: 50%;
+    background: radial-gradient(ellipse 80% 100% at 50% 100%, #3A2A1A 0%, transparent 65%);
+    opacity: 0.09;
+}
+
+/* ── 水墨云雾（中上层的淡墨渲染）── */
+.ink_mist {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    top: 10%;
+    left: 0;
+    background:
+        radial-gradient(ellipse 60% 40% at 20% 50%, rgba(100,80,60,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 75% 40%, rgba(100,80,60,0.05) 0%, transparent 70%);
+    animation: mistDrift 25s ease-in-out infinite;
+}
+
+@keyframes mistDrift {
+    0%, 100% { transform: translateX(0); }
+    33%      { transform: translateX(15px); }
+    66%      { transform: translateX(-10px); }
+}
+
+/* ── 墨点散落 ── */
+.ink_dots {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(44,44,44,0.06) 0%, transparent 4px),
+        radial-gradient(circle at 78% 30%, rgba(44,44,44,0.05) 0%, transparent 3px),
+        radial-gradient(circle at 22% 65%, rgba(44,44,44,0.07) 0%, transparent 5px),
+        radial-gradient(circle at 85% 70%, rgba(44,44,44,0.04) 0%, transparent 3px),
+        radial-gradient(circle at 10% 80%, rgba(44,44,44,0.05) 0%, transparent 4px),
+        radial-gradient(circle at 65% 15%, rgba(44,44,44,0.04) 0%, transparent 3px),
+        radial-gradient(circle at 40% 75%, rgba(44,44,44,0.06) 0%, transparent 5px),
+        radial-gradient(circle at 92% 55%, rgba(44,44,44,0.04) 0%, transparent 3px);
+}
+
+/* ── 竹叶侧边剪影 ── */
+.bamboo_side {
+    position: absolute;
+    width: 120px;
+    height: 70%;
+    opacity: 0.08;
+}
+
+.bamboo_left {
+    left: -20px;
+    top: 10%;
+    background:
+        linear-gradient(175deg, transparent 0%, #2C2C2C 2%, transparent 5%) no-repeat 20px 0 / 3px 100%,
+        linear-gradient(170deg, transparent 0%, #2C2C2C 2%, transparent 5%) no-repeat 35px 20px / 3px 90%,
+        radial-gradient(ellipse 30px 8px at 15px 100px, #2C2C2C 0%, transparent 100%),
+        radial-gradient(ellipse 25px 6px at 30px 160px, #2C2C2C 0%, transparent 100%),
+        radial-gradient(ellipse 28px 7px at 22px 240px, #2C2C2C 0%, transparent 100%),
+        radial-gradient(ellipse 25px 6px at 38px 300px, #2C2C2C 0%, transparent 100%);
+}
+
+.bamboo_right {
+    right: -20px;
+    top: 5%;
+    background:
+        linear-gradient(185deg, transparent 0%, #2C2C2C 2%, transparent 5%) no-repeat 80px 30px / 3px 85%,
+        radial-gradient(ellipse 28px 7px at 85px 120px, #2C2C2C 0%, transparent 100%),
+        radial-gradient(ellipse 30px 8px at 75px 200px, #2C2C2C 0%, transparent 100%),
+        radial-gradient(ellipse 25px 6px at 82px 280px, #2C2C2C 0%, transparent 100%);
+}
+
+/* ==========================================
+   药柜整体框架
+   ========================================== */
+.cabinet_wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto 40px;
+}
+
+.cabinet_frame {
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 3px,
+            rgba(0,0,0,0.02) 3px,
+            rgba(0,0,0,0.02) 4px
+        ),
+        linear-gradient(180deg, #C49A6C 0%, #B8845A 30%, #A0704A 100%);
+    border: 4px solid #6B4226;
+    border-radius: 6px;
+    padding: 24px 20px 20px;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        0 4px 0 #5A3520,
+        0 6px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+/* ── 柜顶檐口装饰 ── */
+.cabinet_cornice {
+    position: absolute;
+    top: -16px;
+    left: -8px;
+    right: -8px;
+    height: 18px;
+    background: linear-gradient(180deg, #8B6914 0%, #A07818 40%, #8B6914 100%);
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ── 柜底底座 ── */
+.cabinet_base {
+    position: absolute;
+    bottom: -12px;
+    left: -8px;
+    right: -8px;
+    height: 14px;
+    background: linear-gradient(180deg, #6B4226 0%, #5A3520 100%);
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+/* ==========================================
+   抽屉网格
+   ========================================== */
+.cabinet_grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ==========================================
+   单个抽屉
+   ========================================== */
+.drawer_item {
+    cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.drawer_item:hover {
+    transform: translateY(-3px);
+}
+
+.drawer_item.pressed {
+    transform: translateY(0) scale(0.96);
+}
+
+/* ── 抽屉面板 ── */
+.drawer_face {
+    position: relative;
+    background:
+        linear-gradient(180deg,
+            rgba(255,255,255,0.08) 0%,
+            transparent 20%,
+            transparent 80%,
+            rgba(0,0,0,0.06) 100%
+        ),
+        linear-gradient(180deg, #D4A76A 0%, #C4956A 50%, #B8845A 100%);
+    border: 2px solid #7A4A2A;
+    border-radius: 4px;
+    padding: 22px 10px 14px;
+    text-align: center;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 3px 0 #6B3A20,
+        0 4px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.drawer_item:hover .drawer_face {
+    box-shadow:
+        inset 0 2px 4px rgba(0,0,0,0.1),
+        0 1px 0 #6B3A20,
+        0 6px 16px rgba(0,0,0,0.2);
+    border-color: #8B5A3A;
+}
+
+.drawer_item.pressed .drawer_face {
+    box-shadow:
+        inset 0 3px 6px rgba(0,0,0,0.2),
+        0 1px 0 #6B3A20;
+    border-color: #6B3A20;
+    transform: scale(0.97);
+}
+
+/* ── 铜环拉手 ── */
+.drawer_ring_wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.drawer_ring {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 3px solid #9B7B3A;
+    background: radial-gradient(circle at 45% 35%, #F5E0A0 0%, #C9A96E 35%, #A08040 70%, #7A6030 100%);
+    box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.5),
+        0 2px 3px rgba(0,0,0,0.25),
+        0 0 0 2px rgba(0,0,0,0.06);
+    transition: all 0.35s ease;
+    position: relative;
+}
+
+.drawer_ring::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    width: 8px;
+    height: 5px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+}
+
+.drawer_item:hover .drawer_ring {
+    border-color: #C9A96E;
+    box-shadow:
+        inset 0 2px 3px rgba(255,255,255,0.6),
+        0 1px 2px rgba(0,0,0,0.15),
+        0 0 0 2px rgba(0,0,0,0.06),
+        0 0 12px rgba(201,169,110,0.4);
+    transform: scale(1.08);
+}
+
+.drawer_item.pressed .drawer_ring {
+    transform: scale(0.95);
+    box-shadow:
+        inset 0 2px 3px rgba(0,0,0,0.2),
+        0 0 0 rgba(0,0,0,0),
+        0 0 0 2px rgba(0,0,0,0.06);
+}
+
+/* ── 抽屉标签 ── */
+.drawer_label {
+    display: block;
+    font-family: var(--font-calligraphy);
+    font-size: 22px;
+    color: #3A1F0D;
+    letter-spacing: 4px;
+    line-height: 1.3;
+    transition: color 0.3s ease;
+}
+
+.drawer_item:hover .drawer_label {
+    color: #6B1A0A;
+}
+
+/* ── 类别小印章 ── */
+.drawer_stamp {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 10px;
+    color: rgba(180, 40, 20, 0.7);
+    border: 1px solid rgba(180, 40, 20, 0.4);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-family: var(--font-calligraphy);
+    letter-spacing: 1px;
+    transform: rotate(5deg);
+    pointer-events: none;
+}
+
+/* ==========================================
+   知识面板（点击抽屉后展开）
+   ========================================== */
+.drawer_panel {
+    max-height: 0;
+    overflow: hidden;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%),
+        linear-gradient(180deg, #F5EDE0 0%, #EDE0D0 100%);
+    border: 2px solid #C8B89D;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    margin-top: -2px;
+    position: relative;
+    z-index: 0;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
+}
+
+.drawer_panel.open {
+    max-height: 960px;
+    border-color: #8B6914;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.drawer_panel_inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 28px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.4s ease 0.15s,
+                transform 0.4s ease 0.15s;
+}
+
+.drawer_panel_top {
+    display: flex;
+    gap: 30px;
+}
+
+.drawer_panel.open .drawer_panel_inner {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── 关闭按钮 ── */
+.drawer_panel_close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.06);
+    border: none;
+    color: #8B6B5A;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.drawer_panel_close:hover {
+    background: rgba(180,40,20,0.1);
+    color: #B42814;
+}
+
+/* ── 图片区（大幅展示）── */
+.drawer_panel_image {
+    flex: 0 0 380px;
+    height: 300px;
+    background: rgba(0,0,0,0.02);
+    border-radius: 6px;
+    border: 1px solid rgba(139,107,90,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow:
+        inset 0 0 30px rgba(139,107,90,0.04),
+        0 2px 8px rgba(0,0,0,0.06);
+}
+
+.drawer_panel_image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: imageReveal 0.6s ease-out;
+}
+
+@keyframes imageReveal {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── 文字区 ── */
+.drawer_panel_text {
+    flex: 1;
+    min-width: 0;
+}
+
+.drawer_panel_header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.drawer_panel_header h3 {
+    font-family: var(--font-calligraphy);
+    font-size: 30px;
+    color: var(--color-primary);
+    letter-spacing: 3px;
+}
+
+.drawer_category_tag {
+    font-size: 14px;
+    color: var(--color-white);
+    background: var(--color-primary);
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-family: var(--font-calligraphy);
+    letter-spacing: 2px;
+}
+
+.drawer_panel_desc {
+    font-size: 17px;
+    color: var(--color-text);
+    line-height: 1.9;
+    margin-bottom: 14px;
+}
+
+.drawer_panel_quote {
+    padding: 12px 16px;
+    background: rgba(139,37,0,0.04);
+    border-left: 3px solid var(--color-gold);
+    font-size: 15px;
+    color: var(--color-text-light);
+    font-style: italic;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.drawer_panel_tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.drawer_panel_tags .meta_tag {
+    font-size: 13px;
+    padding: 4px 10px;
+    background: rgba(184,134,11,0.08);
+    color: #8B6914;
+    border: 1px solid rgba(184,134,11,0.2);
+    border-radius: 12px;
+    letter-spacing: 1px;
+}
+
+/* ── 科普教学视频占位区 ── */
+.drawer_video_area {
+    display: flex;
+    gap: 24px;
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px dashed rgba(139,107,90,0.2);
+    align-items: center;
+}
+
+.drawer_video_frame {
+    flex: 0 0 340px;
+    height: 210px;
+    background:
+        radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.04) 0%, transparent 50%),
+        linear-gradient(135deg, #1E1E1E 0%, #0D0D0D 100%);
+    border-radius: 6px;
+    border: 2px solid #8B6914;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow:
+        inset 0 0 40px rgba(0,0,0,0.5),
+        0 4px 12px rgba(0,0,0,0.15);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.drawer_video_frame::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+.drawer_video_frame::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.drawer_video_frame:hover {
+    border-color: #C9A96E;
+    box-shadow:
+        inset 0 0 40px rgba(0,0,0,0.5),
+        0 4px 20px rgba(139,105,20,0.2);
+}
+
+/* 播放按钮 */
+.drawer_video_play {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.25);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.drawer_video_play::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 55%;
+    transform: translate(-50%, -50%);
+    border-style: solid;
+    border-width: 10px 0 10px 18px;
+    border-color: transparent transparent transparent rgba(255,255,255,0.75);
+    transition: border-color 0.3s ease;
+}
+
+.drawer_video_frame:hover .drawer_video_play {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 0 20px rgba(255,255,255,0.08);
+}
+
+.drawer_video_frame:hover .drawer_video_play::after {
+    border-left-color: rgba(255,255,255,0.95);
+}
+
+/* 视频标签 */
+.drawer_video_label {
+    position: relative;
+    z-index: 1;
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 4px;
+    font-family: var(--font-calligraphy);
+}
+
+/* 视频说明文字 */
+.drawer_video_info {
+    flex: 1;
+    min-width: 0;
+}
+
+.drawer_video_info h4 {
+    font-family: var(--font-calligraphy);
+    font-size: 19px;
+    color: var(--color-primary);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+.drawer_video_info p {
+    font-size: 15px;
+    color: var(--color-text-light);
+    line-height: 1.8;
+}
+
+/* ==========================================
+   文化介绍文字
+   ========================================== */
+.culture_intro {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+}
+
+.culture_intro p {
+    font-size: 19px;
+    line-height: 2;
+    color: var(--color-text);
+    text-indent: 2em;
+}
+
+/* ==========================================
+   响应式
+   ========================================== */
+
+/* 平板 */
+@media (max-width: 1199px) {
+    .cabinet_grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .drawer_face {
+        padding: 18px 8px 12px;
+    }
+
+    .drawer_label {
+        font-size: 20px;
+    }
+
+    .drawer_panel.open {
+        max-height: 880px;
+    }
+
+    .drawer_panel_image {
+        flex: 0 0 280px;
+        height: 240px;
+    }
+
+    .drawer_panel_header h3 {
+        font-size: 26px;
+    }
+
+    .drawer_video_frame {
+        flex: 0 0 260px;
+        height: 180px;
+    }
+
+    .drawer_video_play {
+        width: 44px;
+        height: 44px;
+    }
+
+    .drawer_video_play::after {
+        border-width: 8px 0 8px 15px;
+    }
+
+    .bamboo_side { opacity: 0.05; }
+}
+
+/* 手机 */
+@media (max-width: 767px) {
+    .cabinet_frame {
+        padding: 18px 12px 16px;
+    }
+
+    .cabinet_grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .drawer_face {
+        padding: 16px 8px 10px;
+        border-width: 2px;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.2),
+            0 2px 0 #6B3A20,
+            0 3px 6px rgba(0,0,0,0.12);
+    }
+
+    .drawer_label {
+        font-size: 18px;
+        letter-spacing: 2px;
+    }
+
+    .drawer_ring {
+        width: 22px;
+        height: 22px;
+        border-width: 2px;
+    }
+
+    .drawer_panel.open {
+        max-height: 1000px;
+    }
+
+    .drawer_panel_inner {
+        padding: 16px;
+    }
+
+    .drawer_panel_top {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .drawer_panel_image {
+        flex: 0 0 auto;
+        height: 200px;
+    }
+
+    .drawer_panel_header h3 {
+        font-size: 24px;
+    }
+
+    .drawer_panel_desc {
+        font-size: 16px;
+    }
+
+    .drawer_panel_quote {
+        font-size: 14px;
+    }
+
+    .drawer_video_area {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .drawer_video_frame {
+        flex: 0 0 auto;
+        height: 180px;
+    }
+
+    .drawer_video_play {
+        width: 44px;
+        height: 44px;
+    }
+
+    .drawer_video_play::after {
+        border-width: 8px 0 8px 14px;
+    }
+
+    .drawer_video_info h4 {
+        font-size: 17px;
+    }
+
+    .drawer_video_info p {
+        font-size: 14px;
+    }
+
+    .cabinet_cornice {
+        top: -12px;
+        height: 14px;
+    }
+
+    .cabinet_base {
+        bottom: -10px;
+        height: 12px;
+    }
+
+    .ink_mountain { opacity: 0.06; }
+    .bamboo_side { display: none; }
+    .ink_dots { opacity: 0.5; }
+
+    .culture_intro { padding: 20px; }
+    .culture_intro p { font-size: 18px; text-indent: 1em; }
+}

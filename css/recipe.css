@@ -1,0 +1,977 @@
+/* ==========================================
+   recipe.css — 食谱养生页面样式
+   包含：药材百科 + 时令食谱 两大板块
+   ========================================== */
+
+/* ==========================================
+   板块内导航（快速跳转）
+   ========================================== */
+.sub_nav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+    position: sticky;
+    top: var(--nav-height);
+    z-index: 100;
+    background: rgba(245, 240, 232, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 4px;
+}
+
+.sub_nav_link {
+    display: block;
+    padding: 12px 28px;
+    font-size: 19px;
+    color: var(--color-text-light);
+    letter-spacing: 2px;
+    position: relative;
+    transition: all var(--transition);
+    text-decoration: none;
+}
+
+.sub_nav_link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 3px 3px 0 0;
+    transition: width var(--transition);
+}
+
+.sub_nav_link:hover {
+    color: var(--color-primary);
+}
+
+.sub_nav_link.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.sub_nav_link.active::after {
+    width: 60%;
+}
+
+/* ==========================================
+   每日推荐食谱推送
+   ========================================== */
+.daily_push {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    background: linear-gradient(135deg, rgba(139,37,0,0.06) 0%, rgba(184,134,11,0.08) 100%);
+    border: 1px solid rgba(184,134,11,0.25);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.daily_push:hover {
+    border-color: var(--color-gold);
+    box-shadow: 0 4px 16px rgba(139,37,0,0.1);
+}
+
+.daily_push::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(184,134,11,0.08);
+    pointer-events: none;
+}
+
+.daily_push_tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 4px 16px 4px 14px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: 16px;
+    letter-spacing: 2px;
+    border-radius: 10px 0 8px 0;
+}
+
+.daily_push_image {
+    width: 140px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #f0ebe0 0%, #e5ddcc 100%);
+}
+
+.daily_push_body {
+    flex: 1;
+    min-width: 0;
+}
+
+.daily_push_name {
+    font-family: var(--font-calligraphy);
+    font-size: 28px;
+    color: var(--color-primary);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+}
+
+.daily_push_desc {
+    font-size: 17px;
+    color: var(--color-text-light);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.daily_push_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.daily_push_diff {
+    font-size: 16px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background: rgba(139,37,0,0.08);
+    color: var(--color-primary-light);
+}
+
+.daily_push_time {
+    font-size: 16px;
+    color: var(--color-text-light);
+}
+
+.daily_push_season {
+    font-size: 16px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background: rgba(46,107,74,0.08);
+    color: var(--color-jade);
+}
+
+.daily_push_btn {
+    flex-shrink: 0;
+    padding: 10px 24px;
+    font-size: 18px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: 4px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.daily_push_btn:hover {
+    background: var(--color-primary-light);
+    box-shadow: 0 4px 12px rgba(139,37,0,0.3);
+}
+
+/* ==========================================
+   板块分隔线
+   ========================================== */
+.section_separator {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 50px 0 40px;
+}
+
+.section_separator_line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.section_separator_text {
+    font-family: var(--font-calligraphy);
+    font-size: 26px;
+    color: var(--color-primary);
+    letter-spacing: 3px;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   板块一：药材百科
+   ========================================== */
+
+/* === 药材筛选栏 === */
+.herb_filter_bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.herb_filter_categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.herb_filter_btn {
+    padding: 6px 18px;
+    font-size: 18px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 1px;
+}
+
+.herb_filter_btn:hover {
+    border-color: var(--color-gold);
+    color: var(--color-primary);
+}
+
+.herb_filter_btn.active {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.herb_filter_search {
+    width: 240px;
+}
+
+.herb_filter_search .form_input {
+    padding: 8px 12px;
+    font-size: 18px;
+}
+
+/* === 季节提示 === */
+.season_tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(46,107,74,0.06);
+    border-left: 3px solid var(--color-jade);
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 24px;
+    font-size: 18px;
+    color: var(--color-jade);
+}
+
+.season_icon { font-size: 22px; }
+
+/* === 药材卡片网格 === */
+.herb_grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.herb_card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition);
+    cursor: pointer;
+}
+
+.herb_card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-gold);
+}
+
+.herb_card_image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background: var(--color-bg-dark);
+    display: block;
+}
+
+.herb_card_body {
+    padding: 16px 18px;
+}
+
+.herb_card_name {
+    font-family: var(--font-calligraphy);
+    font-size: 26px;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+}
+
+.herb_card_nature {
+    font-size: 16px;
+    color: var(--color-text-light);
+    margin-bottom: 10px;
+}
+
+.herb_card_effect {
+    font-size: 17px;
+    color: var(--color-text);
+    line-height: 1.8;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.herb_card_season {
+    font-size: 16px;
+    color: var(--color-jade);
+    background: rgba(46,107,74,0.06);
+    padding: 6px 10px;
+    border-radius: 4px;
+    line-height: 1.6;
+}
+
+.herb_card_detail {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 16px;
+    color: var(--color-primary-light);
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.herb_card_detail:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.herb_loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-light);
+    font-size: 18px;
+}
+
+.herb_no_result {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-light);
+    grid-column: 1 / -1;
+}
+
+/* === 药材详情弹窗 === */
+.modal_overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal_overlay.show {
+    display: flex;
+}
+
+.modal_card {
+    background: var(--color-white);
+    border-radius: 12px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+}
+
+.modal_close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 32px;
+    color: var(--color-text-light);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.modal_close:hover { color: var(--color-primary); }
+
+.modal_image {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--color-bg-dark);
+    margin-bottom: 20px;
+    display: block;
+}
+
+.modal_name {
+    font-family: var(--font-calligraphy);
+    font-size: 32px;
+    color: var(--color-primary);
+    margin-bottom: 6px;
+}
+
+.modal_nature {
+    font-size: 18px;
+    color: var(--color-text-light);
+    margin-bottom: 14px;
+}
+
+.modal_effect {
+    font-size: 19px;
+    line-height: 1.9;
+    color: var(--color-text);
+    margin-bottom: 16px;
+}
+
+.modal_season {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.modal_season_item {
+    font-size: 17px;
+    color: var(--color-jade);
+    padding: 6px 12px;
+    background: rgba(46,107,74,0.05);
+    border-radius: 4px;
+}
+
+.modal_ref {
+    font-size: 16px;
+    color: var(--color-text-light);
+    font-style: italic;
+    text-align: right;
+}
+
+/* ==========================================
+   板块二：时令食谱
+   ========================================== */
+
+/* === 时令推荐栏 === */
+.recipe_season_banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, rgba(139,37,0,0.05) 0%, rgba(184,134,11,0.06) 100%);
+    border-left: 4px solid var(--color-primary-light);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+}
+
+.recipe_season_banner_icon {
+    font-size: 42px;
+    flex-shrink: 0;
+}
+
+.recipe_season_banner_text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.recipe_season_banner_text span:first-child {
+    font-family: var(--font-calligraphy);
+    font-size: 26px;
+    color: var(--color-primary);
+    letter-spacing: 2px;
+}
+
+.recipe_season_banner_text span:last-child {
+    font-size: 18px;
+    color: var(--color-primary-light);
+}
+
+/* === 食谱筛选栏 === */
+.recipe_filter_bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.recipe_filter_categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recipe_filter_search {
+    width: 240px;
+}
+
+.recipe_filter_search .form_input {
+    padding: 8px 12px;
+    font-size: 18px;
+}
+
+.recipe_filter_btn {
+    padding: 6px 18px;
+    font-size: 18px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 1px;
+}
+
+.recipe_filter_btn:hover {
+    border-color: var(--color-gold);
+    color: var(--color-primary);
+}
+
+.recipe_filter_btn.active {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+/* === 食谱卡片网格 === */
+.recipe_grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+/* === 食谱卡片 === */
+.recipe_card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe_card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-gold);
+}
+
+.recipe_card_image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #f0ebe0 0%, #e5ddcc 100%);
+    display: block;
+}
+
+.recipe_card_body {
+    padding: 18px 20px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe_card_name {
+    font-family: var(--font-calligraphy);
+    font-size: 26px;
+    color: var(--color-primary);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.recipe_card_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.recipe_difficulty {
+    font-size: 16px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(139,37,0,0.08);
+    color: var(--color-primary-light);
+}
+
+.recipe_time {
+    font-size: 16px;
+    color: var(--color-text-light);
+}
+
+.recipe_season_tag {
+    font-size: 16px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(46,107,74,0.08);
+    color: var(--color-jade);
+}
+
+.recipe_card_desc {
+    font-size: 17px;
+    color: var(--color-text-light);
+    line-height: 1.7;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.recipe_card_arrow {
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--color-gold);
+    text-align: right;
+}
+
+/* === 食谱加载/无结果 === */
+.recipe_loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-light);
+    font-size: 18px;
+}
+
+.recipe_no_result {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-light);
+    grid-column: 1 / -1;
+}
+
+/* ==========================================
+   食谱详情弹窗
+   ========================================== */
+.recipe_modal_overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.recipe_modal_overlay.show {
+    display: flex;
+}
+
+.recipe_modal_card {
+    background: var(--color-white);
+    border-radius: 12px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+}
+
+.recipe_modal_close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 36px;
+    color: var(--color-text-light);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color var(--transition);
+    z-index: 1;
+}
+
+.recipe_modal_close:hover {
+    color: var(--color-primary);
+}
+
+.recipe_modal_image {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f0ebe0 0%, #e5ddcc 100%);
+    margin-bottom: 20px;
+    display: block;
+}
+
+.recipe_modal_header {
+    margin-bottom: 20px;
+}
+
+.recipe_modal_name {
+    font-family: var(--font-calligraphy);
+    font-size: 36px;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.recipe_modal_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.recipe_modal_meta .recipe_difficulty {
+    font-size: 17px;
+    padding: 4px 14px;
+}
+
+.recipe_modal_meta .recipe_time {
+    font-size: 17px;
+}
+
+.recipe_modal_meta .recipe_season_tag {
+    font-size: 17px;
+    padding: 4px 14px;
+}
+
+/* 弹窗分区 */
+.recipe_modal_section {
+    margin-bottom: 22px;
+}
+
+.recipe_section_title {
+    font-family: var(--font-calligraphy);
+    font-size: 24px;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--color-border);
+    letter-spacing: 2px;
+}
+
+/* 食材列表 */
+.recipe_ingredients {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.recipe_ingredients li {
+    font-size: 18px;
+    color: var(--color-text);
+    padding: 6px 10px;
+    background: rgba(245,240,232,0.6);
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.recipe_ingredients li .ingredient_name {
+    font-weight: 500;
+}
+
+.recipe_ingredients li .ingredient_amount {
+    color: var(--color-text-light);
+    font-size: 17px;
+    white-space: nowrap;
+}
+
+/* 步骤列表 */
+.recipe_steps {
+    list-style: none;
+    counter-reset: step-counter;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recipe_steps li {
+    counter-increment: step-counter;
+    font-size: 18px;
+    color: var(--color-text);
+    line-height: 1.8;
+    padding-left: 40px;
+    position: relative;
+}
+
+.recipe_steps li::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* 养生功效 */
+.recipe_benefit {
+    font-size: 18px;
+    color: var(--color-jade);
+    line-height: 1.9;
+    padding: 12px 16px;
+    background: rgba(46,107,74,0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--color-jade);
+}
+
+/* ==========================================
+   响应式
+   ========================================== */
+@media (max-width: 1199px) {
+    .herb_grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .herb_filter_search {
+        width: 180px;
+    }
+    .recipe_grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .recipe_card_image {
+        height: 180px;
+    }
+    .recipe_season_banner {
+        padding: 14px 18px;
+    }
+    .recipe_season_banner_icon {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 767px) {
+    .daily_push {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 36px 16px 16px;
+        gap: 12px;
+    }
+    .daily_push_image {
+        width: 100%;
+        height: 150px;
+    }
+    .daily_push_name {
+        font-size: 24px;
+    }
+    .daily_push_btn {
+        align-self: stretch;
+        text-align: center;
+    }
+    .sub_nav {
+        gap: 0;
+        justify-content: center;
+    }
+    .sub_nav_link {
+        padding: 10px 18px;
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+    .herb_grid {
+        grid-template-columns: 1fr;
+    }
+    .herb_filter_bar {
+        flex-direction: column;
+    }
+    .herb_filter_search {
+        width: 100%;
+    }
+    .herb_card_image {
+        height: 160px;
+    }
+    .section_separator {
+        margin: 36px 0 30px;
+    }
+    .section_separator_text {
+        font-size: 22px;
+        letter-spacing: 2px;
+    }
+
+    .recipe_grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .recipe_card_image {
+        height: 180px;
+    }
+    .recipe_season_banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px 16px;
+    }
+    .recipe_season_banner_icon {
+        font-size: 32px;
+    }
+    .recipe_season_banner_text span:first-child {
+        font-size: 22px;
+    }
+    .recipe_filter_bar {
+        flex-direction: column;
+    }
+    .recipe_filter_search {
+        width: 100%;
+    }
+    .recipe_filter_categories {
+        gap: 6px;
+    }
+    .recipe_filter_btn {
+        padding: 6px 14px;
+        font-size: 16px;
+    }
+    .recipe_modal_card {
+        padding: 20px 16px;
+        max-width: 100%;
+        border-radius: 12px 12px 0 0;
+        max-height: 90vh;
+    }
+    .recipe_modal_image {
+        height: 180px;
+    }
+    .recipe_modal_name {
+        font-size: 28px;
+    }
+    .recipe_ingredients {
+        grid-template-columns: 1fr;
+    }
+    .recipe_steps li {
+        font-size: 17px;
+        padding-left: 32px;
+    }
+    .recipe_steps li::before {
+        width: 22px;
+        height: 22px;
+        font-size: 15px;
+    }
+}

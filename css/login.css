@@ -1,0 +1,104 @@
+/* ==========================================
+   login.css — 登录/注册页样式
+   ========================================== */
+
+/* === 页面背景 === */
+.auth_page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+        linear-gradient(135deg, rgba(44,44,44,0.5) 0%, rgba(62,39,21,0.4) 50%, rgba(44,44,44,0.5) 100%),
+        url('../images/background/login_bg.svg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* === 表单容器 === */
+.auth_container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth_card {
+    width: 100%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.93);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 44px 36px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    border: 1px solid rgba(184,134,11,0.2);
+}
+
+.auth_title {
+    font-family: var(--font-calligraphy);
+    font-size: 38px;
+    color: var(--color-primary);
+    text-align: center;
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+}
+
+.auth_subtitle {
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.auth_form {
+    margin-bottom: 16px;
+}
+
+.auth_btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 20px;
+    letter-spacing: 3px;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.form_error {
+    color: var(--color-primary);
+    font-size: 17px;
+    min-height: 20px;
+    margin-top: 4px;
+    text-align: center;
+}
+
+.auth_switch {
+    text-align: center;
+    font-size: 18px;
+    color: var(--color-text-light);
+    margin-top: 16px;
+}
+
+.auth_switch a {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.auth_switch a:hover {
+    text-decoration: underline;
+}
+
+.auth_back {
+    text-align: center;
+    margin-top: 14px;
+}
+
+.auth_back a {
+    font-size: 17px;
+    color: var(--color-text-light);
+    transition: color var(--transition);
+}
+
+.auth_back a:hover {
+    color: var(--color-primary);
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中医文化 - 中医文化日常养生</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/culture.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html" class="active">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html" id="nav_user_link">登录</a>
+        </div>
+    </nav>
+
+    <!-- 背景装饰层 -->
+    <div class="culture_bg_decor">
+        <div class="ink_mountain ink_mt_1"></div>
+        <div class="ink_mountain ink_mt_2"></div>
+        <div class="ink_mountain ink_mt_3"></div>
+    </div>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>中医文化</span>
+        </div>
+
+        <!-- 页面标题 -->
+        <h1 class="section_title">中医文化 · 千年传承</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">轻触药屉，开启一段中医智慧的探索之旅</p>
+
+        <!-- 药屉百宝格 -->
+        <div class="cabinet_wrapper">
+            <!-- 药柜边框装饰 -->
+            <div class="cabinet_frame">
+                <div class="cabinet_cornice"></div>
+                <div class="cabinet_grid" id="cabinet_grid">
+                    <!-- 由 JS 动态生成 -->
+                </div>
+                <div class="cabinet_base"></div>
+            </div>
+
+            <!-- 展开的知识抽屉面板 -->
+            <div class="drawer_panel" id="drawer_panel">
+                <button class="drawer_panel_close" id="drawer_close" aria-label="关闭">&times;</button>
+                <div class="drawer_panel_inner">
+                    <div class="drawer_panel_top">
+                        <div class="drawer_panel_image">
+                            <img id="drawer_image" src="" alt="">
+                        </div>
+                        <div class="drawer_panel_text">
+                            <div class="drawer_panel_header">
+                                <h3 id="drawer_name"></h3>
+                                <span class="drawer_category_tag" id="drawer_category"></span>
+                            </div>
+                            <p class="drawer_panel_desc" id="drawer_desc"></p>
+                            <div class="drawer_panel_quote" id="drawer_quote"></div>
+                            <div class="drawer_panel_tags" id="drawer_tags"></div>
+                        </div>
+                    </div>
+                    <!-- 科普教学视频占位区（演示样式） -->
+                    <div class="drawer_video_area">
+                        <div class="drawer_video_frame">
+                            <div class="drawer_video_play"></div>
+                            <span class="drawer_video_label">科普教学</span>
+                        </div>
+                        <div class="drawer_video_info">
+                            <h4>相关科普教学视频</h4>
+                            <p>点击上方视频窗口，观看该疗法的历史渊源、操作演示与临床应用讲解，深入了解中医传统技法的精髓。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文化介绍文字 -->
+        <div class="culture_intro">
+            <p>中医文化源远流长，是中华文明的重要组成部分。从《黄帝内经》到《伤寒杂病论》，从《神农本草经》到《本草纲目》，历代医家不断丰富和发展中医理论与临床实践。针灸、推拿、拔罐、艾灸等传统疗法，凝聚了古人对生命与健康的深刻洞察。</p>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/culture.js"></script>
+</body>
+</html>

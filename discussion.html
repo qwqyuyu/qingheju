@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>养生社区 - 中医文化日常养生</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/discussion.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html" class="active">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html" id="nav_user_link">登录</a>
+        </div>
+    </nav>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>养生社区</span>
+        </div>
+
+        <!-- 页面标题 -->
+        <h1 class="section_title">养生社区</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">分享养生心得，交流健康经验，共同守护身心健康</p>
+
+        <!-- 发帖按钮 -->
+        <div class="community_header">
+            <button class="btn btn_primary" id="new_post_btn">✎ 发布新帖</button>
+        </div>
+
+        <!-- 发帖对话框（隐藏） -->
+        <div class="post_editor" id="post_editor" style="display:none;">
+            <h3 class="editor_title">发布新帖</h3>
+            <div class="form_group">
+                <label for="post_title">标题</label>
+                <input type="text" id="post_title" class="form_input" placeholder="请输入帖子标题" maxlength="100">
+            </div>
+            <div class="form_group">
+                <label for="post_content">内容</label>
+                <textarea id="post_content" class="form_input post_textarea" placeholder="分享您的养生心得..." rows="6"></textarea>
+            </div>
+            <div class="form_group">
+                <label for="post_image">图片（可选）</label>
+                <input type="file" id="post_image" accept="image/*" class="form_input">
+                <img id="post_image_preview" class="image_preview" style="display:none;" alt="预览">
+            </div>
+            <div class="editor_actions">
+                <button class="btn btn_primary" id="submit_post">发 布</button>
+                <button class="btn btn_outline" id="cancel_post">取 消</button>
+            </div>
+            <div class="form_error" id="post_error"></div>
+        </div>
+
+        <!-- 帖子列表 -->
+        <div class="post_list" id="post_list">
+            <!-- 由 JS 动态渲染 -->
+        </div>
+        <div class="loading" id="loading_posts">正在加载帖子...</div>
+    </main>
+
+    <!-- 帖子详情弹窗 -->
+    <div class="modal_overlay" id="post_modal">
+        <div class="modal_post">
+            <button class="modal_close" id="modal_post_close">&times;</button>
+            <div class="modal_post_content" id="modal_post_content">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/discussion.js"></script>
+</body>
+</html>

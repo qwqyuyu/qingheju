@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="260" viewBox="0 0 380 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#B8C8D8"/>
+      <stop offset="100%" style="stop-color:#98A8B8"/>
+    </linearGradient>
+  </defs>
+  <rect width="380" height="260" rx="0" fill="url(#bg)"/>
+  <circle cx="190" cy="100" r="50" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <circle cx="190" cy="100" r="35" fill="rgba(255,255,255,0.06)"/>
+  <text x="190" y="125" text-anchor="middle" font-size="55" font-family="sans-serif">☃</text>
+  <text x="190" y="190" text-anchor="middle" font-size="32" font-family="STXingkai, KaiTi, serif" fill="#fff">冬至</text>
+  <line x1="130" y1="205" x2="250" y2="205" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="190" y="235" text-anchor="middle" font-size="12" font-family="Microsoft YaHei, sans-serif" fill="rgba(255,255,255,0.7)">白昼最短，阳气始生</text>
+</svg>

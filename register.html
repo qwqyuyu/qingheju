@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 中医文化日常养生</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="auth_page">
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html">登录</a>
+        </div>
+    </nav>
+
+    <!-- 注册表单区域 -->
+    <main class="auth_container">
+        <div class="auth_card">
+            <h2 class="auth_title">加入我们</h2>
+            <p class="auth_subtitle">创建账号，开启您的养生之旅</p>
+
+            <form id="register_form" class="auth_form">
+                <div class="form_group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" class="form_input" placeholder="请输入用户名" required>
+                </div>
+                <div class="form_group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" class="form_input" placeholder="请输入邮箱" required>
+                </div>
+                <div class="form_group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" class="form_input" placeholder="请设置密码（至少6位）" required minlength="6">
+                </div>
+                <div class="form_group">
+                    <label for="confirm_password">确认密码</label>
+                    <input type="password" id="confirm_password" class="form_input" placeholder="请再次输入密码" required>
+                </div>
+                <div class="form_error" id="register_error"></div>
+                <button type="submit" class="btn btn_primary auth_btn">注 册</button>
+            </form>
+
+            <p class="auth_switch">已有账号？<a href="login.html">立即登录</a></p>
+            <p class="auth_back"><a href="index.html">← 返回首页</a></p>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        /* ========== 注册页脚本 ========== */
+        document.getElementById('register_form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const errorEl = document.getElementById('register_error');
+
+            /* 前端校验 */
+            if (!username || !email || !password || !confirmPassword) {
+                errorEl.textContent = '请填写所有字段';
+                return;
+            }
+            if (password.length < 6) {
+                errorEl.textContent = '密码至少需要6位';
+                return;
+            }
+            if (password !== confirmPassword) {
+                errorEl.textContent = '两次输入的密码不一致';
+                return;
+            }
+
+            /* 调用模拟注册接口 */
+            const result = await API.register(username, email, password);
+            if (result.success) {
+                errorEl.textContent = '';
+                alert('注册成功！即将跳转到登录页');
+                window.location.href = 'login.html';
+            } else {
+                errorEl.textContent = '用户名已存在，请更换';
+            }
+        });
+    </script>
+</body>
+</html>

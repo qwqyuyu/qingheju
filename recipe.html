@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食谱养生 - 清和居</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/recipe.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html" class="active">食谱养生</a>
+            <a href="solarterms.html">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html" id="nav_user_link">登录</a>
+        </div>
+    </nav>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>食谱养生</span>
+        </div>
+
+        <!-- 板块内导航 -->
+        <nav class="sub_nav" id="sub_nav">
+            <a href="#herb_section" class="sub_nav_link active">药材百科</a>
+            <a href="#recipe_section" class="sub_nav_link">时令食谱</a>
+        </nav>
+
+        <!-- 每日推荐食谱 -->
+        <div class="daily_push" id="daily_push">
+            <div class="daily_push_tag">今日推荐</div>
+            <img class="daily_push_image" id="daily_push_image" src="images/recipes/placeholder.svg" alt="">
+            <div class="daily_push_body">
+                <h3 class="daily_push_name" id="daily_push_name"></h3>
+                <p class="daily_push_desc" id="daily_push_desc"></p>
+                <div class="daily_push_meta">
+                    <span class="daily_push_diff" id="daily_push_diff"></span>
+                    <span class="daily_push_time" id="daily_push_time"></span>
+                    <span class="daily_push_season" id="daily_push_season"></span>
+                </div>
+            </div>
+            <button class="daily_push_btn" id="daily_push_btn">查看做法</button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- 板块一：药材百科 -->
+        <!-- ============================================ -->
+        <h1 class="section_title" id="herb_section">药材百科</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">识药性、明归经，了解每一味道地药材的养生智慧</p>
+
+        <!-- 药材筛选栏 -->
+        <div class="herb_filter_bar">
+            <div class="herb_filter_categories" id="herb_filter_categories">
+                <button class="herb_filter_btn active" data-category="all">全部</button>
+                <button class="herb_filter_btn" data-category="补血类">补血类</button>
+                <button class="herb_filter_btn" data-category="补气类">补气类</button>
+                <button class="herb_filter_btn" data-category="清热类">清热类</button>
+                <button class="herb_filter_btn" data-category="祛湿类">祛湿类</button>
+                <button class="herb_filter_btn" data-category="滋阴类">滋阴类</button>
+                <button class="herb_filter_btn" data-category="温阳类">温阳类</button>
+            </div>
+            <div class="herb_filter_search">
+                <input type="text" class="form_input" id="herb_search_input" placeholder="搜索药材名称或功效...">
+            </div>
+        </div>
+
+        <!-- 药材季节提示 -->
+        <div class="season_tip">
+            <span class="season_icon" id="herb_season_icon">☀️</span>
+            <span id="herb_season_text">当前夏季：以下展示夏季时令建议</span>
+        </div>
+
+        <!-- 药材卡片网格 -->
+        <div class="herb_grid" id="herb_grid">
+            <!-- 由 JS 动态渲染 -->
+        </div>
+
+        <!-- 药材加载提示 -->
+        <div class="herb_loading" id="herb_loading">正在加载药材数据...</div>
+
+        <!-- 药材详情弹窗 -->
+        <div class="modal_overlay" id="herb_modal">
+            <div class="modal_card">
+                <button class="modal_close" id="herb_modal_close">&times;</button>
+                <img class="modal_image" id="herb_modal_image" src="" alt="">
+                <h2 class="modal_name" id="herb_modal_name"></h2>
+                <p class="modal_nature" id="herb_modal_nature"></p>
+                <p class="modal_effect" id="herb_modal_effect"></p>
+                <div class="modal_season" id="herb_modal_season"></div>
+                <p class="modal_ref" id="herb_modal_ref"></p>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- 板块分隔线 -->
+        <!-- ============================================ -->
+        <div class="section_separator">
+            <div class="section_separator_line"></div>
+            <span class="section_separator_text">时令食谱</span>
+            <div class="section_separator_line"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- 板块二：时令食谱 -->
+        <!-- ============================================ -->
+        <h1 class="section_title" id="recipe_section">时令食谱</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">药食同源，顺应时令，以食养生</p>
+
+        <!-- 时令推荐栏 -->
+        <div class="recipe_season_banner" id="recipe_season_banner">
+            <div class="recipe_season_banner_icon" id="recipe_season_icon">☀️</div>
+            <div class="recipe_season_banner_text">
+                <span id="recipe_season_label">夏季暑热</span>
+                <span id="recipe_season_desc">宜清热解暑、健脾祛湿，推荐以下时令食谱</span>
+            </div>
+        </div>
+
+        <!-- 食谱筛选栏 -->
+        <div class="recipe_filter_bar">
+            <div class="recipe_filter_categories" id="recipe_filter_categories">
+                <button class="recipe_filter_btn active" data-category="all">全部</button>
+                <button class="recipe_filter_btn" data-category="汤羹">汤羹</button>
+                <button class="recipe_filter_btn" data-category="粥品">粥品</button>
+                <button class="recipe_filter_btn" data-category="炒菜">炒菜</button>
+                <button class="recipe_filter_btn" data-category="凉拌">凉拌</button>
+                <button class="recipe_filter_btn" data-category="茶饮">茶饮</button>
+                <button class="recipe_filter_btn" data-category="甜品">甜品</button>
+            </div>
+            <div class="recipe_filter_search">
+                <input type="text" class="form_input" id="recipe_search_input" placeholder="搜索食谱名称或功效...">
+            </div>
+        </div>
+
+        <!-- 食谱卡片网格 -->
+        <div class="recipe_grid" id="recipe_grid">
+            <!-- 由 JS 动态渲染 -->
+        </div>
+
+        <!-- 食谱加载提示 -->
+        <div class="recipe_loading" id="recipe_loading">正在加载食谱数据...</div>
+
+        <!-- 食谱详情弹窗 -->
+        <div class="recipe_modal_overlay" id="recipe_modal">
+            <div class="recipe_modal_card">
+                <button class="recipe_modal_close" id="recipe_modal_close">&times;</button>
+                <img class="recipe_modal_image" id="recipe_modal_image" src="" alt="">
+                <div class="recipe_modal_header">
+                    <h2 class="recipe_modal_name" id="recipe_modal_name"></h2>
+                    <div class="recipe_modal_meta">
+                        <span class="recipe_difficulty" id="recipe_modal_difficulty"></span>
+                        <span class="recipe_time" id="recipe_modal_time"></span>
+                        <span class="recipe_season_tag" id="recipe_modal_season_tag"></span>
+                    </div>
+                </div>
+                <div class="recipe_modal_section">
+                    <h3 class="recipe_section_title">食材用料</h3>
+                    <ul class="recipe_ingredients" id="recipe_modal_ingredients"></ul>
+                </div>
+                <div class="recipe_modal_section">
+                    <h3 class="recipe_section_title">做法步骤</h3>
+                    <ol class="recipe_steps" id="recipe_modal_steps"></ol>
+                </div>
+                <div class="recipe_modal_section">
+                    <h3 class="recipe_section_title">养生功效</h3>
+                    <p class="recipe_benefit" id="recipe_modal_benefit"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+        <p>本站食谱仅供参考，不构成医疗建议</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/recipe.js"></script>
+</body>
+</html>

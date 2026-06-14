@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节气养生 - 清和居</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/solarterms.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav_logo">
+            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <span class="nav_logo_text">清和居</span>
+        </div>
+        <button class="nav_toggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav_links">
+            <a href="index.html">首页</a>
+            <a href="recipe.html">食谱养生</a>
+            <a href="solarterms.html" class="active">节气养生</a>
+            <a href="culture.html">中医文化</a>
+            <a href="discussion.html">养生社区</a>
+            <a href="checkin.html">每日签到</a>
+            <a href="constitution.html">体质自测</a>
+            <a href="login.html" id="nav_user_link">登录</a>
+        </div>
+    </nav>
+
+    <main class="page_container">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a><span>›</span><span>节气养生</span>
+        </div>
+
+        <!-- 页面标题 -->
+        <h1 class="section_title">二十四节气养生</h1>
+        <div class="section_divider"></div>
+        <p class="section_subtitle">顺时养生 · 天人合一</p>
+
+        <!-- 当前节气 · Hero 区 -->
+        <div class="term_hero" id="term_hero">
+            <!-- 由 JS 渲染 -->
+        </div>
+
+        <!-- 全部节气卡片 -->
+        <h2 class="grid_heading">二十四节气一览</h2>
+        <div class="term_grid" id="term_grid">
+            <!-- 由 JS 渲染 -->
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
+        <p>顺时养生，顺应自然规律，调养身心健康</p>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/solarterms.js"></script>
+</body>
+</html>
