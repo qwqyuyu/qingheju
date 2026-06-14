@@ -64,6 +64,11 @@ router.post('/posts', authMiddleware, async (req, res) => {
         if (!title || !content) {
             return res.json({ success: false, message: '标题和内容不能为空' });
         }
+        // 验证用户是否存在于数据库
+        const [userCheck] = await pool.query('SELECT id FROM users WHERE id = ?', [req.user.id]);
+        if (userCheck.length === 0) {
+            return res.status(401).json({ success: false, message: '账号不存在，请重新注册' });
+        }
         const [result] = await pool.query(
             'INSERT INTO posts (user_id, title, content, image) VALUES (?, ?, ?, ?)',
             [req.user.id, title, content, image || '']
