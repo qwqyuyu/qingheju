@@ -3,4 +3,4 @@ builder = "nixpacks"
 root = "server"
 
 [deploy]
-startCommand = "node app.js"
+startCommand = "cd server && node app.js"
