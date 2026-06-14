@@ -11,7 +11,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     overflow: hidden;
     background:
         linear-gradient(180deg, rgba(44,44,44,0.3) 0%, rgba(62,39,21,0.2) 40%, rgba(245,240,232,0.55) 100%),
@@ -50,7 +50,7 @@
     z-index: 1;
     text-align: center;
     color: var(--color-white);
-    padding-top: 50px;
+    padding-top: 0;
     flex-shrink: 0;
 }
 
@@ -76,7 +76,7 @@
     position: relative;
     z-index: 1;
     flex-shrink: 0;
-    padding-bottom: 30px;
+    padding-bottom: 18px;
     text-align: center;
 }
 
@@ -153,17 +153,17 @@
     position: relative;
     z-index: 1;
     width: calc(100% - 36px);
-    margin-top: 180px;
     margin-bottom: 10px;
-    flex: 1;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
 }
 
 .carousel_viewport {
     position: relative;
-    flex: 1;
-    min-height: 0;
+    flex: none;
+    height: 700px;
+    max-height: 700px;
     overflow: hidden;
     perspective: 1200px;
 }
@@ -1326,7 +1326,8 @@
     .hero_title { font-size: 42px; letter-spacing: 8px; }
     .hero_logo_bg img { width: 240px; height: 240px; }
     .hero_logo_bg { padding-top: 28px; }
-    .hero_carousel { width: calc(100% - 24px); margin-top: 135px; }
+    .hero_carousel { width: calc(100% - 24px); }
+    .carousel_viewport { height: 570px; max-height: 570px; }
     .carousel_card { width: 60%; margin-left: -30%; }
     .carousel_card.pos_left  { transform: translateX(-50%) scale(0.78); }
     .carousel_card.pos_right { transform: translateX(50%) scale(0.78); }
@@ -1354,7 +1355,7 @@
     .brush_t10 { right: 5%; bottom: 11%; }
     .brush_t14 { left: 18%; bottom: 13%; }
     .brush_t18 { left: calc(50% + 87px); bottom: 24px; }
-    .hero_btn_wrap { padding-bottom: 24px; }
+    .hero_btn_wrap { padding-bottom: 18px; }
     /* 环形缩小 */
     .ring_wrapper { width: 600px; height: 600px; }
     /* 外圈四方位节点位置调整 */
@@ -1394,12 +1395,13 @@
 
 @media (max-width: 767px) {
     .hero { height: auto; min-height: 480px; }
-    .hero_content { padding-top: 30px; }
+    .hero_content { padding-top: 0; }
     .hero_title { font-size: 32px; letter-spacing: 6px; }
     .hero_subtitle { font-size: 17px; letter-spacing: 2px; }
     .hero_logo_bg { padding-top: 20px; }
     .hero_logo_bg img { width: 180px; height: 180px; }
-    .hero_carousel { width: calc(100% - 14px); margin-top: 105px; }
+    .hero_carousel { width: calc(100% - 14px); }
+    .carousel_viewport { height: 460px; max-height: 460px; }
     .carousel_card { width: 64%; margin-left: -32%; border-radius: 10px; }
     .carousel_card.pos_left  { transform: translateX(-48%) scale(0.75); }
     .carousel_card.pos_right { transform: translateX(48%) scale(0.75); }
@@ -1430,7 +1432,7 @@
     .brush_t10 { right: 5%; bottom: 10%; }
     .brush_t14 { left: 16%; bottom: 12%; }
     .brush_t18 { left: calc(50% + 65px); bottom: 20px; }
-    .hero_btn_wrap { padding-bottom: 20px; }
+    .hero_btn_wrap { padding-bottom: 15px; }
     .hero_btn { padding: 10px 28px; font-size: 18px; }
 
     /* 环形退化为简洁卡片列表 */
