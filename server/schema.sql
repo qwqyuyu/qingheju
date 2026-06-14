@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS posts (
     user_id     INT           NOT NULL,
     title       VARCHAR(100)  NOT NULL,
     content     TEXT          NOT NULL,
-    image       TEXT          NOT NULL,
+    image       MEDIUMTEXT   NOT NULL,  -- 支持最大16MB的base64图片
     likes_count INT           NOT NULL DEFAULT 0,
     created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
