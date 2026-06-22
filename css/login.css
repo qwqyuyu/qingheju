@@ -5,6 +5,7 @@
 /* === 页面背景 === */
 .auth_page {
     min-height: 100vh;
+    min-height: 100dvh; /* 动态视口高度，适配移动端键盘弹出 */
     display: flex;
     flex-direction: column;
     background:
@@ -12,7 +13,7 @@
         url('../images/background/login_bg.svg');
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    /* 移除 background-attachment: fixed —— iOS Safari 存在渲染 bug */
 }
 
 /* === 表单容器 === */
@@ -101,4 +102,74 @@
 
 .auth_back a:hover {
     color: var(--color-primary);
+}
+
+/* ==========================================
+   响应式设计
+   ========================================== */
+
+/* 平板：768px - 1199px */
+@media (max-width: 1199px) {
+    .auth_card {
+        max-width: 400px;
+        padding: 38px 30px;
+    }
+
+    .auth_title {
+        font-size: 34px;
+    }
+
+    .auth_subtitle {
+        font-size: 17px;
+        margin-bottom: 24px;
+    }
+
+    .auth_btn {
+        font-size: 19px;
+        padding: 12px;
+    }
+}
+
+/* 手机：< 768px */
+@media (max-width: 767px) {
+    .auth_container {
+        padding: 24px 16px;
+        align-items: flex-start; /* 防止键盘弹出时卡片被顶到屏幕外 */
+        padding-top: 36px;
+    }
+
+    .auth_card {
+        max-width: 100%;
+        padding: 30px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    }
+
+    .auth_title {
+        font-size: 28px;
+        letter-spacing: 3px;
+    }
+
+    .auth_subtitle {
+        font-size: 16px;
+        margin-bottom: 22px;
+    }
+
+    .auth_btn {
+        font-size: 18px;
+        padding: 12px;
+        letter-spacing: 2px;
+    }
+
+    .auth_switch {
+        font-size: 16px;
+    }
+
+    .auth_back a {
+        font-size: 16px;
+    }
+
+    .form_error {
+        font-size: 15px;
+    }
 }
