@@ -8,5 +8,8 @@
   "scripts": {
     "start": "cd server && node app.js",
     "build": "cd server && npm install"
+  },
+  "dependencies": {
+    "@railway/cli": "^5.20.0"
   }
 }
