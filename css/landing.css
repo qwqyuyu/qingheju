@@ -158,8 +158,8 @@
 .carousel_viewport {
     position: relative;
     flex: none;
-    height: 700px;
-    max-height: 700px;
+    height: 480px;
+    max-height: 480px;
     overflow: hidden;
     perspective: 1200px;
 }
@@ -259,7 +259,7 @@
     .hero_logo_bg img { width: 240px; height: 240px; }
     .hero_logo_bg { padding-top: 28px; }
     .hero_carousel { width: calc(100% - 24px); }
-    .carousel_viewport { height: 570px; max-height: 570px; }
+    .carousel_viewport { height: 400px; max-height: 400px; }
     .carousel_card { width: 60%; margin-left: -30%; }
     .carousel_card.pos_left  { transform: translateX(-50%) scale(0.78); }
     .carousel_card.pos_right { transform: translateX(50%) scale(0.78); }
@@ -299,7 +299,7 @@
     .hero_logo_bg { padding-top: 20px; }
     .hero_logo_bg img { width: 180px; height: 180px; }
     .hero_carousel { width: calc(100% - 14px); }
-    .carousel_viewport { height: 460px; max-height: 460px; }
+    .carousel_viewport { height: 340px; max-height: 340px; }
     .carousel_card { width: 64%; margin-left: -32%; border-radius: 10px; }
     .carousel_card.pos_left  { transform: translateX(-48%) scale(0.75); }
     .carousel_card.pos_right { transform: translateX(48%) scale(0.75); }
