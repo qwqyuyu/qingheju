@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>首页 - 中医文化日常养生</title>
+    <title>清和居 - 中医文化日常养生</title>
     <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/landing.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Liu+Jian+Mao+Cao&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
         </div>
     </nav>
 
-    <!-- ========== Hero 区域 ========== -->
+    <!-- ========== Hero 区域（全屏） ========== -->
     <section class="hero">
         <div class="hero_overlay"></div>
         <div class="hero_logo_bg">
@@ -43,7 +43,7 @@
             <h1 class="hero_title">清和居</h1>
             <p class="hero_subtitle">传承千年中医智慧 · 守护当代身心健康</p>
         </div>
-        <!-- 毛笔字标语（半遮半显，非对称散布全区域） -->
+        <!-- 毛笔字标语 -->
         <div class="hero_brush_text brush_t1">上工治未病</div>
         <div class="hero_brush_text brush_t2">天人合一</div>
         <div class="hero_brush_text brush_t3">阴阳平衡</div>
@@ -88,440 +88,23 @@
             </div>
         </div>
         <div class="hero_btn_wrap">
-            <a href="recipe.html" class="hero_btn">开始养生之旅</a>
+            <a href="home.html" class="hero_btn">开始养生之旅</a>
         </div>
     </section>
-
-    <!-- ========== 四板块环形导航 ========== -->
-    <section class="feature_section">
-
-        <!-- SVG 墨水滤镜 + 蒙版（filterUnits=userSpaceOnUse 确保像素级噪点纹理） -->
-        <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;" aria-hidden="true">
-            <defs>
-                <filter id="inkEdgeFilter" filterUnits="userSpaceOnUse">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="3" result="noise"/>
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
-                </filter>
-                <!-- TL: 食谱养生 — 原点(右下)→左上角 -->
-                <mask id="inkMask_tl" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="black"/>
-<circle cx="0.96" cy="0.96" r="0" fill="white" class="tl_drop tl_drop_1"/><circle cx="0.93" cy="0.98" r="0" fill="white" class="tl_drop tl_drop_2"/><circle cx="0.98" cy="0.94" r="0" fill="white" class="tl_drop tl_drop_3"/>
-<circle cx="0.85" cy="0.85" r="0" fill="white" class="tl_body tl_body_1"/><circle cx="0.78" cy="0.65" r="0" fill="white" class="tl_body tl_body_2"/><circle cx="0.90" cy="0.55" r="0" fill="white" class="tl_body tl_body_3"/><circle cx="0.70" cy="0.88" r="0" fill="white" class="tl_body tl_body_4"/><circle cx="0.72" cy="0.72" r="0" fill="white" class="tl_body tl_body_5"/><circle cx="0.62" cy="0.78" r="0" fill="white" class="tl_body tl_body_6"/><circle cx="0.70" cy="0.50" r="0" fill="white" class="tl_body tl_body_7"/><circle cx="0.55" cy="0.40" r="0" fill="white" class="tl_body tl_body_8"/><circle cx="0.58" cy="0.58" r="0" fill="white" class="tl_body tl_body_9"/><circle cx="0.48" cy="0.55" r="0" fill="white" class="tl_body tl_body_10"/><circle cx="0.42" cy="0.45" r="0" fill="white" class="tl_body tl_body_11"/><circle cx="0.55" cy="0.25" r="0" fill="white" class="tl_body tl_body_12"/><circle cx="0.35" cy="0.48" r="0" fill="white" class="tl_body tl_body_13"/><circle cx="0.30" cy="0.32" r="0" fill="white" class="tl_body tl_body_14"/><circle cx="0.42" cy="0.15" r="0" fill="white" class="tl_body tl_body_15"/><circle cx="0.20" cy="0.35" r="0" fill="white" class="tl_body tl_body_16"/><circle cx="0.18" cy="0.18" r="0" fill="white" class="tl_body tl_body_17"/><circle cx="0.08" cy="0.25" r="0" fill="white" class="tl_body tl_body_18"/><circle cx="0.08" cy="0.08" r="0" fill="white" class="tl_body tl_body_19"/><circle cx="0.15" cy="0.60" r="0" fill="white" class="tl_body tl_body_20"/>
-<circle cx="0.88" cy="0.80" r="0" fill="white" class="tl_noise tl_noise_1"/><circle cx="0.82" cy="0.90" r="0" fill="white" class="tl_noise tl_noise_2"/><circle cx="0.75" cy="0.60" r="0" fill="white" class="tl_noise tl_noise_3"/><circle cx="0.68" cy="0.82" r="0" fill="white" class="tl_noise tl_noise_4"/><circle cx="0.62" cy="0.70" r="0" fill="white" class="tl_noise tl_noise_5"/><circle cx="0.58" cy="0.50" r="0" fill="white" class="tl_noise tl_noise_6"/><circle cx="0.52" cy="0.62" r="0" fill="white" class="tl_noise tl_noise_7"/><circle cx="0.48" cy="0.40" r="0" fill="white" class="tl_noise tl_noise_8"/><circle cx="0.40" cy="0.50" r="0" fill="white" class="tl_noise tl_noise_9"/><circle cx="0.36" cy="0.30" r="0" fill="white" class="tl_noise tl_noise_10"/><circle cx="0.28" cy="0.38" r="0" fill="white" class="tl_noise tl_noise_11"/><circle cx="0.25" cy="0.18" r="0" fill="white" class="tl_noise tl_noise_12"/><circle cx="0.20" cy="0.28" r="0" fill="white" class="tl_noise tl_noise_13"/><circle cx="0.15" cy="0.12" r="0" fill="white" class="tl_noise tl_noise_14"/><circle cx="0.12" cy="0.45" r="0" fill="white" class="tl_noise tl_noise_15"/><circle cx="0.08" cy="0.35" r="0" fill="white" class="tl_noise tl_noise_16"/><circle cx="0.05" cy="0.15" r="0" fill="white" class="tl_noise tl_noise_17"/><circle cx="0.10" cy="0.55" r="0" fill="white" class="tl_noise tl_noise_18"/><circle cx="0.18" cy="0.65" r="0" fill="white" class="tl_noise tl_noise_19"/><circle cx="0.45" cy="0.70" r="0" fill="white" class="tl_noise tl_noise_20"/>
-</mask>
-                <!-- TR: 中医文化 — 原点(左下)→右上角 -->
-                <mask id="inkMask_tr" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="black"/>
-<circle cx="0.04" cy="0.96" r="0" fill="white" class="tr_drop tr_drop_1"/><circle cx="0.07" cy="0.98" r="0" fill="white" class="tr_drop tr_drop_2"/><circle cx="0.02" cy="0.94" r="0" fill="white" class="tr_drop tr_drop_3"/>
-<circle cx="0.15" cy="0.85" r="0" fill="white" class="tr_body tr_body_1"/><circle cx="0.22" cy="0.65" r="0" fill="white" class="tr_body tr_body_2"/><circle cx="0.10" cy="0.55" r="0" fill="white" class="tr_body tr_body_3"/><circle cx="0.30" cy="0.88" r="0" fill="white" class="tr_body tr_body_4"/><circle cx="0.28" cy="0.72" r="0" fill="white" class="tr_body tr_body_5"/><circle cx="0.38" cy="0.78" r="0" fill="white" class="tr_body tr_body_6"/><circle cx="0.30" cy="0.50" r="0" fill="white" class="tr_body tr_body_7"/><circle cx="0.45" cy="0.40" r="0" fill="white" class="tr_body tr_body_8"/><circle cx="0.42" cy="0.58" r="0" fill="white" class="tr_body tr_body_9"/><circle cx="0.52" cy="0.55" r="0" fill="white" class="tr_body tr_body_10"/><circle cx="0.58" cy="0.45" r="0" fill="white" class="tr_body tr_body_11"/><circle cx="0.45" cy="0.25" r="0" fill="white" class="tr_body tr_body_12"/><circle cx="0.65" cy="0.48" r="0" fill="white" class="tr_body tr_body_13"/><circle cx="0.70" cy="0.32" r="0" fill="white" class="tr_body tr_body_14"/><circle cx="0.58" cy="0.15" r="0" fill="white" class="tr_body tr_body_15"/><circle cx="0.80" cy="0.35" r="0" fill="white" class="tr_body tr_body_16"/><circle cx="0.82" cy="0.18" r="0" fill="white" class="tr_body tr_body_17"/><circle cx="0.92" cy="0.25" r="0" fill="white" class="tr_body tr_body_18"/><circle cx="0.92" cy="0.08" r="0" fill="white" class="tr_body tr_body_19"/><circle cx="0.85" cy="0.60" r="0" fill="white" class="tr_body tr_body_20"/>
-<circle cx="0.12" cy="0.80" r="0" fill="white" class="tr_noise tr_noise_1"/><circle cx="0.18" cy="0.90" r="0" fill="white" class="tr_noise tr_noise_2"/><circle cx="0.25" cy="0.60" r="0" fill="white" class="tr_noise tr_noise_3"/><circle cx="0.32" cy="0.82" r="0" fill="white" class="tr_noise tr_noise_4"/><circle cx="0.38" cy="0.70" r="0" fill="white" class="tr_noise tr_noise_5"/><circle cx="0.42" cy="0.50" r="0" fill="white" class="tr_noise tr_noise_6"/><circle cx="0.48" cy="0.62" r="0" fill="white" class="tr_noise tr_noise_7"/><circle cx="0.52" cy="0.40" r="0" fill="white" class="tr_noise tr_noise_8"/><circle cx="0.60" cy="0.50" r="0" fill="white" class="tr_noise tr_noise_9"/><circle cx="0.64" cy="0.30" r="0" fill="white" class="tr_noise tr_noise_10"/><circle cx="0.72" cy="0.38" r="0" fill="white" class="tr_noise tr_noise_11"/><circle cx="0.75" cy="0.18" r="0" fill="white" class="tr_noise tr_noise_12"/><circle cx="0.80" cy="0.28" r="0" fill="white" class="tr_noise tr_noise_13"/><circle cx="0.85" cy="0.12" r="0" fill="white" class="tr_noise tr_noise_14"/><circle cx="0.88" cy="0.45" r="0" fill="white" class="tr_noise tr_noise_15"/><circle cx="0.92" cy="0.35" r="0" fill="white" class="tr_noise tr_noise_16"/><circle cx="0.95" cy="0.15" r="0" fill="white" class="tr_noise tr_noise_17"/><circle cx="0.90" cy="0.55" r="0" fill="white" class="tr_noise tr_noise_18"/><circle cx="0.82" cy="0.65" r="0" fill="white" class="tr_noise tr_noise_19"/><circle cx="0.55" cy="0.70" r="0" fill="white" class="tr_noise tr_noise_20"/>
-</mask>
-                <!-- BR: 养生社区 — 原点(左上)→右下角 -->
-                <mask id="inkMask_br" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="black"/>
-<circle cx="0.04" cy="0.04" r="0" fill="white" class="br_drop br_drop_1"/><circle cx="0.07" cy="0.02" r="0" fill="white" class="br_drop br_drop_2"/><circle cx="0.02" cy="0.06" r="0" fill="white" class="br_drop br_drop_3"/>
-<circle cx="0.15" cy="0.15" r="0" fill="white" class="br_body br_body_1"/><circle cx="0.22" cy="0.35" r="0" fill="white" class="br_body br_body_2"/><circle cx="0.10" cy="0.45" r="0" fill="white" class="br_body br_body_3"/><circle cx="0.30" cy="0.12" r="0" fill="white" class="br_body br_body_4"/><circle cx="0.28" cy="0.28" r="0" fill="white" class="br_body br_body_5"/><circle cx="0.38" cy="0.22" r="0" fill="white" class="br_body br_body_6"/><circle cx="0.30" cy="0.50" r="0" fill="white" class="br_body br_body_7"/><circle cx="0.45" cy="0.60" r="0" fill="white" class="br_body br_body_8"/><circle cx="0.42" cy="0.42" r="0" fill="white" class="br_body br_body_9"/><circle cx="0.52" cy="0.45" r="0" fill="white" class="br_body br_body_10"/><circle cx="0.58" cy="0.55" r="0" fill="white" class="br_body br_body_11"/><circle cx="0.45" cy="0.75" r="0" fill="white" class="br_body br_body_12"/><circle cx="0.65" cy="0.52" r="0" fill="white" class="br_body br_body_13"/><circle cx="0.70" cy="0.68" r="0" fill="white" class="br_body br_body_14"/><circle cx="0.58" cy="0.85" r="0" fill="white" class="br_body br_body_15"/><circle cx="0.80" cy="0.65" r="0" fill="white" class="br_body br_body_16"/><circle cx="0.82" cy="0.82" r="0" fill="white" class="br_body br_body_17"/><circle cx="0.92" cy="0.75" r="0" fill="white" class="br_body br_body_18"/><circle cx="0.92" cy="0.92" r="0" fill="white" class="br_body br_body_19"/><circle cx="0.85" cy="0.40" r="0" fill="white" class="br_body br_body_20"/>
-<circle cx="0.12" cy="0.20" r="0" fill="white" class="br_noise br_noise_1"/><circle cx="0.18" cy="0.10" r="0" fill="white" class="br_noise br_noise_2"/><circle cx="0.25" cy="0.40" r="0" fill="white" class="br_noise br_noise_3"/><circle cx="0.32" cy="0.18" r="0" fill="white" class="br_noise br_noise_4"/><circle cx="0.38" cy="0.30" r="0" fill="white" class="br_noise br_noise_5"/><circle cx="0.42" cy="0.50" r="0" fill="white" class="br_noise br_noise_6"/><circle cx="0.48" cy="0.38" r="0" fill="white" class="br_noise br_noise_7"/><circle cx="0.52" cy="0.60" r="0" fill="white" class="br_noise br_noise_8"/><circle cx="0.60" cy="0.50" r="0" fill="white" class="br_noise br_noise_9"/><circle cx="0.64" cy="0.70" r="0" fill="white" class="br_noise br_noise_10"/><circle cx="0.72" cy="0.62" r="0" fill="white" class="br_noise br_noise_11"/><circle cx="0.75" cy="0.82" r="0" fill="white" class="br_noise br_noise_12"/><circle cx="0.80" cy="0.72" r="0" fill="white" class="br_noise br_noise_13"/><circle cx="0.85" cy="0.88" r="0" fill="white" class="br_noise br_noise_14"/><circle cx="0.88" cy="0.55" r="0" fill="white" class="br_noise br_noise_15"/><circle cx="0.92" cy="0.65" r="0" fill="white" class="br_noise br_noise_16"/><circle cx="0.95" cy="0.85" r="0" fill="white" class="br_noise br_noise_17"/><circle cx="0.90" cy="0.45" r="0" fill="white" class="br_noise br_noise_18"/><circle cx="0.82" cy="0.35" r="0" fill="white" class="br_noise br_noise_19"/><circle cx="0.55" cy="0.30" r="0" fill="white" class="br_noise br_noise_20"/>
-</mask>
-                <!-- BL: 体质自测 — 原点(右上)→左下角 -->
-                <mask id="inkMask_bl" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="black"/>
-<circle cx="0.96" cy="0.04" r="0" fill="white" class="bl_drop bl_drop_1"/><circle cx="0.93" cy="0.02" r="0" fill="white" class="bl_drop bl_drop_2"/><circle cx="0.98" cy="0.06" r="0" fill="white" class="bl_drop bl_drop_3"/>
-<circle cx="0.85" cy="0.15" r="0" fill="white" class="bl_body bl_body_1"/><circle cx="0.78" cy="0.35" r="0" fill="white" class="bl_body bl_body_2"/><circle cx="0.90" cy="0.45" r="0" fill="white" class="bl_body bl_body_3"/><circle cx="0.70" cy="0.12" r="0" fill="white" class="bl_body bl_body_4"/><circle cx="0.72" cy="0.28" r="0" fill="white" class="bl_body bl_body_5"/><circle cx="0.62" cy="0.22" r="0" fill="white" class="bl_body bl_body_6"/><circle cx="0.70" cy="0.50" r="0" fill="white" class="bl_body bl_body_7"/><circle cx="0.55" cy="0.60" r="0" fill="white" class="bl_body bl_body_8"/><circle cx="0.58" cy="0.42" r="0" fill="white" class="bl_body bl_body_9"/><circle cx="0.48" cy="0.45" r="0" fill="white" class="bl_body bl_body_10"/><circle cx="0.42" cy="0.55" r="0" fill="white" class="bl_body bl_body_11"/><circle cx="0.55" cy="0.75" r="0" fill="white" class="bl_body bl_body_12"/><circle cx="0.35" cy="0.52" r="0" fill="white" class="bl_body bl_body_13"/><circle cx="0.30" cy="0.68" r="0" fill="white" class="bl_body bl_body_14"/><circle cx="0.42" cy="0.85" r="0" fill="white" class="bl_body bl_body_15"/><circle cx="0.20" cy="0.65" r="0" fill="white" class="bl_body bl_body_16"/><circle cx="0.18" cy="0.82" r="0" fill="white" class="bl_body bl_body_17"/><circle cx="0.08" cy="0.75" r="0" fill="white" class="bl_body bl_body_18"/><circle cx="0.08" cy="0.92" r="0" fill="white" class="bl_body bl_body_19"/><circle cx="0.15" cy="0.40" r="0" fill="white" class="bl_body bl_body_20"/>
-<circle cx="0.88" cy="0.20" r="0" fill="white" class="bl_noise bl_noise_1"/><circle cx="0.82" cy="0.10" r="0" fill="white" class="bl_noise bl_noise_2"/><circle cx="0.75" cy="0.40" r="0" fill="white" class="bl_noise bl_noise_3"/><circle cx="0.68" cy="0.18" r="0" fill="white" class="bl_noise bl_noise_4"/><circle cx="0.62" cy="0.30" r="0" fill="white" class="bl_noise bl_noise_5"/><circle cx="0.58" cy="0.50" r="0" fill="white" class="bl_noise bl_noise_6"/><circle cx="0.52" cy="0.38" r="0" fill="white" class="bl_noise bl_noise_7"/><circle cx="0.48" cy="0.60" r="0" fill="white" class="bl_noise bl_noise_8"/><circle cx="0.40" cy="0.50" r="0" fill="white" class="bl_noise bl_noise_9"/><circle cx="0.36" cy="0.70" r="0" fill="white" class="bl_noise bl_noise_10"/><circle cx="0.28" cy="0.62" r="0" fill="white" class="bl_noise bl_noise_11"/><circle cx="0.25" cy="0.82" r="0" fill="white" class="bl_noise bl_noise_12"/><circle cx="0.20" cy="0.72" r="0" fill="white" class="bl_noise bl_noise_13"/><circle cx="0.15" cy="0.88" r="0" fill="white" class="bl_noise bl_noise_14"/><circle cx="0.12" cy="0.55" r="0" fill="white" class="bl_noise bl_noise_15"/><circle cx="0.08" cy="0.65" r="0" fill="white" class="bl_noise bl_noise_16"/><circle cx="0.05" cy="0.85" r="0" fill="white" class="bl_noise bl_noise_17"/><circle cx="0.10" cy="0.45" r="0" fill="white" class="bl_noise bl_noise_18"/><circle cx="0.18" cy="0.35" r="0" fill="white" class="bl_noise bl_noise_19"/><circle cx="0.45" cy="0.30" r="0" fill="white" class="bl_noise bl_noise_20"/>
-</mask>
-            </defs>
-        </svg>
-
-        <!-- 四象限照片（滤镜包裹层 + 墨水蒙版照片） -->
-        <div class="quadrant_photo_wrap quadrant_tl_wrap">
-            <div class="quadrant_photo quadrant_photo_tl"></div>
-        </div>
-        <div class="quadrant_photo_wrap quadrant_tr_wrap">
-            <div class="quadrant_photo quadrant_photo_tr"></div>
-        </div>
-        <div class="quadrant_photo_wrap quadrant_br_wrap">
-            <div class="quadrant_photo quadrant_photo_br"></div>
-        </div>
-        <div class="quadrant_photo_wrap quadrant_bl_wrap">
-            <div class="quadrant_photo quadrant_photo_bl"></div>
-        </div>
-
-        <div class="page_container">
-        <h2 class="section_title">探索养生之道</h2>
-        <div class="section_divider"></div>
-        <p class="section_subtitle">四大板块，全方位了解中医养生文化</p>
-
-        <div class="ring_container">
-            <div class="ring_wrapper">
-                <!-- 大背景圆（四等分照片预留） -->
-                <div class="ring_bg_circle">
-                    <div class="ring_bg_quarter bg_quarter_tl">
-                        <div class="quarter_img_placeholder" style="background-image: url('');">
-                            <span>预留照片①</span>
-                        </div>
-                    </div>
-                    <div class="ring_bg_quarter bg_quarter_tr">
-                        <div class="quarter_img_placeholder" style="background-image: url('');">
-                            <span>预留照片②</span>
-                        </div>
-                    </div>
-                    <div class="ring_bg_quarter bg_quarter_br">
-                        <div class="quarter_img_placeholder" style="background-image: url('');">
-                            <span>预留照片③</span>
-                        </div>
-                    </div>
-                    <div class="ring_bg_quarter bg_quarter_bl">
-                        <div class="quarter_img_placeholder" style="background-image: url('');">
-                            <span>预留照片④</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 左上：食谱养生 -->
-                <a href="recipe.html" class="ring_segment segment_recipe">
-                    <span class="ring_icon">🍵</span>
-                    <h3 class="ring_name">食谱养生</h3>
-                    <p class="ring_desc">药材食材·时令搭配</p>
-                </a>
-                <!-- 右上：中医文化 -->
-                <a href="culture.html" class="ring_segment segment_culture">
-                    <span class="ring_icon">🏛</span>
-                    <h3 class="ring_name">中医文化</h3>
-                    <p class="ring_desc">传统疗法·博大精深</p>
-                </a>
-                <!-- 右下：养生社区 -->
-                <a href="discussion.html" class="ring_segment segment_discussion">
-                    <span class="ring_icon">💬</span>
-                    <h3 class="ring_name">养生社区</h3>
-                    <p class="ring_desc">心得交流·共同进步</p>
-                </a>
-                <!-- 左下：体质自测 -->
-                <a href="constitution.html" class="ring_segment segment_constitution">
-                    <span class="ring_icon">🩺</span>
-                    <h3 class="ring_name">体质自测</h3>
-                    <p class="ring_desc">AI助手·辨识体质</p>
-                </a>
-                <!-- 中心太极图 -->
-                <div class="ring_center">
-                    <div class="taiji">
-                        <div class="taiji_dot taiji_dot_top"></div>
-                        <div class="taiji_dot taiji_dot_bottom"></div>
-                    </div>
-                </div>
-
-                <!-- 浮动粒子 -->
-                <div class="particle p1"></div>
-                <div class="particle p2"></div>
-                <div class="particle p3"></div>
-                <div class="particle p4"></div>
-                <div class="particle p5"></div>
-                <div class="particle p6"></div>
-                <div class="particle p7"></div>
-                <div class="particle p8"></div>
-                <div class="particle p9"></div>
-                <div class="particle p10"></div>
-            </div>
-        </div>
-        </div>
-    </section>
-
-    <!-- ========== 今日养生推荐 ========== -->
-    <section class="solar_term_section">
-        <div class="page_container">
-            <h2 class="section_title" id="section_title">今日养生 · 顺时调养</h2>
-            <div class="section_divider"></div>
-
-            <!-- 日期与季节 -->
-            <div class="wellness_header">
-                <span class="wellness_date_icon" id="term_icon">🌸</span>
-                <div class="wellness_date_info">
-                    <span class="wellness_date_text" id="term_name">加载中...</span>
-                    <span class="term_period_tag" id="term_period"></span>
-                </div>
-                <p class="wellness_desc" id="term_desc"></p>
-            </div>
-
-            <!-- 四张便签纸 -->
-            <div class="sticky_notes">
-                <div class="sticky_note" data-note="morning">
-                    <div class="done_note">
-                        <div class="done_check">
-                            <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
-                        </div>
-                        <span class="done_text">已完成</span>
-                    </div>
-                    <div class="note_layer note_top">
-                        <div class="pushpin"></div>
-                        
-                        <h4>🌅 晨间运动</h4>
-                        <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
-                    </div>
-                    <div class="note_layer note_bottom">
-                        <p id="tip_morning">加载中...</p>
-                    </div>
-                </div>
-                <div class="sticky_note" data-note="diet">
-                    <div class="done_note">
-                        <div class="done_check">
-                            <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
-                        </div>
-                        <span class="done_text">已完成</span>
-                    </div>
-                    <div class="note_layer note_top">
-                        <div class="pushpin"></div>
-                        
-                        <h4>🍽 饮食推荐</h4>
-                        <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
-                    </div>
-                    <div class="note_layer note_bottom">
-                        <p id="tip_diet">加载中...</p>
-                    </div>
-                </div>
-                <div class="sticky_note" data-note="sleep">
-                    <div class="done_note">
-                        <div class="done_check">
-                            <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
-                        </div>
-                        <span class="done_text">已完成</span>
-                    </div>
-                    <div class="note_layer note_top">
-                        <div class="pushpin"></div>
-                        
-                        <h4>😴 作息建议</h4>
-                        <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
-                    </div>
-                    <div class="note_layer note_bottom">
-                        <p id="tip_sleep">加载中...</p>
-                    </div>
-                </div>
-                <div class="sticky_note" data-note="mood">
-                    <div class="done_note">
-                        <div class="done_check">
-                            <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
-                        </div>
-                        <span class="done_text">已完成</span>
-                    </div>
-                    <div class="note_layer note_top">
-                        <div class="pushpin"></div>
-                        
-                        <h4>💚 情志调养</h4>
-                        <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
-                    </div>
-                    <div class="note_layer note_bottom">
-                        <p id="tip_mood">加载中...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== 最新讨论预览 ========== -->
-    <section class="page_container">
-        <h2 class="section_title">社区热帖</h2>
-        <div class="section_divider"></div>
-        <div class="post_preview_list" id="post_preview">
-            <!-- 由 JS 动态渲染 -->
-        </div>
-        <div class="view_all_wrap">
-            <a href="discussion.html" class="btn btn_outline">查看全部帖子 →</a>
-        </div>
-    </section>
-
-    <!-- ========== 页脚 ========== -->
-    <footer class="footer">
-        <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
-        <p>本站内容仅供参考，不构成医疗建议。如有健康问题请咨询专业医师。</p>
-    </footer>
 
     <script src="js/common.js"></script>
     <script src="js/api.js"></script>
     <script src="js/carousel.js"></script>
     <script>
-        /* ========== 首页专属脚本 ========== */
-
-        document.addEventListener('DOMContentLoaded', async () => {
-
-            /* 检查登录状态，更新导航栏 */
+        /* 检查登录状态，更新导航栏 */
+        document.addEventListener('DOMContentLoaded', () => {
             const user = API.getCurrentUser();
             const navUserLink = document.getElementById('nav_user_link');
             if (user) {
                 navUserLink.textContent = '我的';
                 navUserLink.href = 'profile.html';
             }
-
-            /* ── 墨迹扩散 hover 触发（JS 兼容方案，四个象限）── */
-            const featureSection = document.querySelector('.feature_section');
-            const hoverMap = {
-                '.segment_recipe':       'ink_active_tl',
-                '.segment_culture':      'ink_active_tr',
-                '.segment_discussion':   'ink_active_br',
-                '.segment_constitution': 'ink_active_bl'
-            };
-            if (featureSection) {
-                Object.entries(hoverMap).forEach(([sel, cls]) => {
-                    const seg = document.querySelector(sel);
-                    if (seg) {
-                        seg.addEventListener('mouseenter', () => featureSection.classList.add(cls));
-                        seg.addEventListener('mouseleave', () => featureSection.classList.remove(cls));
-                    }
-                });
-            }
-
-            /* 加载今日养生推荐 */
-            const termsResult = await API.getSolarTerms();
-            const solarTerms = termsResult.data || [];
-            const todayTerm = API.isTodaySolarTerm(solarTerms);
-
-            const info = getTodayWellnessInfo(solarTerms);
-
-            if (todayTerm) {
-                /* 今天是节气日，头部显示节气信息 */
-                document.getElementById('section_title').textContent = '今日节气 · 顺时养生';
-                document.getElementById('term_icon').textContent = getTermEmoji(todayTerm.name);
-                document.getElementById('term_name').textContent = todayTerm.name;
-                document.getElementById('term_desc').textContent = todayTerm.description;
-                document.getElementById('term_desc').style.display = 'block';
-                document.getElementById('term_period').textContent = info.dateStr;
-            } else {
-                /* 非节气日，头部显示日期与季节 */
-                document.getElementById('section_title').textContent = '今日养生 · 顺时调养';
-                document.getElementById('term_icon').textContent = info.seasonEmoji;
-                document.getElementById('term_name').textContent = info.dateStr;
-                document.getElementById('term_desc').style.display = 'none';
-                document.getElementById('term_period').textContent = info.termPeriod;
-            }
-
-            /* 填充四张便签纸 */
-            document.getElementById('tip_morning').textContent = info.morning;
-            document.getElementById('tip_diet').textContent = info.diet;
-            document.getElementById('tip_sleep').textContent = info.sleep;
-            document.getElementById('tip_mood').textContent = info.mood;
-
-            /* ── 便签纸撕落完成标记 ── */
-            const todayKey = 'wellness_done_' + new Date().toISOString().split('T')[0];
-            let doneState = {};
-            try {
-                const saved = localStorage.getItem(todayKey);
-                if (saved) doneState = JSON.parse(saved);
-            } catch (e) { /* ignore */ }
-
-            /* 清理非当日的旧数据 */
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('wellness_done_') && key !== todayKey) {
-                    localStorage.removeItem(key);
-                }
-            });
-
-            /* 恢复当日完成状态 */
-            document.querySelectorAll('.sticky_note[data-note]').forEach(note => {
-                const key = note.dataset.note;
-                if (doneState[key]) note.classList.add('done');
-            });
-
-            /* 点击便签纸触发撕落/恢复 */
-            document.querySelectorAll('.sticky_note[data-note]').forEach(note => {
-                note.addEventListener('click', function() {
-                    const key = this.dataset.note;
-                    if (this.classList.contains('done')) {
-                        /* 撤销：移除完成状态 */
-                        this.classList.remove('done');
-                        delete doneState[key];
-                    } else {
-                        /* 标记完成：撕落动画 */
-                        this.classList.add('done');
-                        doneState[key] = true;
-                    }
-                    try { localStorage.setItem(todayKey, JSON.stringify(doneState)); } catch (e) { /* ignore */ }
-                });
-            });
-
-            /* 加载最新帖子预览 */
-            try {
-                const result = await API.getPosts();
-                const posts = result.data || [];
-                const previewContainer = document.getElementById('post_preview');
-                const recentPosts = posts.slice(0, 3);
-                if (recentPosts.length > 0) {
-                    previewContainer.innerHTML = recentPosts.map(p => `
-                        <a href="discussion.html" class="post_preview_item">
-                            <span class="post_preview_title">${escapeHtml(p.title)}</span>
-                            <span class="post_preview_meta">${p.username} · ${p.time}</span>
-                            <span class="post_preview_likes">♥ ${p.likes || 0}</span>
-                        </a>
-                    `).join('');
-                } else {
-                    previewContainer.innerHTML = '<p class="no_data">暂无讨论，快来发布第一条帖子吧！</p>';
-                }
-            } catch (e) {
-                document.getElementById('post_preview').innerHTML = '<p class="no_data">加载中...</p>';
-            }
         });
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function getTodayWellnessInfo(solarTerms) {
-            const now = new Date();
-            const month = now.getMonth() + 1;
-            const day = now.getDate();
-            const dayOfWeek = now.getDay();
-
-            /* 当前处于哪个节气时段 */
-            const todayStr = now.toISOString().split('T')[0];
-            let currentTerm = null;
-            for (let i = solarTerms.length - 1; i >= 0; i--) {
-                if (solarTerms[i].date <= todayStr) { currentTerm = solarTerms[i]; break; }
-            }
-            const termPeriod = currentTerm ? '正值「' + currentTerm.name + '」时节' : '';
-
-            let seasonEmoji, weather, morning, diet, sleep, mood;
-
-            if (month >= 3 && month <= 5) {
-                seasonEmoji = '🌸';
-                weather = '春意盎然，阳气生发，万物复苏';
-                morning = '宜早起（6:00-7:00），到户外散步或打太极拳，舒展筋骨，吸收春日阳气，以助肝气生发。';
-                diet = '宜清淡，多吃荠菜、香椿、春笋等时令蔬菜，少食酸味多食辛甘以养肝。';
-                sleep = '宜早睡早起，保证7-8小时睡眠，睡前可用温水泡脚助眠。';
-                mood = '保持心情舒畅，戒怒忌郁，多到户外踏青赏花，让身心与春天一起舒展。';
-            } else if (month >= 6 && month <= 8) {
-                seasonEmoji = '☀️';
-                weather = '夏日炎炎，阳气旺盛，暑湿渐重';
-                morning = '宜在日出前后（5:30-6:30）运动，推荐八段锦、太极等柔缓运动，微汗即可，避免大汗伤津耗气。';
-                diet = '宜清补，多食苦瓜、冬瓜、莲子、绿豆等清热解暑，少食油腻辛辣，可饮酸梅汤生津止渴。';
-                sleep = '宜晚睡早起（不晚于23:00），午间小憩20-30分钟养心，切忌贪凉整夜吹空调入睡。';
-                mood = '保持心神宁静，避免烦躁易怒，可听舒缓音乐、练习静坐以清心安神，心静自然凉。';
-            } else if (month >= 9 && month <= 11) {
-                seasonEmoji = '🍂';
-                weather = '秋高气爽，气候渐燥，万物收敛';
-                morning = '宜在日出后（6:30-7:30）运动，注意添衣防秋凉，推荐散步、八段锦等平和运动。';
-                diet = '宜滋阴润燥，多食银耳、百合、雪梨、蜂蜜等，少食辛辣烧烤，多饮温水防秋燥伤肺。';
-                sleep = '宜早卧早起，与鸡俱兴，睡前勿多思虑以免伤肺气，可温水泡脚助眠。';
-                mood = '保持内心平静，收敛神气，可登高望远、读书品茶以畅胸怀，悲秋之时多与亲友相聚。';
-            } else {
-                seasonEmoji = '❄️';
-                weather = '冬日严寒，阳气潜藏，万物蛰伏';
-                morning = '宜待日光而出（7:00-8:00），避免过早户外运动受寒，可做室内八段锦或站桩，以身体微热为度。';
-                diet = '宜温补，多食羊肉、核桃、黑芝麻、红枣等，少食生冷，可饮生姜红糖水暖身驱寒。';
-                sleep = '宜早卧晚起，必待日光，保证充足睡眠以养肾精，睡前热水泡脚至微汗最佳。';
-                mood = '保持心态平和，减少不必要的消耗，静养以待阳气来复，冬日蓄力方有春日勃发。';
-            }
-
-            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-            const season = (month >= 3 && month <= 5) ? '春' : (month >= 6 && month <= 8) ? '夏' : (month >= 9 && month <= 11) ? '秋' : '冬';
-            const dateStr = month + '月' + day + '日 星期' + weekDays[dayOfWeek] + ' · ' + season + '季';
-
-            return { dateStr, seasonEmoji, weather, termPeriod, morning, diet, sleep, mood };
-        }
-
-        function getTermEmoji(termName) {
-            const map = {
-                '立春':'🌱','雨水':'🌧','惊蛰':'⚡','春分':'🌸','清明':'🌿','谷雨':'🌾',
-                '立夏':'🌞','小满':'🌾','芒种':'🌾','夏至':'☀️','小暑':'🔥','大暑':'☀️',
-                '立秋':'🍂','处暑':'🌤','白露':'💧','秋分':'🌾','寒露':'🌫','霜降':'❄️',
-                '立冬':'🌬','小雪':'🌨','大雪':'❄️','冬至':'🧊','小寒':'🥶','大寒':'☃️'
-            };
-            return map[termName] || '🌿';
-        }
     </script>
 </body>
 </html>
