@@ -68,7 +68,7 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
     overflow: hidden;
-    height: 500px;
+    height: 840px;
 }
 
 /* 消息区 */
@@ -225,30 +225,49 @@
         margin-bottom: 0;
     }
     .chat_window {
-        height: 400px;
+        height: 720px;
     }
 }
 
 @media (max-width: 767px) {
     .chat_avatar_area {
-        padding: 14px 16px;
-        gap: 12px;
+        padding: 10px 14px;
+        gap: 10px;
     }
     .chat_avatar_frame {
-        width: 64px;
-        height: 64px;
+        width: 52px;
+        height: 52px;
     }
     .chat_avatar_name {
-        font-size: 26px;
+        font-size: 22px;
+    }
+    .chat_avatar_desc {
+        font-size: 14px;
     }
     .chat_window {
-        height: 360px;
+        height: 660px;
+    }
+    .chat_messages {
+        padding: 14px;
+        gap: 12px;
     }
     .chat_msg {
-        max-width: 90%;
+        max-width: 92%;
     }
     .chat_msg_bubble {
-        font-size: 17px;
-        padding: 10px 14px;
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+    .chat_input_area {
+        padding: 10px 12px;
+    }
+    .chat_input {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+    .chat_send_btn {
+        font-size: 16px;
+        padding: 10px 16px;
+        letter-spacing: 1px;
     }
 }
