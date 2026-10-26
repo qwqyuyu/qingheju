@@ -7,10 +7,19 @@ const router = express.Router();
 const OpenAI = require('openai');
 const aiConfig = require('../config/ai');
 
-const client = new OpenAI({
-    apiKey: aiConfig.apiKey,
-    baseURL: aiConfig.baseURL
-});
+/* 延迟初始化：未配置密钥时不影响服务启动，接口返回明确的 503 */
+let client = null;
+
+function getClient() {
+    if (!aiConfig.apiKey) return null;
+    if (!client) {
+        client = new OpenAI({
+            apiKey: aiConfig.apiKey,
+            baseURL: aiConfig.baseURL
+        });
+    }
+    return client;
+}
 
 const SYSTEM_PROMPT = `你是"小清"，清和居中医养生平台的AI智能养生助手。你的角色定位：
 
@@ -46,7 +55,12 @@ router.post('/ai/chat', async (req, res) => {
             return res.status(400).json({ code: 400, msg: '消息不能为空' });
         }
 
-        const completion = await client.chat.completions.create({
+        const aiClient = getClient();
+        if (!aiClient) {
+            return res.status(503).json({ code: 503, msg: 'AI 服务未配置，请设置 DASHSCOPE_API_KEY 环境变量' });
+        }
+
+        const completion = await aiClient.chat.completions.create({
             model: aiConfig.model,
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
