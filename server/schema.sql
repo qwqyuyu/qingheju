@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     avatar     MEDIUMTEXT    NOT NULL,
     avatar_version INT        NOT NULL DEFAULT 0,
     is_admin   TINYINT(1)    NOT NULL DEFAULT 0,
+    token_version INT        NOT NULL DEFAULT 0,  -- 改密时自增，让旧 token 失效
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_username (username)
 ) ENGINE=InnoDB;

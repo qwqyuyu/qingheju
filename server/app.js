@@ -15,6 +15,14 @@ const { defaultJsonParser } = require('./config/body');
 const app = express();
 const PORT = process.env.PORT || 3112;
 
+/* 反向代理：部署在 nginx / 云平台后面时设置 TRUST_PROXY（如 1、2 或 loopback），
+   限流等按 IP 的逻辑才能拿到真实客户端地址。
+   默认不信任 X-Forwarded-For，避免客户端伪造 IP 绕过限流。 */
+const TRUST_PROXY = String(process.env.TRUST_PROXY || '').trim();
+if (TRUST_PROXY) {
+    app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY);
+}
+
 /* 不暴露 Express 版本 */
 app.disable('x-powered-by');
 
@@ -175,6 +183,12 @@ async function migrate() {
         if (!adminType) {
             await pool.query('ALTER TABLE users ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0 AFTER avatar');
             console.log('数据库迁移完成: users.is_admin 已添加');
+        }
+        /* 改密后让旧 token 失效：token 里带版本号，改密时自增 */
+        const tokenVersionType = await columnType('users', 'token_version');
+        if (!tokenVersionType) {
+            await pool.query('ALTER TABLE users ADD COLUMN token_version INT NOT NULL DEFAULT 0 AFTER is_admin');
+            console.log('数据库迁移完成: users.token_version 已添加');
         }
     } catch (e) {
         console.warn('数据库迁移检查失败（服务仍会启动）:', e.code || e.message);

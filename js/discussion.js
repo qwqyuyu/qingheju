@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="post_time">${escapeHtml(p.time)}</span>
                     </div>
                     <h3 class="post_title">${p.featured ? '<span class="post_featured_badge">精选</span>' : ''}${escapeHtml(p.title)}</h3>
-                    <p class="post_content_preview">${escapeHtml(String(p.content || '').substring(0, 150))}</p>
+                    <p class="post_content_preview">${escapeHtml(String(p.preview || p.content || '').substring(0, 150))}</p>
                     ${p.image ? `<div class="post_thumb_wrap"><img class="post_thumb_img" src="${escapeHtml(p.image)}" alt="帖子图片" loading="lazy"></div>` : ''}
                     <div class="post_card_footer">
                         <span class="post_stat ${isLiked ? 'liked' : ''}" data-action="like" data-id="${p.id}">
@@ -185,14 +185,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (e) {}
 
-        /* 列表接口只返回缩略图，详情弹窗再取原图 */
+        /* 列表接口只返回缩略图和正文预览；详情弹窗再取原图与全文 */
         let originalImage = post.image || '';
+        let fullContent = post.preview || post.content || '';
         try {
             const detail = await API.getPost(post.id);
-            if (detail.success && detail.data && detail.data.image) {
-                originalImage = detail.data.image;
+            if (detail.success && detail.data) {
+                if (detail.data.image) originalImage = detail.data.image;
+                if (typeof detail.data.content === 'string' && detail.data.content) {
+                    fullContent = detail.data.content;
+                }
             }
-        } catch (e) { /* 取不到就回退到缩略图 */ }
+        } catch (e) { /* 取不到就回退到缩略图和预览 */ }
 
         const modal = document.getElementById('post_modal');
         const content = document.getElementById('modal_post_content');
@@ -206,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span class="post_time">${escapeHtml(post.time)}</span>
             </div>
             <h2>${escapeHtml(post.title)}</h2>
-            <div class="post_full_body">${escapeHtml(post.content)}</div>
+            <div class="post_full_body">${escapeHtml(fullContent)}</div>
             ${originalImage ? `<img src="${escapeHtml(originalImage)}" style="max-width:100%;border-radius:8px;margin-bottom:16px;" alt="帖子图片">` : ''}
             ${canDeletePost ? `<div style="text-align:right;margin-bottom:16px;"><button class="modal_post_delete" id="modal_delete_post">删除帖子</button></div>` : ''}
             <div class="comments_section">

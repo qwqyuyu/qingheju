@@ -8,8 +8,9 @@
 
     说明：
         * 会自动安装 server 依赖（仅首次）、读取 server\.env、检查端口和 MySQL。
+        * 首次运行没有配置时会自动进入配置向导（setup.js）。
         * 没有 MySQL 也能启动：静态页面可正常浏览，登录/发帖/签到等接口会返回 500。
-        * 要配置数据库或 AI Key，在 server 目录下新建 .env，每行一个 KEY=VALUE。
+        * 要配置数据库或 AI Key，运行 .\setup.ps1（或 node setup.js），也可以手工编辑 server\.env。
 #>
 [CmdletBinding()]
 param(
@@ -71,8 +72,32 @@ if (-not (Test-Path (Join-Path $serverDir 'node_modules\express'))) {
     finally { Pop-Location }
 }
 
-# ---------- 3. 读取 server\.env ----------
+# ---------- 3. 首次配置 + 读取 server\.env ----------
 $envFile = Join-Path $serverDir '.env'
+
+# 配置缺失或不完整时自动进入向导（此时依赖已装好，向导可以顺便测试数据库）
+$envReady = $false
+Push-Location $root
+try {
+    & node (Join-Path $root 'setup.js') --check *> $null
+    $envReady = ($LASTEXITCODE -eq 0)
+}
+finally { Pop-Location }
+
+if (-not $envReady) {
+    Write-Step '首次运行：需要填写配置（数据库 / JWT / 可选 AI）'
+    Push-Location $root
+    try {
+        & node (Join-Path $root 'setup.js')
+        $setupCode = $LASTEXITCODE
+    }
+    finally { Pop-Location }
+    if ($setupCode -ne 0 -or -not (Test-Path $envFile)) {
+        Write-Err '配置未完成，已退出。可以稍后再运行 .\setup.ps1（或 node setup.js）'
+        exit 1
+    }
+}
+
 if (Test-Path $envFile) {
     Write-Step '读取 server\.env'
     Get-Content -LiteralPath $envFile | ForEach-Object {
@@ -82,6 +107,19 @@ if (Test-Path $envFile) {
         if ($i -lt 1) { return }
         $key = $line.Substring(0, $i).Trim()
         $val = $line.Substring($i + 1).Trim()
+        # 行内注释：加引号的值在闭合引号处结束；未加引号的值去掉「空白 + #」之后的内容（与 config/env.js 一致）
+        if ($val.Length -gt 0) {
+            $q = $val.Substring(0, 1)
+            if ($q -eq '"' -or $q -eq "'") {
+                $end = $val.IndexOf($q, 1)
+                if ($end -gt 0) { $val = $val.Substring(0, $end + 1) }
+            }
+            else {
+                $hash = $val.IndexOf(' #')
+                if ($hash -lt 0) { $hash = $val.IndexOf("`t#") }
+                if ($hash -ge 0) { $val = $val.Substring(0, $hash).Trim() }
+            }
+        }
         if ($val.Length -ge 2) {
             $q1 = $val.Substring(0, 1); $q2 = $val.Substring($val.Length - 1, 1)
             if (($q1 -eq '"' -and $q2 -eq '"') -or ($q1 -eq "'" -and $q2 -eq "'")) {

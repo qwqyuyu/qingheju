@@ -68,7 +68,12 @@ const rules = [];
 const queries = [];
 const norm = (sql) => String(sql).replace(/\s+/g, ' ').trim();
 function when(re, fn) { rules.push([re, fn]); }
-function resetDb() { rules.length = 0; queries.length = 0; }
+function resetDb() {
+    rules.length = 0;
+    queries.length = 0;
+    /* 鉴权中间件每个请求都会查一次 token 版本（改密即失效），给个默认值 */
+    when(/^SELECT token_version FROM users WHERE id = \?$/, () => [[{ token_version: 0 }]]);
+}
 
 async function fakeQuery(sql, params) {
     const s = norm(sql);
@@ -231,6 +236,7 @@ for (const [kind, path, denied] of [
 ]) {
     setupDelete();
     let r = await call('DELETE', path, { token: tokenOf(STRANGER) });
+    assert.equal(r.status, 403, '越权删除应返回 403');
     assert.equal(r.json.success, false);
     assert.equal(r.json.message, denied);
     assert.equal(deleted(), false, '普通用户不能删他人' + kind);

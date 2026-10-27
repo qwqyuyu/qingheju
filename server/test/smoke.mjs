@@ -110,9 +110,10 @@ async function main() {
 
     /* 3. 重复注册 */
     r = await api('POST', '/api/register', { username, email: 'x@test.com', password }, false);
+    assert.equal(r.status, 409);
     assert.equal(r.body.success, false);
     assert.match(r.body.message, /已被注册/);
-    ok('重复注册被拒绝');
+    ok('重复注册被拒绝（409）');
 
     /* 4. 登录 */
     r = await api('POST', '/api/login', { username, password }, false);
@@ -151,9 +152,10 @@ async function main() {
     assert.equal(r.body.success, true, JSON.stringify(r.body));
     assert.match(r.body.data.date, /^\d{4}-\d{2}-\d{2}$/);
     r = await api('POST', '/api/checkin', {});
+    assert.equal(r.status, 409);
     assert.equal(r.body.success, false);
     assert.match(r.body.message, /已签到/);
-    ok('签到与重复签到判断正确');
+    ok('签到与重复签到判断正确（重复签到 409）');
 
     /* 9. 分页 */
     r = await api('GET', '/api/posts?page=1&pageSize=5', undefined, false);
@@ -321,7 +323,22 @@ async function main() {
     assert.equal(forgedRes.status, 401);
     ok('错误密钥签发的 token 被拒绝');
 
-    /* 18. 登录失败限流（smoke 里把 IP 上限设为 5，前面已用掉 2 次） */
+    /* 18. 改密后旧 token 立即失效，响应里换发新 token */
+    const oldToken = token;
+    r = await api('PUT', '/api/user/password', { oldPassword: password, newPassword: 'smoke5678' });
+    assert.equal(r.body.success, true, JSON.stringify(r.body));
+    const freshToken = r.body.data && r.body.data.token;
+    assert.ok(freshToken, '改密响应应带新 token');
+    assert.notEqual(freshToken, oldToken);
+
+    const stale = await fetch(base + '/api/user', { headers: { Authorization: 'Bearer ' + oldToken } });
+    assert.equal(stale.status, 401, '改密前的 token 应立即失效');
+    token = freshToken;
+    r = await api('GET', '/api/user');
+    assert.equal(r.body.success, true, '新 token 应可继续使用');
+    ok('改密后旧 token 立即失效，新 token 可用');
+
+    /* 19. 登录失败限流（smoke 里把 IP 上限设为 5，前面已用掉 2 次） */
     for (let i = 0; i < 3; i++) {
         r = await api('POST', '/api/login', { username: 'no_such_user', password: 'wrongpass' }, false);
         assert.equal(r.status, 200);

@@ -49,6 +49,10 @@ function parseId(value) {
     return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+/* 列表接口只返回正文前 N 个字符（详情接口才给全文），
+   否则 10 条接近上限的帖子会让列表响应达到几百 KB */
+const PREVIEW_CHARS = 300;
+
 /* GET /api/posts — 帖子列表（分页）
    查询参数：page（默认 1）、pageSize（默认 10，最大 50）、username（可选，按作者筛选） */
 router.get('/posts', optionalAuth, async (req, res) => {
@@ -68,7 +72,8 @@ router.get('/posts', optionalAuth, async (req, res) => {
         const total = countRows[0].total;
 
         const [posts] = await pool.query(
-            `SELECT p.id, p.title, p.content, COALESCE(p.image_thumb, '') AS image,
+            `SELECT p.id, p.title, LEFT(p.content, ${PREVIEW_CHARS}) AS preview,
+                    COALESCE(p.image_thumb, '') AS image,
                     (p.image <> '') AS hasImage, p.is_featured AS featured,
                     p.likes_count AS likes,
                     p.created_at AS time,
@@ -104,7 +109,8 @@ router.get('/posts', optionalAuth, async (req, res) => {
             avatar: avatarUrl(p.user_id, p.avatar_version),
             time: p.time,
             title: p.title,
-            content: p.content,
+            /* 列表只返回预览，全文由 GET /api/posts/:id 提供 */
+            preview: p.preview || '',
             image: p.image || '',
             hasImage: !!p.hasImage,
             featured: !!p.featured,
@@ -230,11 +236,11 @@ router.delete('/posts/:id', authMiddleware, async (req, res) => {
         }
         const [rows] = await pool.query('SELECT user_id FROM posts WHERE id = ?', [postId]);
         if (rows.length === 0) {
-            return res.json({ success: false, message: '帖子不存在' });
+            return res.status(404).json({ success: false, message: '帖子不存在' });
         }
         const isOwner = rows[0].user_id === req.user.id;
         if (!isOwner && !(await isAdminUser(req.user.id))) {
-            return res.json({ success: false, message: '无权删除他人帖子' });
+            return res.status(403).json({ success: false, message: '无权删除他人帖子' });
         }
         await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
         if (!isOwner) {
@@ -341,6 +347,10 @@ router.get('/posts/:id/comments', async (req, res) => {
         if (!postId) {
             return res.status(400).json({ success: false, message: '帖子 ID 不合法' });
         }
+        const [postRows] = await pool.query('SELECT id FROM posts WHERE id = ?', [postId]);
+        if (postRows.length === 0) {
+            return res.status(404).json({ success: false, message: '帖子不存在' });
+        }
         const [comments] = await pool.query(
             `SELECT c.id, c.content, c.created_at AS time, u.username
              FROM comments c JOIN users u ON c.user_id = u.id
@@ -405,11 +415,11 @@ router.delete('/comments/:id', authMiddleware, async (req, res) => {
         }
         const [rows] = await pool.query('SELECT user_id FROM comments WHERE id = ?', [commentId]);
         if (rows.length === 0) {
-            return res.json({ success: false, message: '评论不存在' });
+            return res.status(404).json({ success: false, message: '评论不存在' });
         }
         const isOwner = rows[0].user_id === req.user.id;
         if (!isOwner && !(await isAdminUser(req.user.id))) {
-            return res.json({ success: false, message: '无权删除他人评论' });
+            return res.status(403).json({ success: false, message: '无权删除他人评论' });
         }
         await pool.query('DELETE FROM comments WHERE id = ?', [commentId]);
         if (!isOwner) {

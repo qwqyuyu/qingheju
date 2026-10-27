@@ -9,7 +9,8 @@
     "test": "node test/smoke.mjs",
     "test:context": "node test/context.test.mjs",
     "test:ratelimit": "node test/ratelimit.test.mjs",
-    "test:routes": "node test/routes.test.mjs"
+    "test:routes": "node test/routes.test.mjs",
+    "test:setup": "node test/setup.test.mjs"
   },
   "keywords": [
     "tcm",

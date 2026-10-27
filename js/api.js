@@ -112,7 +112,12 @@ const API = (() => {
     }
 
     async function updatePassword(oldPassword, newPassword) {
-        return await put('/api/user/password', { oldPassword, newPassword });
+        const result = await put('/api/user/password', { oldPassword, newPassword });
+        /* 改密后服务端会让旧 token 立即失效，并给当前客户端换发新 token */
+        if (result.success && result.data && result.data.token) {
+            localStorage.setItem('auth_token', result.data.token);
+        }
+        return result;
     }
 
     /* ============ 药材模块（暂保留本地数据） ============ */

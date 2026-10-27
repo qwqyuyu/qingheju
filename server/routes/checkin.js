@@ -20,7 +20,7 @@ router.post('/checkin', authMiddleware, async (req, res) => {
             [req.user.id, todayStr]
         );
         if (exists.length > 0) {
-            return res.json({ success: false, message: '今日已签到' });
+            return res.status(409).json({ success: false, message: '今日已签到' });
         }
         /* 计算连续天数 */
         const ymd = addDays(todayStr, -1);
@@ -37,7 +37,7 @@ router.post('/checkin', authMiddleware, async (req, res) => {
         } catch (err) {
             /* 并发请求同时通过“今日已签到”检查时，唯一索引会兜底 */
             if (err.code === 'ER_DUP_ENTRY' || err.errno === 1062) {
-                return res.json({ success: false, message: '今日已签到' });
+                return res.status(409).json({ success: false, message: '今日已签到' });
             }
             throw err;
         }

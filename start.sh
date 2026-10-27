@@ -10,8 +10,9 @@
 #
 # 说明：
 #     * 会自动安装 server 依赖（仅首次）、读取 server/.env、检查端口和 MySQL。
+#     * 首次运行没有配置时会自动进入配置向导（setup.js / setup.sh）。
 #     * 没有 MySQL 也能启动：静态页面可正常浏览，登录/发帖/签到等接口会返回 500。
-#     * 要配置数据库或 AI Key，在 server 目录下新建 .env，每行一个 KEY=VALUE。
+#     * 要配置数据库或 AI Key，运行 ./setup.sh 或手工编辑 server/.env。
 #     * server/.env 里的 PORT 会被本脚本覆盖（与 start.ps1 行为一致）。
 #
 # 注意：脚本必须在 Linux 上带可执行权限才能直接运行
@@ -63,6 +64,10 @@ usage() {
 环境变量：
     可以像 start.ps1 一样用 server/.env 配置数据库、AI、JWT_SECRET。
     系统里已存在的同名环境变量优先，不会被 .env 覆盖。
+
+首次使用：
+    ./setup.sh                  交互式填写数据库 / JWT / AI 配置
+    （直接运行 ./start.sh 时，如果配置缺失也会自动进入向导）
 EOF
 }
 
@@ -167,7 +172,14 @@ if [ ! -d "$SERVER_DIR/node_modules/express" ]; then
     fi
 fi
 
-# ---------- 4. 读取 server/.env ----------
+# ---------- 4. 首次配置 + 读取 server/.env ----------
+
+# 配置缺失或不完整时自动进入向导（此时依赖已装好，向导可以顺便测试数据库）
+if ! ( cd "$SCRIPT_DIR" && node setup.js --check >/dev/null 2>&1 ); then
+    step '首次运行：需要填写配置（数据库 / JWT / 可选 AI）'
+    ( cd "$SCRIPT_DIR" && node setup.js ) || die '配置未完成，已退出。可以稍后再运行 ./setup.sh'
+    ( cd "$SCRIPT_DIR" && node setup.js --check >/dev/null 2>&1 ) || die '配置仍不完整，请重新运行 ./setup.sh'
+fi
 
 trim() {
     local s=$1
@@ -200,6 +212,19 @@ if [ -f "$ENV_FILE" ]; then
                 esac
                 ;;
             *) continue ;;
+        esac
+
+        # 行内注释：加引号的值在闭合引号处结束；未加引号的值去掉「空白 + #」之后的内容（与 config/env.js 一致）
+        case "$val" in
+            \"*|\'*)
+                q=${val:0:1}
+                rest=${val:1}
+                inner=${rest%%"$q"*}
+                [ "$inner" = "$rest" ] || val="$q$inner$q"
+                ;;
+            *)
+                val=${val%%[[:space:]]#*}
+                ;;
         esac
 
         # 去掉成对的引号

@@ -67,7 +67,7 @@ router.post('/register', registerLimiter, async (req, res) => {
         /* 检查用户名唯一性 */
         const [rows] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
         if (rows.length > 0) {
-            return res.json({ success: false, message: '用户名已被注册' });
+            return res.status(409).json({ success: false, message: '用户名已被注册' });
         }
 
         const hashed = await bcrypt.hash(password, 10);
@@ -82,7 +82,7 @@ router.post('/register', registerLimiter, async (req, res) => {
             result = insertResult;
         } catch (err) {
             if (err.code === 'ER_DUP_ENTRY' || err.errno === 1062) {
-                return res.json({ success: false, message: '用户名已被注册' });
+                return res.status(409).json({ success: false, message: '用户名已被注册' });
             }
             throw err;
         }
@@ -151,7 +151,7 @@ router.get('/user', authMiddleware, async (req, res) => {
             [req.user.id]
         );
         if (rows.length === 0) {
-            return res.json({ success: false, message: '用户不存在' });
+            return res.status(401).json({ success: false, message: '用户不存在' });
         }
         const user = rows[0];
         res.json({
@@ -273,14 +273,14 @@ router.put('/user/username', authMiddleware, async (req, res) => {
             [username, req.user.id]
         );
         if (conflict.length > 0) {
-            return res.json({ success: false, message: '用户名已被占用' });
+            return res.status(409).json({ success: false, message: '用户名已被占用' });
         }
 
         try {
             await pool.query('UPDATE users SET username = ? WHERE id = ?', [username, req.user.id]);
         } catch (err) {
             if (err.code === 'ER_DUP_ENTRY' || err.errno === 1062) {
-                return res.json({ success: false, message: '用户名已被占用' });
+                return res.status(409).json({ success: false, message: '用户名已被占用' });
             }
             throw err;
         }
@@ -315,11 +315,21 @@ router.put('/user/password', authMiddleware, async (req, res) => {
         }
         const valid = await bcrypt.compare(oldPassword, rows[0].password);
         if (!valid) {
-            return res.json({ success: false, message: '当前密码错误' });
+            return res.status(400).json({ success: false, message: '当前密码错误' });
         }
         const hashed = await bcrypt.hash(newPassword, 10);
-        await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashed, req.user.id]);
-        res.json({ success: true, data: { updated: true } });
+        /* token_version 自增：本次改密之前签发的 token 全部立即失效 */
+        await pool.query(
+            'UPDATE users SET password = ?, token_version = token_version + 1 WHERE id = ?',
+            [hashed, req.user.id]
+        );
+        const [[row]] = await pool.query(
+            'SELECT token_version FROM users WHERE id = ?',
+            [req.user.id]
+        );
+        /* 给当前客户端换发新 token，避免用户改完密码自己也被踢下线 */
+        const token = generateToken({ id: req.user.id, token_version: row ? row.token_version : 0 });
+        res.json({ success: true, data: { updated: true, token } });
     } catch (err) {
         console.error('update password error:', err);
         res.status(500).json({ success: false, message: '服务器错误' });

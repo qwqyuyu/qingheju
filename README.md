@@ -18,13 +18,16 @@
 qingheju/
 ├─ pages/                 所有前端页面（index 为入口落地页，home 为主站首页）
 ├─ css/ js/ images/       前端资源（js/vendor/lunar.js 为农历库）
+├─ setup.js               首次配置向导（Windows / macOS / Linux 通用）
+├─ setup.bat / setup.ps1  Windows 配置向导入口（双击 setup.bat 即可）
+├─ setup.sh               Linux / macOS 配置向导入口
 ├─ start.bat / start.ps1  Windows 一键启动脚本
 ├─ start.sh               Linux / macOS 一键启动脚本
 ├─ server/                后端
 │  ├─ app.js              入口：中间件、静态托管、路由、404/错误处理
 │  ├─ config/             db、auth、ratelimit、validate、avatar、solarterm、ai、context、env（.env 加载）、time（时区）、body（请求体上限）、streak（连续签到）
 │  ├─ routes/             user、post、checkin、solarterm、ai
-│  ├─ test/               smoke（接口冒烟）、routes（路由行为，无需数据库）、context（上下文裁剪）、ratelimit（限流）
+│  ├─ test/               smoke（接口冒烟）、routes（路由行为，无需数据库）、context（上下文裁剪）、ratelimit（限流）、setup（配置向导）
 │  ├─ schema.sql          建库建表 + 24 节气初始数据
 │  └─ .env.example        环境变量模板
 └─ README.md
@@ -36,17 +39,19 @@ qingheju/
 
 1. 安装 Node.js 18+。
 2. 启动 MariaDB / MySQL（本机 MariaDB 服务名 `MariaDB`，端口 3308）。
-3. 首次导入表结构：
+3. 运行配置向导（首次运行 `start.bat` 也会自动进入）：
+
+   ```powershell
+   .\setup.ps1            # 或双击 setup.bat
+   ```
+
+   依次填写数据库地址/端口/账号/密码/库名；向导会自动生成 `JWT_SECRET`，并询问是否配置 AI（可跳过）。
+   填完会尝试连接数据库，并提示导入表结构的命令。
+
+4. 首次导入表结构（向导没连上库时也可以先做这步）：
 
    ```powershell
    mysql -u root -p < server\schema.sql
-   ```
-
-4. 复制并修改配置：
-
-   ```powershell
-   Copy-Item server\.env.example server\.env
-   notepad server\.env
    ```
 
 5. 双击 `start.bat`，或：
@@ -69,18 +74,18 @@ npm start
 ## 快速启动（Linux / macOS）
 
 1. 安装 Node.js 18+（例如 `sudo apt install nodejs npm`，或用 nvm 安装较新版本）。
-2. 启动并初始化数据库：
+2. 启动数据库并导入表结构：
 
    ```bash
    sudo systemctl start mariadb          # 或 mysql
    mysql -u root -p < server/schema.sql
    ```
 
-3. 准备配置：
+3. 运行配置向导（首次运行 `./start.sh` 也会自动进入）：
 
    ```bash
-   cp server/.env.example server/.env
-   nano server/.env                      # 填 MYSQL_*、JWT_SECRET、AI_*
+   chmod +x setup.sh start.sh            # 克隆后可能需要
+   ./setup.sh                            # 依次填写数据库 / JWT / 可选的 AI 配置
    ```
 
 4. 启动：
@@ -97,6 +102,35 @@ npm start
 
 > `start.sh` 默认**不打开浏览器**（服务器/远程环境更常见），需要时加 `--browser`；`--no-browser` 仍可显式指定，等价于默认行为。
 > `start.sh` 已按 LF 换行提交（`.gitattributes` 保证），git 里也记录了可执行位；如果克隆后提示没有执行权限，`chmod +x start.sh` 即可。
+
+## 首次配置向导（setup.js）
+
+第一次跑服务前需要一份 `server/.env`（数据库、`JWT_SECRET`、可选的 AI）。向导会交互式问一遍并写文件，避免手抄模板出错：
+
+| 系统 | 运行方式 |
+|---|---|
+| Windows | 双击 `setup.bat`，或 `.\setup.ps1`，或 `node setup.js` |
+| macOS / Linux | `./setup.sh`（首次可能需要 `chmod +x setup.sh`），或 `node setup.js` |
+
+流程：
+
+1. 数据库：主机 / 端口 / 用户名 / 密码（隐藏输入）/ 库名，默认值来自现有 `.env` 或 `127.0.0.1:3306 / root / qingheju`；
+2. 自动测试连接（依赖未安装时跳过），失败会提示导入表结构的命令，可选择仍然保存；
+3. `JWT_SECRET`：没有就自动生成 64 位随机串，直接回车即可；
+4. AI（可选）：地址（需带 `/v1`）、格式（responses / chat / messages）、模型名、Key；选“否”则写入注释占位，AI 接口返回 503，其它功能不受影响；
+5. 高级项（时区 / 监听端口 / 反向代理 `TRUST_PROXY`）默认不改；
+6. 写入 `server/.env`，已有文件先备份为 `server/.env.bak.<时间戳>`，Unix 上权限设为 `600`。
+
+其他用法：
+
+```bash
+node setup.js --check     # 只检查配置能不能启动（0=可以，1=需要配置）；start 脚本用它判断
+node setup.js --yes       # 非交互：保留已有值，缺的用默认值并自动生成 JWT（适合脚本/CI）
+node setup.js --help      # 帮助
+```
+
+> `start.ps1` / `start.sh` 在依赖装好后会先跑 `setup.js --check`，配置缺失就自动进入向导，配完继续启动。
+> 向导只管理上面这些键，`.env` 里自己加的其它变量会原样保留；重复运行不会丢掉已有密码和 AI Key。
 
 ## 环境变量（server/.env）
 
@@ -118,6 +152,7 @@ npm start
 | `AI_MAX_MESSAGE_CHARS` | 单条消息字符上限（超出截断） | `20000` |
 | `AI_RATE_LIMIT_WINDOW_MS` / `AI_RATE_LIMIT_MAX` | AI 按用户限流：窗口（毫秒）/ 窗口内最大请求数 | `600000` / `30` |
 | `CORS_ORIGINS` | 允许跨域的来源，逗号分隔；留空只允许同源 | 空 |
+| `TRUST_PROXY` | 反向代理层数（如 `1`）或 `loopback`；部署在 nginx / Railway 等反代后设置，限流才能取到真实客户端 IP；直连部署保持空 | 空 |
 | `REGISTER_RATE_LIMIT_MAX` / `LOGIN_IP_RATE_LIMIT_MAX` / `LOGIN_USER_RATE_LIMIT_MAX` | 注册 / 登录 IP / 登录用户名限流上限 | `10` / `30` / `10` |
 | `POST_RATE_LIMIT_MAX` / `COMMENT_RATE_LIMIT_MAX` / `LIKE_RATE_LIMIT_MAX` | 发帖 / 评论 / 点赞限流上限（窗口均为 10 分钟，可用 `*_RATE_LIMIT_WINDOW_MS` 调整） | `10` / `30` / `120` |
 | `JSON_BODY_LIMIT` | 普通接口的 JSON 请求体上限 | `2mb` |
@@ -125,6 +160,7 @@ npm start
 | `PORT` | 本地监听端口（`start.ps1` 会覆盖） | `3112` |
 
 > `.env` 已被 `.gitignore` 忽略；如需部署，直接在各平台的环境变量里配置同名变量即可。
+> `.env` 支持行内注释：未加引号的值会忽略「空白 + `#`」之后的内容（`AI_FORMAT=chat  # chat | messages` 读作 `chat`）；值本身包含 `#` 时用引号包起来。
 > `JWT_SECRET` 必须设置（至少 32 位），生成命令：`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`。轮换后所有已签发的 token 立即失效，用户需重新登录。
 
 ## 接口一览（前缀 `/api`）
@@ -134,7 +170,7 @@ npm start
 | POST | `/register` `/login` | 注册 / 登录（带限流） | — |
 | GET/PUT | `/user` `/user/avatar` `/user/username` `/user/password` | 资料与设置 | ✅ |
 | GET | `/users/:id/avatar?v=N` | 头像文件（独立 URL，可按版本长期缓存） | — |
-| GET | `/posts?page=1&pageSize=10&username=` | 帖子分页列表（只返回缩略图） | 可选 |
+| GET | `/posts?page=1&pageSize=10&username=` | 帖子分页列表（只返回缩略图与正文预览 `preview`） | 可选 |
 | GET | `/posts/:id` | 帖子详情（返回原图） | 可选 |
 | POST/DELETE | `/posts` `/posts/:id` | 发帖（限流）/ 删帖（作者或管理员） | ✅ |
 | POST | `/posts/:id/like` | 点赞 / 取消（限流，返回最新计数） | ✅ |
@@ -156,11 +192,14 @@ npm test                 # 冒烟测试：需要数据库
 npm run test:routes      # 路由行为：不需要数据库、不调用真实 AI
 npm run test:context     # AI 上下文裁剪
 npm run test:ratelimit   # 限流器
+npm run test:setup       # 配置向导：不需要数据库，不修改 server/.env
 ```
 
-`test/smoke.mjs` 会自动在 3199 端口启动一个临时服务，依次验证：节气、注册、重复注册、登录、发帖、点赞/取消、评论、签到、分页、非法 ID、JSON 404/400，结束后删除测试账号并关闭服务。前提是数据库可连接（读取 `server/.env`）。
+`test/smoke.mjs` 会自动在 3199 端口启动一个临时服务，依次验证：节气、注册、重复注册（409）、登录、发帖、点赞/取消、评论、签到、重复签到（409）、改密后旧 token 立即失效、分页、非法 ID、JSON 404/400，结束后删除测试账号并关闭服务。前提是数据库可连接（读取 `server/.env`）。
 
-`test/routes.test.mjs` 不需要数据库：它把 `config/db` 换成假连接池，AI 上游换成本机假服务，用真实路由验证请求体上限（含“未登录的大请求先 401”）、发帖/评论/点赞限流、管理员删帖删评论的权限、断签后连续天数归零、AI 错误不泄露上游信息、客户端断开即取消上游请求。
+`test/routes.test.mjs` 不需要数据库：它把 `config/db` 换成假连接池，AI 上游换成本机假服务，用真实路由验证请求体上限（含“未登录的大请求先 401”）、发帖/评论/点赞限流、管理员删帖删评论的权限（越权 403）、断签后连续天数归零、AI 错误不泄露上游信息、客户端断开即取消上游请求。
+
+`test/setup.test.mjs` 用临时目录验证配置向导：`--check` 的通过/失败、`--yes` 生成的默认值、重复运行的备份、含空格/`#` 的密码加引号写回、自定义键保留，不会碰 `server/.env`。
 
 ## 部署说明
 
@@ -181,20 +220,23 @@ npm run test:ratelimit   # 限流器
 - 登录/注册有限流：注册每 IP 每小时 10 次；登录每 IP 10 分钟 30 次、每个用户名 10 分钟 10 次，超出返回 429。数据库密码不再有 `123456` 默认值。
 - 发帖 / 评论 / 点赞也有限流（默认 10 分钟分别 10 / 30 / 120 次），超出返回 429，响应带 `X-RateLimit-*` 与 `Retry-After` 头；前端的评论、点赞、删除失败时会给出提示，不再静默失败。
 - JSON 请求体上限分两档：普通接口 `JSON_BODY_LIMIT`（默认 2mb），发帖接口 `POST_BODY_LIMIT`（默认 12mb）。发帖的解析器挂在鉴权和限流之后，未登录的大请求在读出请求体之前就被 401 拒绝，不会占用内存。
-- 删帖 / 删评论：作者本人可以删除自己的内容；管理员（`users.is_admin = 1`）可以删除任何人的帖子和评论。服务端每次都从数据库确认管理员身份（不信任 token），管理员删除他人内容时会在日志里留一条 `[审计]` 记录。
+- 删帖 / 删评论：作者本人可以删除自己的内容；管理员（`users.is_admin = 1`）可以删除任何人的帖子和评论。服务端每次都从数据库确认管理员身份（不信任 token），管理员删除他人内容时会在日志里留一条 `[审计]` 记录。越权删除返回 403，帖子/评论不存在返回 404。
+- 状态码语义统一：参数/格式错误 400，未登录或 token 失效 401，无权操作 403，资源不存在 404，重复注册 / 重复签到等状态冲突 409，限流 429。响应体仍是 `{ success, message }`，前端按 `success` 判断即可。
+- 改密会让旧 token 立即失效：`users.token_version` 在改密时自增，token 里带版本号，鉴权时与数据库比对；`PUT /api/user/password` 的响应里会给当前客户端换发新 token（前端会自动保存），因此用户改完密码不会被自己踢下线。删除账号后旧 token 同样立即失效（鉴权时查不到用户返回 401）。
 - 签到连续天数：`checkins.streak` 记录的是签到当天的值，`GET /api/checkin` 会按业务时区判断最近一次签到是不是今天或昨天，断签则返回 0，避免页面一直显示旧的连续天数。
+- 签到页的知识卡片缓存在 localStorage：打开页面只请求一次节气表，并且只回填最近 30 天；更早的日期点开时再按需生成，避免连续签到几百天的用户一进页面就发几百个请求。
 - AI 出错时浏览器只拿到统一文案“AI 服务暂时不可用，请稍后重试”；上游的原始错误（可能包含网关地址、模型名等）只写服务端日志。客户端断开（关页面、停止）时服务端会通过 `AbortController` 取消上游请求，不会白白消耗 token。
 - `.idea/` 已被 `.gitignore` 忽略。
-- 已加基础安全响应头（CSP、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy`），并关闭 `X-Powered-By`；CORS 默认只允许同源，跨域需显式配置 `CORS_ORIGINS`。
+- 已加基础安全响应头（CSP、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy`），并关闭 `X-Powered-By`；CORS 默认只允许同源，跨域需显式配置 `CORS_ORIGINS`。部署在 nginx / 云平台等反向代理后面时请设置 `TRUST_PROXY=1`，否则 `req.ip` 会是代理地址，按 IP 的登录/注册限流会被所有用户共享。
 - 依赖已升级到 express 5.3.0、mysql2 3.24.6 等，`npm audit --omit=dev` 当前为 0 漏洞。
-- 登录使用 JWT，签名密钥只来自 `JWT_SECRET`；未配置或不足 32 位时服务拒绝启动，轮换密钥会让所有旧 token 立即失效。
+- 登录使用 JWT，签名密钥只来自 `JWT_SECRET`；未配置或不足 32 位时服务拒绝启动，轮换密钥会让所有旧 token 立即失效。token 里只放用户 id 与 token 版本号，鉴权时按 id 查一次数据库确认用户仍存在且版本一致，所以改密或删号后旧 token 立即失效。
 - AI 上下文有双重限制：最多携带最近 `AI_MAX_MESSAGES`（默认 15）条消息，且输入总量不超过 `AI_CONTEXT_TOKENS`（默认 80000）tokens（含 system prompt）。裁剪后保证以 `user` 开头（必要时少一条）；超出预算时从最早的消息开始丢弃，若最新一条本身就超预算，会截断并追加“内容过长已截断”标记。token 为保守估算（中文按 1 字 1 token，其余按 4 字符 1 token），不依赖分词器。单条消息超过 `AI_MAX_MESSAGE_CHARS`（默认 20000 字符）会先截断并标记。前端对话页面同样只保留最近 15 条。
 - AI 接口默认流式输出：服务端以 SSE 返回 `data: {"delta":"..."}`，前端逐段渲染；`AI_STREAM=false` 时返回普通 JSON。三种格式（responses / chat / messages）都支持流式。
 - `AI_TEMPERATURE` 默认 `0.8`；填 `default` / `omit` / `none` 表示不传该参数。若模型（如 `claude-haiku-5-5`）只接受默认温度，服务端会自动去掉 `temperature` 重试一次并记住该模型。
 - AI 只有一套配置：`AI_BASE_URL`、`AI_FORMAT`、`AI_API_KEY`、`AI_MODEL`；`AI_FORMAT=messages` 时走 Anthropic Messages，`responses`/`chat` 时走 OpenAI 兼容接口。`/api/ai/chat` 与 `/api/ai/message` 行为相同，后者仅为兼容别名。
 - AI 的地址、Key、模型全部来自 `server/.env`（已被 `.gitignore` 忽略）；代码和 `.env.example` 里只有占位符，不包含真实值。
 - 帖子支持“精选”：`posts.is_featured = 1` 的帖子在列表里置顶并显示“精选”徽标；管理员（`users.is_admin = 1`）可在帖子卡片上点“设为精选 / 取消精选”。
-- 帖子图片保留原始 base64（不转码、不压缩），上传时额外生成 800px 缩略图存 `image_thumb`；列表接口只返回缩略图，详情接口 `/posts/:id` 返回原图，避免列表响应过大。
+- 帖子图片保留原始 base64（不转码、不压缩），上传时额外生成 800px 缩略图存 `image_thumb`；列表接口只返回缩略图与正文前 300 字的 `preview`，详情接口 `/posts/:id` 返回原图与全文，避免列表响应过大。
 - 头像上传会在浏览器端压到 256px 再存库（`users.avatar` + `users.avatar_version`）。用户/帖子接口只返回 `avatar` URL（`/api/users/:id/avatar?v=N`），不再在每个帖子/评论里重复塞 base64；头像响应带 `Cache-Control: immutable`，浏览器每个用户只下载一次，旧版本 URL 会 302 到当前版本。`avatar_version` 由启动迁移自动添加。
 - 图片已按显示尺寸压缩（仓库约 7 MB）；原图可从 git 历史恢复。
 - 农历使用 `lunar-javascript`（`js/vendor/lunar.js`），未加载时自动隐藏农历行。

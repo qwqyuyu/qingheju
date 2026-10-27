@@ -26,6 +26,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {}
     }
 
+    /* 节气表只取一次：卡片按日期匹配节气，回填历史卡片时不再逐日请求接口 */
+    var solarTermsCache = null;
+
+    /* 回填历史卡片只做最近 30 天，更早的日期点开时再按需生成 */
+    const BACKFILL_LIMIT = 30;
+
+    async function getSolarTermsOnce() {
+        if (solarTermsCache) return solarTermsCache;
+        try {
+            const result = await API.getSolarTerms();
+            solarTermsCache = (result && result.success && Array.isArray(result.data)) ? result.data : [];
+        } catch (e) {
+            solarTermsCache = [];
+        }
+        return solarTermsCache;
+    }
+
     /* 初始化日历 */
     await Calendar.init();
 
@@ -94,8 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* 生成今日卡片内容（仅当天首次签到调用） */
     async function generateCardContent(dateStr) {
-        const termsResult = await API.getSolarTerms();
-        const solarTerms = termsResult.data || [];
+        const solarTerms = await getSolarTermsOnce();
         const term = solarTerms.find(t => t.date === dateStr);
 
         var cardTitle, cardText, cardTip, cardImgPath, cardIsTerm;
@@ -173,16 +189,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const flipCard = document.getElementById('flip_card');
         const cardBack = flipCard.querySelector('.flip_card_back');
 
-        /* 获取或生成卡片数据 */
+        /* 获取或生成卡片数据：今天首次签到、或历史卡片还没回填时按需生成 */
         var cardData = getStoredCardData(dateStr);
-        if (!cardData && isToday) {
-            /* 今天首次签到，生成并保存 */
+        if (!cardData) {
             cardData = await generateCardContent(dateStr);
-            cardData.bgIndex = getTodayBgIndex();
+            cardData.bgIndex = isToday ? getTodayBgIndex() : (Math.floor(Math.random() * 4) + 1);
             saveCardData(dateStr, cardData);
-        } else if (!cardData) {
-            /* 历史日期无数据（一般不会发生） */
-            return;
         }
 
         /* 应用卡片背景 */
@@ -233,11 +245,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 1200);
     });
 
-    /* 回填历史缺失的卡片数据 */
+    /* 回填历史缺失的卡片数据：只回填最近 BACKFILL_LIMIT 天。
+       更早的日期在用户点开时按需生成（节气表已缓存，不会再发请求），
+       避免连续签到几百天的老用户一进页面就串行处理几百次。 */
     async function backfillMissingCards() {
         const signDates = JSON.parse(localStorage.getItem('sign_dates') || '[]');
-        for (var i = 0; i < signDates.length; i++) {
-            const dateStr = signDates[i];
+        const recent = signDates.slice(0, BACKFILL_LIMIT);
+        for (var i = 0; i < recent.length; i++) {
+            const dateStr = recent[i];
             if (!getStoredCardData(dateStr)) {
                 const cardData = await generateCardContent(dateStr);
                 cardData.bgIndex = Math.floor(Math.random() * 4) + 1;

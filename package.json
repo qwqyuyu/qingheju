@@ -6,6 +6,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "setup": "node setup.js",
     "start": "cd server && node app.js",
     "build": "cd server && npm install",
     "test": "cd server && npm test"
