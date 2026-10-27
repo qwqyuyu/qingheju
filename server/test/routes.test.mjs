@@ -328,6 +328,28 @@ const aiBody = { messages: [{ role: 'user', content: '你好' }] };
     ok('AI 流式：客户端断开后，服务端取消了上游请求');
 }
 
+/* ========== 6. 节气：图片统一为站内绝对路径 ========== */
+
+{
+    resetDb();
+    when(/^SELECT name, pinyin, image, description, health_tip AS healthTip FROM solar_terms$/, () => [[
+        { name: '立春', pinyin: 'lichun', image: 'images/solarterms/lichun.jpg', description: 'd', healthTip: 't' },
+        { name: '雨水', pinyin: 'yushui', image: '/images/solarterms/yushui.jpg', description: 'd', healthTip: 't' },
+        { name: '惊蛰', pinyin: 'jingzhe', image: 'https://cdn.example.com/jingzhe.jpg', description: 'd', healthTip: 't' }
+    ]]);
+
+    const r = await call('GET', '/api/solarterms');
+    assert.equal(r.status, 200);
+    assert.equal(r.json.data.length, 24, '一次返回 24 个节气');
+
+    const byName = new Map(r.json.data.map(t => [t.name, t.image]));
+    /* 页面在 /pages/ 下：相对路径会被解析成 /pages/images/... 而 404 */
+    assert.equal(byName.get('立春'), '/images/solarterms/lichun.jpg', '缺前导斜杠的相对路径应补齐');
+    assert.equal(byName.get('雨水'), '/images/solarterms/yushui.jpg', '已是绝对路径的保持不变');
+    assert.equal(byName.get('惊蛰'), 'https://cdn.example.com/jingzhe.jpg', '外链原样返回');
+    ok('节气接口：图片路径统一为 /images/...，页面在 /pages/ 下也不会 404');
+}
+
 /* ---------- 收尾 ---------- */
 
 console.log('\n路由行为测试全部通过。');

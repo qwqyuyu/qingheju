@@ -11,6 +11,16 @@ const { termsOfYear, currentTermYear, MIN_YEAR, MAX_YEAR } = require('../config/
 
 const router = express.Router();
 
+/* 数据库里存的是 images/solarterms/xxx.jpg 这类不带前导斜杠的相对路径。
+   页面位于 /pages/ 下，相对路径会被浏览器解析成 /pages/images/... 而 404，
+   因此统一转成站内绝对路径；外链 / data: 等原样返回。 */
+function resolveImagePath(value) {
+    const src = String(value || '').trim();
+    if (!src) return '';
+    if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src) || /^(?:data|blob):/i.test(src)) return src;
+    return src.startsWith('/') ? src : '/' + src;
+}
+
 /* GET /api/solarterms?year=2026 — 某个节气年的 24 个节气 */
 router.get('/solarterms', async (req, res) => {
     try {
@@ -40,7 +50,7 @@ router.get('/solarterms', async (req, res) => {
                 pinyin: content.pinyin || '',
                 date: term.date,
                 lunarDate: term.lunarDate,
-                image: content.image || '',
+                image: resolveImagePath(content.image),
                 description: content.description || '',
                 healthTip: content.healthTip || ''
             };

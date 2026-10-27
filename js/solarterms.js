@@ -45,10 +45,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
+/* 图片地址兜底：数据库没给图片时退回同名矢量图，避免出现破图 */
+function termImage(term) {
+    return term.image || (term.pinyin ? '/images/solarterms/' + term.pinyin + '.svg' : '');
+}
+
 function renderHero(term) {
     const hero = document.getElementById('term_hero');
     hero.innerHTML = `
-        <img class="term_hero_img" src="${term.image}" alt="${term.name}" onerror="this.style.opacity='0.4'">
+        <img class="term_hero_img" src="${termImage(term)}" alt="${term.name}" onerror="this.style.opacity='0.4'">
         <div class="term_hero_body">
             <span class="term_hero_tag">当前节气</span>
             <h2 class="term_hero_name">${term.name}</h2>
@@ -68,11 +73,10 @@ function renderGrid(terms, currentTerm) {
     grid.innerHTML = terms.map(t => {
         const isCurrent = t.name === (currentTerm && currentTerm.name);
         return `
-            <div class="term_card${isCurrent ? ' current' : ''}" data-term="${t.name}">
-                <img class="term_card_img" src="${t.image}" alt="${t.name}" onerror="this.style.opacity='0.3'">
-                <h3 class="term_card_name">${t.name}</h3>
+            <div class="term_card${isCurrent ? ' current' : ''}" data-term="${t.name}" title="${t.name}">
+                <img class="term_card_img" src="${termImage(t)}" alt="${t.name}" onerror="this.style.opacity='0.3'">
                 <p class="term_card_date">${t.date.replace(/-/g, '/')}</p>
-                <p class="term_card_desc">${t.description.substring(0, 40)}...</p>
+                <p class="term_card_desc">${t.description}</p>
             </div>
         `;
     }).join('');
@@ -96,7 +100,7 @@ function showTermModal(term) {
     overlay.innerHTML =
         '<div class="term_modal_box">' +
         '<button class="term_modal_close">&times;</button>' +
-        '<img class="term_modal_img" src="' + term.image + '" alt="' + term.name + '">' +
+        '<img class="term_modal_img" src="' + termImage(term) + '" alt="' + term.name + '">' +
         '<h2 class="term_modal_name">' + term.name + '</h2>' +
         '<p class="term_modal_date">公历 ' + term.date.replace(/-/g, '/') + '　农历 ' + term.lunarDate + '</p>' +
         '<p class="term_modal_desc">' + term.description + '</p>' +

@@ -15,11 +15,13 @@
     align-items: center;
 }
 
+/* 3:2 —— 与原图比例一致，几乎不裁切（原为 160×160 contain，图上书法字看不清） */
 .term_hero_img {
-    width: 160px;
+    width: 240px;
     height: 160px;
     flex-shrink: 0;
-    object-fit: contain;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
 .term_hero_body {
@@ -95,7 +97,10 @@
     background: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 0;
+    /* 底部留白放在卡片上，不能放在 .term_card_desc 上：
+       被 -webkit-line-clamp 截断的元素加 padding-bottom 时，
+       多出来的那行会渗进 padding 区域，被卡片边缘切掉 */
+    padding: 0 0 20px;
     text-align: center;
     box-shadow: var(--shadow-card);
     transition: all var(--transition);
@@ -129,25 +134,22 @@
     letter-spacing: 1px;
 }
 
+/* 3:2 —— 原图普遍是 1.34~1.81，用 3:2 容器裁切量从 19~28% 降到 0~4%
+   （原为 height:140px，260 宽下相当于 1.86:1，会切掉画面上下内容） */
 .term_card_img {
     width: 100%;
-    height: 140px;
+    aspect-ratio: 3 / 2;
+    height: auto;
     object-fit: cover;
+    display: block;
     margin: 0;
 }
 
-.term_card_name {
-    font-family: var(--font-calligraphy);
-    font-size: 24px;
-    color: var(--color-primary);
-    margin: 14px 18px 6px;
-    letter-spacing: 2px;
-}
-
+/* 节气名已在图里，卡片不再重复写一遍，避免“两套字”打架 */
 .term_card_date {
     font-size: 16px;
     color: var(--color-text-light);
-    margin: 0 18px 10px;
+    margin: 16px 18px 10px;
 }
 
 .term_card_desc {
@@ -221,9 +223,11 @@
     background: rgba(0, 0, 0, 0.6);
 }
 
+/* 3:2 —— 原为 height:180px，520 宽下是 2.89:1，会把图拦腰裁掉约一半 */
 .term_modal_img {
     width: 100%;
-    height: 180px;
+    aspect-ratio: 3 / 2;
+    height: auto;
     object-fit: cover;
     margin: 0;
     display: block;
@@ -283,8 +287,8 @@
         font-size: 34px;
     }
     .term_hero_img {
-        width: 120px;
-        height: 120px;
+        width: 200px;
+        height: 133px;
     }
 }
 
@@ -299,8 +303,10 @@
         padding: 20px;
     }
     .term_hero_img {
-        width: 100px;
-        height: 100px;
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+        aspect-ratio: 3 / 2;
     }
     .term_hero_name {
         font-size: 30px;
@@ -313,12 +319,7 @@
         font-size: 18px;
     }
     .term_card {
-        padding: 0;
-    }
-    .term_card_name {
-        font-size: 20px;
-        margin-left: 12px;
-        margin-right: 12px;
+        padding: 0 0 16px;
     }
     .term_card_date {
         margin-left: 12px;
