@@ -5,29 +5,67 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
 
-    /* 更新导航登录状态 */
-    const currentUser = API.getCurrentUser();
+    /* 更新导航登录状态；同时刷新一次资料，拿到 is_admin（旧会话里可能没有） */
+    let currentUser = API.getCurrentUser();
     if (currentUser) {
         const navLink = document.getElementById('nav_user_link');
         if (navLink) { navLink.textContent = '我的'; navLink.href = 'profile.html'; }
+        try {
+            const me = await API.getUser();
+            if (me.success && me.data) {
+                currentUser = {
+                    ...currentUser,
+                    username: me.data.username,
+                    avatar: me.data.avatar,
+                    is_admin: !!me.data.is_admin
+                };
+                localStorage.setItem('current_user', JSON.stringify(currentUser));
+            }
+        } catch (e) { /* 忽略，保留本地缓存 */ }
+    }
+
+    /* 能否删除某个用户的内容：本人或管理员（服务端会再次校验，这里只决定是否显示按钮） */
+    function canDelete(authorName) {
+        return !!currentUser && (!!currentUser.is_admin || currentUser.username === authorName);
     }
 
     let allPosts = [];
+    let currentPage = 0;
+    let totalPosts = 0;
+    let loadingPosts = false;
+    const PAGE_SIZE = 10;
 
-    /* 加载帖子 */
-    async function loadPosts() {
+    /* 加载帖子（reset=true 重新从第一页加载） */
+    async function loadPosts(reset) {
+        if (loadingPosts) return;
+        loadingPosts = true;
+        const page = reset ? 1 : currentPage + 1;
         document.getElementById('loading_posts').style.display = 'block';
         try {
-            const result = await API.getPosts();
-            if (result.success) {
-                allPosts = result.data || [];
+            const result = await API.getPosts({ page: page, pageSize: PAGE_SIZE });
+            if (result.success && result.data) {
+                const items = result.data.items || [];
+                allPosts = reset ? items : allPosts.concat(items);
+                currentPage = page;
+                totalPosts = result.data.total || 0;
                 renderPostList(allPosts);
+                updateLoadMore();
             }
         } catch (e) {
-            /* 兜底数据 */
-            allPosts = [];
+            if (reset) allPosts = [];
         }
         document.getElementById('loading_posts').style.display = 'none';
+        loadingPosts = false;
+    }
+
+    /* 更新“加载更多”按钮和计数 */
+    function updateLoadMore() {
+        const wrap = document.getElementById('load_more_wrap');
+        if (!wrap) return;
+        const hasMore = allPosts.length < totalPosts;
+        wrap.style.display = hasMore ? 'block' : 'none';
+        const hint = document.getElementById('load_more_hint');
+        if (hint) hint.textContent = '已显示 ' + allPosts.length + ' / 共 ' + totalPosts + ' 条';
     }
 
     /* 渲染帖子列表 */
@@ -41,15 +79,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.innerHTML = posts.map(p => {
             const isLiked = p.liked;
             return `
-                <div class="post_card" data-id="${p.id}">
+                <div class="post_card${p.featured ? ' featured' : ''}" data-id="${p.id}">
                     <div class="post_card_header">
-                        <img class="post_avatar" src="${p.avatar || 'images/ui/default_avatar.svg'}" alt="${p.username}" onerror="this.style.background='#D8CFBF'">
+                        <img class="post_avatar" src="${escapeHtml(p.avatar || 'images/ui/default_avatar.svg')}" alt="${escapeHtml(p.username)}" onerror="this.style.background='#D8CFBF'">
                         <span class="post_username">${escapeHtml(p.username)}</span>
-                        <span class="post_time">${p.time}</span>
+                        <span class="post_time">${escapeHtml(p.time)}</span>
                     </div>
-                    <h3 class="post_title">${escapeHtml(p.title)}</h3>
-                    <p class="post_content_preview">${escapeHtml(p.content).substring(0, 150)}</p>
-                    ${p.image ? `<div class="post_thumb_wrap"><img class="post_thumb_img" src="${p.image}" alt="帖子图片" loading="lazy"></div>` : ''}
+                    <h3 class="post_title">${p.featured ? '<span class="post_featured_badge">精选</span>' : ''}${escapeHtml(p.title)}</h3>
+                    <p class="post_content_preview">${escapeHtml(String(p.content || '').substring(0, 150))}</p>
+                    ${p.image ? `<div class="post_thumb_wrap"><img class="post_thumb_img" src="${escapeHtml(p.image)}" alt="帖子图片" loading="lazy"></div>` : ''}
                     <div class="post_card_footer">
                         <span class="post_stat ${isLiked ? 'liked' : ''}" data-action="like" data-id="${p.id}">
                             ♥ ${p.likes || 0}
@@ -57,7 +95,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="post_stat" data-action="comment" data-id="${p.id}">
                             💬 ${p.commentCount || 0} 评论
                         </span>
-                        ${currentUser && currentUser.username === p.username ? `<span class="post_delete_btn" data-action="delete" data-id="${p.id}">删除</span>` : ''}
+                        ${currentUser && currentUser.is_admin ? `<span class="post_feature_btn" data-action="feature" data-id="${p.id}" data-featured="${p.featured ? 1 : 0}">${p.featured ? '取消精选' : '设为精选'}</span>` : ''}
+                        ${canDelete(p.username) ? `<span class="post_delete_btn" data-action="delete" data-id="${p.id}">删除</span>` : ''}
                     </div>
                 </div>
             `;
@@ -72,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.post_card').forEach(card => {
             card.addEventListener('click', (e) => {
                 /* 如果点击了点赞按钮则不弹出详情 */
-                if (e.target.closest('[data-action="like"]') || e.target.closest('[data-action="delete"]')) return;
+                if (e.target.closest('[data-action="like"]') || e.target.closest('[data-action="delete"]') || e.target.closest('[data-action="feature"]')) return;
                 const id = parseInt(card.dataset.id);
                 const post = allPosts.find(p => p.id === id);
                 if (post) showPostDetail(post);
@@ -87,9 +126,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const postId = parseInt(btn.dataset.id);
                 const result = await API.deletePost(postId);
                 if (result.success) {
-                    allPosts = allPosts.filter(p => p.id !== postId);
-                    renderPostList(allPosts);
+                    /* 删除后重置到第一页，避免 offset 分页错位 */
+                    loadPosts(true);
                     document.getElementById('post_modal').classList.remove('show');
+                } else {
+                    alert(result.message || '删除失败，请稍后再试');
+                }
+            });
+        });
+
+        /* 精选（仅管理员可见按钮） */
+        document.querySelectorAll('[data-action="feature"]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const postId = parseInt(btn.dataset.id);
+                const next = btn.dataset.featured !== '1';
+                const result = await API.setFeatured(postId, next);
+                if (result.success) {
+                    loadPosts(true);
+                } else {
+                    alert(result.message || '操作失败');
                 }
             });
         });
@@ -102,14 +158,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const result = await API.likePost(postId);
                 if (result.success && result.data) {
                     const post = allPosts.find(p => p.id === postId);
-                    if (result.data.liked) {
-                        btn.classList.add('liked');
-                        if (post) { post.likes = (post.likes || 0) + 1; post.liked = true; }
-                    } else {
-                        btn.classList.remove('liked');
-                        if (post) { post.likes = Math.max(0, (post.likes || 0) - 1); post.liked = false; }
-                    }
-                    btn.innerHTML = `♥ ${post ? post.likes : 0}`;
+                    const liked = !!result.data.liked;
+                    const likes = (typeof result.data.likes === 'number')
+                        ? result.data.likes
+                        : (post ? post.likes : 0);
+
+                    btn.classList.toggle('liked', liked);
+                    if (post) { post.likes = likes; post.liked = liked; }
+                    btn.innerHTML = `♥ ${likes}`;
+                } else if (result && result.code === 429) {
+                    /* 被限流时给个提示；其它失败（如未登录）保持原来的静默行为 */
+                    alert(result.message || '操作过于频繁，请稍后再试');
                 }
             });
         });
@@ -126,32 +185,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (e) {}
 
+        /* 列表接口只返回缩略图，详情弹窗再取原图 */
+        let originalImage = post.image || '';
+        try {
+            const detail = await API.getPost(post.id);
+            if (detail.success && detail.data && detail.data.image) {
+                originalImage = detail.data.image;
+            }
+        } catch (e) { /* 取不到就回退到缩略图 */ }
+
         const modal = document.getElementById('post_modal');
         const content = document.getElementById('modal_post_content');
 
-        const isPostOwner = currentUser && currentUser.username === post.username;
+        const canDeletePost = canDelete(post.username);
 
         content.innerHTML = `
             <div class="post_card_header" style="margin-bottom:14px;">
-                <img class="post_avatar" src="${post.avatar || 'images/ui/default_avatar.svg'}" alt="${post.username}">
+                <img class="post_avatar" src="${escapeHtml(post.avatar || 'images/ui/default_avatar.svg')}" alt="${escapeHtml(post.username)}">
                 <span class="post_username">${escapeHtml(post.username)}</span>
-                <span class="post_time">${post.time}</span>
+                <span class="post_time">${escapeHtml(post.time)}</span>
             </div>
             <h2>${escapeHtml(post.title)}</h2>
             <div class="post_full_body">${escapeHtml(post.content)}</div>
-            ${post.image ? `<img src="${post.image}" style="max-width:100%;border-radius:8px;margin-bottom:16px;" alt="帖子图片">` : ''}
-            ${isPostOwner ? `<div style="text-align:right;margin-bottom:16px;"><button class="modal_post_delete" id="modal_delete_post">删除帖子</button></div>` : ''}
+            ${originalImage ? `<img src="${escapeHtml(originalImage)}" style="max-width:100%;border-radius:8px;margin-bottom:16px;" alt="帖子图片">` : ''}
+            ${canDeletePost ? `<div style="text-align:right;margin-bottom:16px;"><button class="modal_post_delete" id="modal_delete_post">删除帖子</button></div>` : ''}
             <div class="comments_section">
                 <p class="comments_title">评论 (${comments.length})</p>
                 <div class="comments_list" id="comments_list">
                     ${comments.length > 0 ? comments.map(c => {
-                        const isCommentOwner = currentUser && currentUser.username === c.username;
+                        const canDeleteComment = canDelete(c.username);
                         return `
                         <div class="comment_item">
                             <div class="comment_header">
                                 <span class="comment_user">${escapeHtml(c.username)}</span>
-                                <span class="comment_time">${c.time}</span>
-                                ${isCommentOwner ? `<span class="comment_delete_btn" data-comment-id="${c.id}">删除</span>` : ''}
+                                <span class="comment_time">${escapeHtml(c.time)}</span>
+                                ${canDeleteComment ? `<span class="comment_delete_btn" data-comment-id="${c.id}">删除</span>` : ''}
                             </div>
                             <p class="comment_content">${escapeHtml(c.content)}</p>
                         </div>
@@ -175,9 +243,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!await showConfirm('确定要删除这篇帖子吗？删除后无法恢复。')) return;
                 const result = await API.deletePost(post.id);
                 if (result.success) {
-                    allPosts = allPosts.filter(p => p.id !== post.id);
-                    renderPostList(allPosts);
+                    loadPosts(true);
                     modal.classList.remove('show');
+                } else {
+                    alert(result.message || '删除失败，请稍后再试');
                 }
             });
         }
@@ -205,6 +274,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (count === 0) {
                         document.getElementById('comments_list').innerHTML = '<p class="no_comment">暂无评论，来说两句吧</p>';
                     }
+                } else {
+                    alert(result.message || '删除失败，请稍后再试');
                 }
             });
         });
@@ -226,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     commentsList.insertAdjacentHTML('beforeend', `
                         <div class="comment_item">
                             <div class="comment_header">
-                                <span class="comment_user">${currentUser.username}</span>
+                                <span class="comment_user">${escapeHtml(currentUser.username)}</span>
                                 <span class="comment_time">刚刚</span>
                                 <span class="comment_delete_btn" data-comment-id="${result.data.id}">删除</span>
                             </div>
@@ -256,6 +327,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 if (cnt === 0) {
                                     document.getElementById('comments_list').innerHTML = '<p class="no_comment">暂无评论，来说两句吧</p>';
                                 }
+                            } else {
+                                alert(r.message || '删除失败，请稍后再试');
                             }
                         });
                     }
@@ -270,6 +343,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const count = document.querySelectorAll('#comments_list .comment_item').length;
                     if (commentsTitle) commentsTitle.textContent = `评论 (${count})`;
                     input.value = '';
+                } else {
+                    /* 之前失败时没有任何提示；被限流（429）或评论不合法时要让用户看见 */
+                    alert(result.message || '评论失败，请稍后再试');
                 }
             });
         }
@@ -307,19 +383,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!title) { errorEl.textContent = '请输入标题'; return; }
         if (!content) { errorEl.textContent = '请输入内容'; return; }
 
-        /* 处理图片（base64 预览） */
+        /* 处理图片：原图原样上传，另生成一张缩略图给列表用 */
         let imageData = '';
+        let thumbData = '';
         const fileInput = document.getElementById('post_image');
         if (fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
             imageData = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => resolve(e.target.result);
                 reader.onerror = () => resolve('');
-                reader.readAsDataURL(fileInput.files[0]);
+                reader.readAsDataURL(file);
             });
+            try {
+                thumbData = await makePostThumb(file);
+            } catch (e) {
+                thumbData = '';
+            }
         }
 
-        const result = await API.createPost(title, content, imageData);
+        const result = await API.createPost(title, content, imageData, thumbData);
         if (result.success) {
             document.getElementById('post_editor').style.display = 'none';
             document.getElementById('post_title').value = '';
@@ -327,9 +410,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('post_image').value = '';
             document.getElementById('post_error').textContent = '';
             document.getElementById('post_image_preview').style.display = 'none';
-            /* 新帖子插入到列表最前面 */
-            allPosts.unshift(result.data);
-            renderPostList(allPosts);
+            /* 新帖子在最前面：重置列表以便第一页能看到 */
+            loadPosts(true);
         } else {
             const msg = result.message || '';
             if (msg.includes('登录') || msg.includes('过期')) {
@@ -356,12 +438,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    /* 列表缩略图：最长边 800px，原图保持不动 */
+    function makePostThumb(file) {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const max = 800;
+                    const scale = Math.min(max / img.width, max / img.height, 1);
+                    const w = Math.max(1, Math.round(img.width * scale));
+                    const h = Math.max(1, Math.round(img.height * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.82));
+                } catch (err) {
+                    reject(err);
+                } finally {
+                    URL.revokeObjectURL(url);
+                }
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error('缩略图生成失败'));
+            };
+            img.src = url;
+        });
+    }
+
     function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        return div.innerHTML;
+        return String(text == null ? '' : text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /* 加载更多 */
+    const loadMoreBtn = document.getElementById('load_more_btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => loadPosts(false));
     }
 
     /* 初始化 */
-    loadPosts();
+    loadPosts(true);
 });

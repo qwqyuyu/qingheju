@@ -3,6 +3,15 @@
    功能：导航栏交互、移动端菜单、页面状态管理
    ========================================== */
 
+/* 本地日期 YYYY-MM-DD（用浏览器本地时区，不经过 UTC） */
+window.localDate = function (date) {
+    const d = date instanceof Date ? date : new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
 
     /* === 移动端汉堡菜单 === */
@@ -58,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* === 签到状态检查（通用） === */
     window.checkSignStatus = function() {
-        const today = new Date().toISOString().split('T')[0];
+        const today = window.localDate();
         const lastSignDate = localStorage.getItem('last_sign_date');
         return lastSignDate === today;
     };
@@ -106,12 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastDate = localStorage.getItem('last_sign_date');
         if (!lastDate) return 0;
 
-        const last = new Date(lastDate);
-        const today = new Date();
-        const diffDays = Math.floor((today - last) / (1000 * 60 * 60 * 24));
+        /* 按本地日期字符串计算相差天数，避免时区/时分秒干扰 */
+        const diffDays = Math.round((Date.parse(window.localDate()) - Date.parse(lastDate)) / 86400000);
 
         /* 如果最后签到是昨天或今天，保持连续；否则重置 */
-        if (diffDays <= 1) {
+        if (!isNaN(diffDays) && diffDays <= 1) {
             return streak;
         } else {
             localStorage.setItem('sign_streak', '0');

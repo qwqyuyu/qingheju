@@ -322,6 +322,49 @@
     padding: 16px;
 }
 
+/* === 分页加载 === */
+.load_more_wrap {
+    text-align: center;
+    margin: 8px 0 48px;
+}
+
+.load_more_hint {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--color-text-light);
+}
+
+/* === 精选 === */
+.post_card.featured {
+    border-color: var(--color-gold);
+    box-shadow: 0 6px 24px rgba(184, 134, 11, 0.18);
+}
+
+.post_featured_badge {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 8px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 1.6;
+    vertical-align: middle;
+    color: #fff;
+    background: var(--color-gold);
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.post_feature_btn {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--color-gold);
+    cursor: pointer;
+    user-select: none;
+}
+.post_feature_btn:hover { text-decoration: underline; }
+.post_feature_btn + .post_delete_btn { margin-left: 16px; }
+
 /* === 响应式 === */
 @media (max-width: 767px) {
     .post_card { padding: 14px 16px; }

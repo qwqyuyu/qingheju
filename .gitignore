@@ -1,6 +1,10 @@
 node_modules/
+.idea/
 .env
 .env.*
+!.env.example
+*_dump.sql
+*.sql.gz
 .claude/
 *.docx
 replaceImages/

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const terms = result.data;
-    const today = new Date().toISOString().split('T')[0];
+    const today = window.localDate();
 
     /* 找到当前节气（最近一个日期 <= 今天的节气） */
     let currentTerm = null;

@@ -7,6 +7,18 @@ const API = (() => {
 
     const BASE = '';  /* 同源，使用相对路径 */
 
+    /* 本地日期（优先复用 common.js 的 localDate） */
+    function localDateStr(date) {
+        if (typeof window !== 'undefined' && typeof window.localDate === 'function') {
+            return window.localDate(date);
+        }
+        const d = date instanceof Date ? date : new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+
     /* 获取存储的 token */
     function getToken() {
         return localStorage.getItem('auth_token') || '';
@@ -43,7 +55,9 @@ const API = (() => {
         if (result.success) {
             localStorage.setItem('auth_token', result.data.token);
             localStorage.setItem('current_user', JSON.stringify({
-                id: result.data.id, username: result.data.username, avatar: 'images/ui/default_avatar.svg'
+                id: result.data.id, username: result.data.username,
+                avatar: result.data.avatar || 'images/ui/default_avatar.svg',
+                is_admin: false
             }));
         }
         return result;
@@ -54,7 +68,8 @@ const API = (() => {
         if (result.success) {
             localStorage.setItem('auth_token', result.data.token);
             localStorage.setItem('current_user', JSON.stringify({
-                id: result.data.id, username: result.data.username, avatar: result.data.avatar
+                id: result.data.id, username: result.data.username,
+                avatar: result.data.avatar, is_admin: !!result.data.is_admin
             }));
         }
         return result;
@@ -62,6 +77,10 @@ const API = (() => {
 
     function getCurrentUser() {
         return JSON.parse(localStorage.getItem('current_user') || 'null');
+    }
+
+    async function getUser() {
+        return await get('/api/user');
     }
 
     function logout() {
@@ -73,8 +92,11 @@ const API = (() => {
         const result = await put('/api/user/avatar', { avatar: imageData });
         if (result.success) {
             const user = getCurrentUser();
-            user.avatar = imageData;
-            localStorage.setItem('current_user', JSON.stringify(user));
+            if (user) {
+                /* 服务端返回带版本的 URL；回退到本地预览图 */
+                user.avatar = (result.data && result.data.avatar) || imageData;
+                localStorage.setItem('current_user', JSON.stringify(user));
+            }
         }
         return result;
     }
@@ -125,12 +147,28 @@ const API = (() => {
 
     /* ============ 帖子模块 ============ */
 
-    async function getPosts() {
-        return await get('/api/posts');
+    async function getPosts(options) {
+        const params = new URLSearchParams();
+        if (options) {
+            if (options.page) params.set('page', options.page);
+            if (options.pageSize) params.set('pageSize', options.pageSize);
+            if (options.username) params.set('username', options.username);
+        }
+        const qs = params.toString();
+        return await get('/api/posts' + (qs ? '?' + qs : ''));
     }
 
-    async function createPost(title, content, image) {
-        return await post('/api/posts', { title, content, image: image || '' });
+    async function getPost(postId) {
+        return await get('/api/posts/' + postId);
+    }
+
+    async function createPost(title, content, image, imageThumb) {
+        return await post('/api/posts', {
+            title,
+            content,
+            image: image || '',
+            imageThumb: imageThumb || ''
+        });
     }
 
     async function deletePost(postId) {
@@ -139,6 +177,10 @@ const API = (() => {
 
     async function likePost(postId) {
         return await post('/api/posts/' + postId + '/like');
+    }
+
+    async function setFeatured(postId, featured) {
+        return await put('/api/posts/' + postId + '/feature', { featured: !!featured });
     }
 
     async function addComment(postId, content) {
@@ -165,15 +207,17 @@ const API = (() => {
 
     /* ============ 节气模块 ============ */
 
-    async function getSolarTerms() {
-        return await get('/api/solarterms');
+    async function getSolarTerms(year) {
+        var url = '/api/solarterms';
+        if (year) url += '?year=' + encodeURIComponent(year);
+        return await get(url);
     }
 
     async function getCurrentSolarTerm() {
         var result = await getSolarTerms();
         var terms = result.data;
         if (!terms || terms.length === 0) return null;
-        var today = new Date().toISOString().split('T')[0];
+        var today = localDateStr();
         for (var i = terms.length - 1; i >= 0; i--) {
             if (terms[i].date <= today) return terms[i];
         }
@@ -186,20 +230,112 @@ const API = (() => {
         return await post('/api/ai/chat', { messages: messages });
     }
 
+    /* 流式 AI：服务端返回 SSE 时逐段回调 onDelta；AI_STREAM=false 时自动按 JSON 处理 */
+    async function aiChatStream(messages, onDelta) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+        };
+        const token = getToken();
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        let res;
+        try {
+            res = await fetch(BASE + '/api/ai/chat', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ messages: messages })
+            });
+        } catch (e) {
+            return { success: false, msg: '网络错误，请稍后重试' };
+        }
+
+        /* 未登录 / token 过期：交给页面跳转登录 */
+        if (res.status === 401) {
+            const data = await res.json().catch(function () { return null; });
+            return { success: false, needLogin: true, msg: (data && data.message) || '请先登录' };
+        }
+
+        const type = (res.headers.get('content-type') || '').toLowerCase();
+
+        /* 服务端关闭流式时，按普通 JSON 处理 */
+        if (type.indexOf('application/json') >= 0) {
+            const data = await res.json().catch(function () { return null; });
+            if (data && data.code === 200 && data.data) {
+                if (typeof onDelta === 'function') onDelta(data.data.reply || '');
+                return { success: true, data: data.data };
+            }
+            return { success: false, msg: (data && data.msg) || 'AI 服务暂时不可用' };
+        }
+
+        if (!res.body || typeof res.body.getReader !== 'function') {
+            return { success: false, msg: '当前浏览器不支持流式输出' };
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let reply = '';
+        let meta = {};
+        let errorMsg = '';
+
+        try {
+            while (true) {
+                const chunk = await reader.read();
+                if (chunk.done) break;
+                buffer += decoder.decode(chunk.value, { stream: true });
+
+                let index;
+                while ((index = buffer.indexOf('\n\n')) >= 0) {
+                    const block = buffer.slice(0, index);
+                    buffer = buffer.slice(index + 2);
+
+                    for (const line of block.split('\n')) {
+                        if (line.indexOf('data:') !== 0) continue;
+                        const payload = line.slice(5).trim();
+                        if (!payload) continue;
+
+                        let event;
+                        try { event = JSON.parse(payload); } catch (e) { continue; }
+
+                        if (event.delta) {
+                            reply += event.delta;
+                            if (typeof onDelta === 'function') onDelta(event.delta);
+                        } else if (event.error) {
+                            errorMsg = event.error;
+                        } else if (event.done) {
+                            meta = event;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            errorMsg = '网络中断，请稍后重试';
+        }
+
+        if (errorMsg && !reply) return { success: false, msg: errorMsg };
+        if (!reply) return { success: false, msg: errorMsg || 'AI 返回内容为空' };
+
+        return {
+            success: true,
+            data: { reply: reply, model: meta.model, format: meta.format }
+        };
+    }
+
     function isTodaySolarTerm(solarTerms) {
-        var today = new Date().toISOString().split('T')[0];
+        var today = localDateStr();
         return solarTerms.find(function(t) { return t.date === today; }) || null;
     }
 
     /* 暴露接口 */
     return {
-        register, login, logout, getCurrentUser,
+        register, login, logout, getCurrentUser, getUser,
         updateAvatar, updateUsername, updatePassword,
         getHerbs,
-        getPosts, createPost, deletePost, likePost,
+        getPosts, getPost, createPost, deletePost, likePost, setFeatured,
         addComment, deleteComment, getComments,
         checkin, getCheckinHistory,
         getSolarTerms, getCurrentSolarTerm, isTodaySolarTerm,
-        aiChat
+        aiChat, aiChatStream
     };
 })();

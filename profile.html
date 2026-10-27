@@ -204,10 +204,10 @@
 
             /* 加载我的帖子 */
             try {
-                const result = await API.getPosts();
-                const allPosts = result.data || [];
-                const myPosts = allPosts.filter(p => p.username === user.username);
-                document.getElementById('p_posts').textContent = myPosts.length;
+                const result = await API.getPosts({ username: user.username, pageSize: 50 });
+                const payload = result.data || {};
+                const myPosts = payload.items || [];
+                document.getElementById('p_posts').textContent = payload.total || 0;
 
                 if (myPosts.length > 0) {
                     document.getElementById('profile_posts_section').style.display = 'block';
@@ -215,7 +215,7 @@
                     document.getElementById('profile_post_list').innerHTML = myPosts.map(p => `
                         <div class="profile_post_item">
                             <h4>${escapeHtml(p.title)}</h4>
-                            <span class="post_meta">${p.time} · ♥ ${p.likes || 0} · 💬 ${p.commentCount || 0}</span>
+                            <span class="post_meta">${escapeHtml(p.time)} · ♥ ${p.likes || 0} · 💬 ${p.commentCount || 0}</span>
                         </div>
                     `).join('');
                 } else {
@@ -231,21 +231,64 @@
 
             avatarWrap.addEventListener('click', () => avatarInput.click());
 
+            /* 上传前压缩到 256px，避免 base64 过大写库失败 */
+            function makeAvatar(file) {
+                return new Promise((resolve, reject) => {
+                    if (!file.type || !file.type.startsWith('image/')) {
+                        reject(new Error('请选择图片文件'));
+                        return;
+                    }
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const max = 256;
+                            const scale = Math.min(max / img.width, max / img.height, 1);
+                            const w = Math.max(1, Math.round(img.width * scale));
+                            const h = Math.max(1, Math.round(img.height * scale));
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.fillStyle = '#fff';
+                            ctx.fillRect(0, 0, w, h);
+                            ctx.drawImage(img, 0, 0, w, h);
+                            let data = canvas.toDataURL('image/webp', 0.85);
+                            if (!data.startsWith('data:image/webp')) {
+                                data = canvas.toDataURL('image/jpeg', 0.85);
+                            }
+                            resolve(data);
+                        } catch (err) {
+                            reject(err);
+                        } finally {
+                            URL.revokeObjectURL(url);
+                        }
+                    };
+                    img.onerror = () => {
+                        URL.revokeObjectURL(url);
+                        reject(new Error('图片读取失败'));
+                    };
+                    img.src = url;
+                });
+            }
+
             avatarInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (ev) => {
-                    const imageData = ev.target.result;
+                try {
+                    const imageData = await makeAvatar(file);
                     const result = await API.updateAvatar(imageData);
                     if (result.success) {
-                        avatarImg.src = imageData;
+                        avatarImg.src = (result.data && result.data.avatar) || imageData;
                         showMsg('msg_username', '头像已更新', 'success');
                     } else {
-                        showMsg('msg_username', '更新失败，请重试', 'error');
+                        showMsg('msg_username', result.message || '头像更新失败，请重试', 'error');
                     }
-                };
-                reader.readAsDataURL(file);
+                } catch (err) {
+                    showMsg('msg_username', err.message || '图片处理失败', 'error');
+                } finally {
+                    avatarInput.value = '';
+                }
             });
 
             /* ========== 用户名修改 ========== */
@@ -267,7 +310,7 @@
                     document.getElementById('username_display').style.display = 'flex';
                     showMsg('msg_username', '用户名已更新', 'success');
                 } else {
-                    showMsg('msg_username', '用户名已被占用或更新失败', 'error');
+                    showMsg('msg_username', result.message || '用户名更新失败，请重试', 'error');
                 }
             });
 
@@ -292,7 +335,7 @@
                     document.getElementById('password_display').style.display = 'flex';
                     showMsg('msg_password', '密码已更新', 'success');
                 } else {
-                    showMsg('msg_password', '当前密码错误', 'error');
+                    showMsg('msg_password', result.message || '密码修改失败，请重试', 'error');
                 }
             });
 
@@ -304,9 +347,12 @@
         });
 
         function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            return String(text == null ? '' : text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function showMsg(id, text, type) {

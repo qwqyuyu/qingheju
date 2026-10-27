@@ -6,9 +6,6 @@
     <title>探索养生之道 - 中医文化日常养生</title>
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/index.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Liu+Jian+Mao+Cao&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -328,7 +325,7 @@
             document.getElementById('tip_mood').textContent = info.mood;
 
             /* ── 便签纸撕落完成标记 ── */
-            const todayKey = 'wellness_done_' + new Date().toISOString().split('T')[0];
+            const todayKey = 'wellness_done_' + window.localDate();
             let doneState = {};
             try {
                 const saved = localStorage.getItem(todayKey);
@@ -362,15 +359,15 @@
 
             /* 加载最新帖子预览 */
             try {
-                const result = await API.getPosts();
-                const posts = result.data || [];
+                const result = await API.getPosts({ pageSize: 3 });
+                const posts = (result.data && result.data.items) || [];
                 const previewContainer = document.getElementById('post_preview');
                 const recentPosts = posts.slice(0, 3);
                 if (recentPosts.length > 0) {
                     previewContainer.innerHTML = recentPosts.map(p => `
                         <a href="discussion.html" class="post_preview_item">
                             <span class="post_preview_title">${escapeHtml(p.title)}</span>
-                            <span class="post_preview_meta">${p.username} · ${p.time}</span>
+                            <span class="post_preview_meta">${escapeHtml(p.username)} · ${escapeHtml(p.time)}</span>
                             <span class="post_preview_likes">♥ ${p.likes || 0}</span>
                         </a>
                     `).join('');
@@ -383,9 +380,12 @@
         });
 
         function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            return String(text == null ? '' : text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function getTodayWellnessInfo(solarTerms) {
@@ -394,7 +394,7 @@
             const day = now.getDate();
             const dayOfWeek = now.getDay();
 
-            const todayStr = now.toISOString().split('T')[0];
+            const todayStr = window.localDate(now);
             let currentTerm = null;
             for (let i = solarTerms.length - 1; i >= 0; i--) {
                 if (solarTerms[i].date <= todayStr) { currentTerm = solarTerms[i]; break; }

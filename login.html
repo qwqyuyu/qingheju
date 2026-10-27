@@ -82,7 +82,7 @@
                 /* 模拟跳转到首页 */
                 window.location.href = 'index.html';
             } else {
-                errorEl.textContent = '用户名或密码错误（请先注册）';
+                errorEl.textContent = result.message || '登录失败，请稍后重试';
             }
         });
 

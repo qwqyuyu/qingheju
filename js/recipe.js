@@ -564,8 +564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         /* 每日推荐 — 基于日期确定性选取一道食谱 */
         function initDailyPush() {
-            const today = new Date().toISOString().split('T')[0];
-            const dayNum = new Date(today).getDate();
+            const dayNum = new Date().getDate();
             const dailyRecipe = RECIPES[dayNum % RECIPES.length];
 
             document.getElementById('daily_push_image').src = dailyRecipe.image || 'images/recipes/placeholder.svg';

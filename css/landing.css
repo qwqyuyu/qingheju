@@ -111,7 +111,7 @@
     position: absolute;
     z-index: 0;
     writing-mode: vertical-rl;
-    font-family: 'Liu Jian Mao Cao', 'Ma Shan Zheng', 'STXingkai', '华文行楷', 'KaiTi', '楷体', serif;
+    font-family: 'STXingkai', '华文行楷', 'STKaiti', 'KaiTi', '楷体', serif;
     color: rgba(255, 255, 255, 0.13);
     letter-spacing: 16px;
     pointer-events: none;

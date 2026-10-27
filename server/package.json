@@ -5,7 +5,11 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js"
+    "dev": "node app.js",
+    "test": "node test/smoke.mjs",
+    "test:context": "node test/context.test.mjs",
+    "test:ratelimit": "node test/ratelimit.test.mjs",
+    "test:routes": "node test/routes.test.mjs"
   },
   "keywords": [
     "tcm",
@@ -15,11 +19,11 @@
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "compression": "^1.8.2",
     "cors": "^2.8.6",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "jsonwebtoken": "^9.0.3",
-    "multer": "^2.1.1",
-    "mysql2": "^3.22.5",
+    "mysql2": "^3.24.6",
     "openai": "^6.42.0"
   }
 }

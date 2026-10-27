@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     username   VARCHAR(20)   NOT NULL UNIQUE,
     email      VARCHAR(100)  NOT NULL DEFAULT '',
     password   VARCHAR(255)  NOT NULL,
-    avatar     VARCHAR(500)  NOT NULL DEFAULT 'images/ui/default_avatar.svg',
+    avatar     MEDIUMTEXT    NOT NULL,
+    avatar_version INT        NOT NULL DEFAULT 0,
+    is_admin   TINYINT(1)    NOT NULL DEFAULT 0,
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_username (username)
 ) ENGINE=InnoDB;
@@ -25,7 +27,9 @@ CREATE TABLE IF NOT EXISTS posts (
     user_id     INT           NOT NULL,
     title       VARCHAR(100)  NOT NULL,
     content     TEXT          NOT NULL,
-    image       MEDIUMTEXT   NOT NULL,  -- 支持最大16MB的base64图片
+    image       MEDIUMTEXT   NOT NULL,  -- 原图 base64（列表接口不返回）
+    image_thumb MEDIUMTEXT   NULL,      -- 列表用缩略图 base64
+    is_featured TINYINT(1)   NOT NULL DEFAULT 0,
     likes_count INT           NOT NULL DEFAULT 0,
     created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -82,6 +86,8 @@ CREATE TABLE IF NOT EXISTS solar_terms (
 
 -- ==========================================
 -- 插入24节气初始数据
+-- 说明：term_date / lunar_date 仅为历史参考，接口日期由
+-- config/solarterm.js 按年计算（立春 → 次年大寒）。
 -- ==========================================
 INSERT INTO solar_terms (name, pinyin, term_date, lunar_date, image, description, health_tip) VALUES
 ('立春', 'lichun', '2026-02-04', '腊月十七', 'images/solarterms/lichun.jpg', '立春是二十四节气之首，标志着春季的开始。东风解冻，蛰虫始振，阳气生发，万物复苏。此时宜养肝护肝，保持心情舒畅。', '宜早睡早起，适当运动，饮食宜清淡，多食新鲜蔬菜，少食酸味多食辛甘以养肝。'),
@@ -95,7 +101,7 @@ INSERT INTO solar_terms (name, pinyin, term_date, lunar_date, image, description
 ('芒种', 'mangzhong', '2026-06-05', '四月二十', 'images/solarterms/mangzhong.jpg', '有芒的麦子快收，有芒的稻子可种。天气炎热，雨水充沛，湿热最重时期。', '宜清补为主，可食鸭肉、鱼等凉性蛋白质，多饮酸梅汤解暑生津，注意防暑祛湿。'),
 ('夏至', 'xiazhi', '2026-06-21', '五月初七', 'images/solarterms/xiazhi.jpg', '一年中白昼最长的一天，阳气最盛。此后阴气始生，养生需注意保护初生的阴气。', '饮食宜清淡，可食绿豆汤、冬瓜汤解暑，午间小憩养心，避免过度出汗伤津。'),
 ('小暑', 'xiaoshu', '2026-07-07', '五月廿三', 'images/solarterms/xiaoshu.jpg', '暑为炎热之意，小暑即天气开始炎热但尚未到最热。此时人体出汗多，易耗气伤津。', '注意防暑降温，多饮水补充津液，可饮菊花茶、薄荷茶清热解暑，饮食宜清补。'),
-('大暑', 'dashu', '2026-07-22', '六月初九', 'images/solarterms/dashu.jpg', '一年中最热的时期，湿热交蒸达到顶点。人体阳气浮于体表，内里反而虚寒。', '切忌贪凉饮冷伤脾胃，可食生姜温中散寒，饮绿豆汤、酸梅汤解暑，注意防暑降温。'),
+('大暑', 'dashu', '2026-07-23', '六月初十', 'images/solarterms/dashu.jpg', '一年中最热的时期，湿热交蒸达到顶点。人体阳气浮于体表，内里反而虚寒。', '切忌贪凉饮冷伤脾胃，可食生姜温中散寒，饮绿豆汤、酸梅汤解暑，注意防暑降温。'),
 ('立秋', 'liqiu', '2026-08-07', '六月廿五', 'images/solarterms/liqiu.jpg', '秋季的开始，暑去凉来。但立秋后暑气难消，有秋老虎之说。气候由热转凉。', '逐渐调整饮食，适当增加滋阴润燥食物，可食银耳、百合、雪梨等，注意养肺。'),
 ('处暑', 'chushu', '2026-08-23', '七月十一', 'images/solarterms/chushu.jpg', '暑气消退，秋意渐浓。此时气候干燥，人体容易出现口干舌燥、皮肤干燥等秋燥症状。', '注意滋阴润燥，多饮温水，可食蜂蜜、银耳、百合等润肺生津食物，少吃辛辣。'),
 ('白露', 'bailu', '2026-09-07', '七月廿六', 'images/solarterms/bailu.jpg', '天气转凉，清晨露水凝结。昼夜温差加大，秋燥更加明显，是养肺润燥的关键时期。', '早晚注意添衣保暖，饮食以滋阴润肺为主，可食雪梨、银耳、蜂蜜，多饮温水。'),
@@ -105,6 +111,6 @@ INSERT INTO solar_terms (name, pinyin, term_date, lunar_date, image, description
 ('立冬', 'lidong', '2026-11-07', '九月廿九', 'images/solarterms/lidong.jpg', '冬季的开始，万物收藏。阳气潜藏，阴气盛极，草木凋零，蛰虫伏藏。', '宜早卧晚起，待日光而出，注意保暖，饮食宜温补，可食羊肉、核桃等补肾食物。'),
 ('小雪', 'xiaoxue', '2026-11-22', '十月十四', 'images/solarterms/xiaoxue.jpg', '开始降雪但还不到大雪纷飞之时。寒气加重，阳气继续潜藏，阴气盛。', '注意保暖防寒，保持心情愉悦防抑郁，饮食宜温补，可食黑豆、黑芝麻等黑色食物补肾。'),
 ('大雪', 'daxue', '2026-12-07', '十月廿九', 'images/solarterms/daxue.jpg', '降雪量增大，天寒地冻。阴气最盛时期，人体阳气潜藏于内，是进补的好时节。', '适合温补，可食羊肉、牛肉等温性食物，注意头部和脚部保暖，早卧晚起。'),
-('冬至', 'dongzhi', '2026-12-21', '十一月十四', 'images/solarterms/dongzhi.jpg', '一年中白昼最短的一天，阴极之至，阳气始生。冬至大如年，是重要的节气兼传统节日。', '宜食饺子、汤圆等传统食物，适当进补如当归生姜羊肉汤，注意保暖，静养以待阳气生发。'),
+('冬至', 'dongzhi', '2026-12-22', '冬月十四', 'images/solarterms/dongzhi.jpg', '一年中白昼最短的一天，阴极之至，阳气始生。冬至大如年，是重要的节气兼传统节日。', '宜食饺子、汤圆等传统食物，适当进补如当归生姜羊肉汤，注意保暖，静养以待阳气生发。'),
 ('小寒', 'xiaohan', '2027-01-05', '十一月廿九', 'images/solarterms/xiaohan.jpg', '进入一年中最寒冷的时段。寒气凛冽，万物潜藏，人体阳气内敛。', '注意防寒保暖，减少户外活动，饮食宜温热，可食当归生姜羊肉汤等温补驱寒。'),
 ('大寒', 'dahan', '2027-01-20', '腊月十三', 'images/solarterms/dahan.jpg', '一年中最寒冷的节气。寒气逆极，万物蛰藏。大寒过后便是立春，是新旧交替之时。', '继续温补防寒，但不宜大补，可逐渐转为平补，为春季养生做好准备，保持心情平和。');

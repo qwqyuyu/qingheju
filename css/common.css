@@ -214,7 +214,12 @@ input, textarea {
 .section_divider {
     width: 60px;
     height: 2px;
-    background: var(--color-gold);
+    /* 线条中间留出空隙给菱形，不要用背景色去盖线：
+       在深色/图片背景上，米色底块会变成一个像输入框的浅色方块 */
+    background: linear-gradient(to right,
+        var(--color-gold) 0%, var(--color-gold) 32%,
+        transparent 32%, transparent 68%,
+        var(--color-gold) 68%, var(--color-gold) 100%);
     margin: 0 auto 30px;
     position: relative;
 }
@@ -225,10 +230,11 @@ input, textarea {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 8px;
+    font-size: 9px;
+    line-height: 1;
     color: var(--color-gold);
-    background: var(--color-bg);
-    padding: 0 8px;
+    background: none;
+    padding: 0;
 }
 
 /* === 通用卡片样式 === */

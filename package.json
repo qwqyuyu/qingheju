@@ -7,9 +7,7 @@
   },
   "scripts": {
     "start": "cd server && node app.js",
-    "build": "cd server && npm install"
-  },
-  "dependencies": {
-    "@railway/cli": "^5.20.0"
+    "build": "cd server && npm install",
+    "test": "cd server && npm test"
   }
 }

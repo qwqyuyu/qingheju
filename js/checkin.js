@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const result = await API.checkin();
         if (result.success) {
             /* 同步签到数据到本地缓存 */
-            const today = new Date().toISOString().split('T')[0];
+            const today = window.localDate();
             const signDates = JSON.parse(localStorage.getItem('sign_dates') || '[]');
             if (!signDates.includes(today)) signDates.unshift(today);
             localStorage.setItem('sign_dates', JSON.stringify(signDates));
@@ -72,6 +72,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             /* 显示卡片动画 */
             showCard();
+        } else {
+            statusEl.textContent = result.message || '签到失败，请稍后重试';
         }
     });
 
@@ -135,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* 获取当天卡片背景编号 */
     function getTodayBgIndex() {
-        const today = new Date().toISOString().split('T')[0];
+        const today = window.localDate();
         const storedDate = localStorage.getItem('card_bg_date');
         const storedIndex = parseInt(localStorage.getItem('card_bg_index') || '0');
         if (storedDate === today && storedIndex > 0) {
@@ -163,8 +165,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* 展示卡片（3D翻转动画）dateStr 可选，默认今天 */
     async function showCard(dateStr) {
-        dateStr = dateStr || new Date().toISOString().split('T')[0];
-        const todayStr = new Date().toISOString().split('T')[0];
+        dateStr = dateStr || window.localDate();
+        const todayStr = window.localDate();
         const isToday = (dateStr === todayStr);
 
         const overlay = document.getElementById('card_overlay');

@@ -3,21 +3,13 @@
    功能：生成月历网格、标注农历/节气、签到标记、红色毛笔圈动画
    ========================================== */
 
-/* 农历日期数据（1900-2100）简化版，仅用于展示基本农历信息 */
-const LUNAR_INFO = {
-    /* 农历月名 */
-    monthNames: ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'],
-    /* 农历日名 */
-    dayNames: [
-        '初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
-        '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
-        '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'
-    ]
-};
+/* 农历换算依赖 js/vendor/lunar.js（lunar-javascript），
+   未加载时农历行自动隐藏，不会显示错误数据 */
 
 const Calendar = (() => {
     let currentYear, currentMonth;
     let solarTerms = [];
+    let loadedTermYears = new Set();
     let signDates = [];
 
     /* 初始化 */
@@ -25,11 +17,8 @@ const Calendar = (() => {
         currentYear = year || new Date().getFullYear();
         currentMonth = month !== undefined ? month : new Date().getMonth(); /* 0-11 */
 
-        /* 加载节气数据 */
-        const result = await API.getSolarTerms();
-        if (result.success) {
-            solarTerms = result.data;
-        }
+        /* 加载当前显示月份所属“节气年”的数据（1 月属于上一节气年） */
+        await ensureTerms(currentYear, currentMonth);
 
         /* 加载签到日期（优先从后端，降级到本地缓存） */
         try {
@@ -51,6 +40,22 @@ const Calendar = (() => {
         bindEvents();
     }
 
+    /* 节气接口按“节气年”返回（立春 → 次年大寒）：1 月属于上一年 */
+    function termYearFor(year, month) {
+        return month === 0 ? year - 1 : year;
+    }
+
+    /* 按需加载某个节气年的节气，跨年浏览时自动补齐 */
+    async function ensureTerms(year, month) {
+        const termYear = termYearFor(year, month);
+        if (loadedTermYears.has(termYear)) return;
+        const result = await API.getSolarTerms(termYear);
+        if (result && result.success && Array.isArray(result.data)) {
+            solarTerms = solarTerms.concat(result.data);
+            loadedTermYears.add(termYear);
+        }
+    }
+
     /* 渲染日历 */
     function render() {
         const grid = document.getElementById('calendar_grid');
@@ -67,8 +72,7 @@ const Calendar = (() => {
         /* 上月最后几天 */
         const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
 
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = window.localDate();
 
         let cells = [];
 
@@ -132,25 +136,35 @@ const Calendar = (() => {
         });
     }
 
-    /* 简化农历计算（仅作展示用） */
+    /* 农历日期：使用 lunar-javascript（js/vendor/lunar.js）
+       初一显示月份（如“九月”“闰二月”），其余显示日（如“十七”） */
     function getLunarDay(year, month, day) {
-        /* 使用简单的偏移近似，实际项目中应使用完整的农历算法库 */
-        const date = new Date(year, month - 1, day);
-        const lunarDayIndex = (date.getDate() + 15) % 30;
-        return LUNAR_INFO.dayNames[lunarDayIndex];
+        if (typeof Solar === 'undefined') return '';
+        try {
+            const lunar = Solar.fromYmd(year, month, day).getLunar();
+            if (lunar.getDay() === 1) {
+                /* 闰月时 getMonthInChinese() 自带“闰”字，如“闰六” */
+                return lunar.getMonthInChinese() + '月';
+            }
+            return lunar.getDayInChinese();
+        } catch (e) {
+            return '';
+        }
     }
 
     /* 绑定翻页事件 + 日历格子点击 */
     function bindEvents() {
-        document.getElementById('cal_prev').addEventListener('click', () => {
+        document.getElementById('cal_prev').addEventListener('click', async () => {
             currentMonth--;
             if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            await ensureTerms(currentYear, currentMonth);
             render();
         });
 
-        document.getElementById('cal_next').addEventListener('click', () => {
+        document.getElementById('cal_next').addEventListener('click', async () => {
             currentMonth++;
             if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            await ensureTerms(currentYear, currentMonth);
             render();
         });
 
