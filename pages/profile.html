@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人中心 - 清和居</title>
-    <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/profile.css">
 </head>
 <body>
 
     <!-- 导航栏 -->
     <nav class="navbar">
         <div class="nav_logo">
-            <img class="nav_logo_icon" src="images/logo.png" alt="logo">
+            <img class="nav_logo_icon" src="/images/logo.png" alt="logo">
             <span class="nav_logo_text">清和居</span>
         </div>
         <button class="nav_toggle" aria-label="菜单">
@@ -39,7 +39,7 @@
         <!-- 用户信息卡片 -->
         <div class="profile_header" id="profile_header">
             <div class="profile_avatar_wrap" id="avatar_wrap">
-                <img class="profile_avatar" id="profile_avatar" src="images/ui/default_avatar.svg" alt="头像">
+                <img class="profile_avatar" id="profile_avatar" src="/images/ui/default_avatar.svg" alt="头像">
                 <div class="profile_avatar_overlay">更换头像</div>
             </div>
             <input type="file" id="avatar_input" accept="image/*" style="display:none;">
@@ -143,8 +143,8 @@
         <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
     </footer>
 
-    <script src="js/common.js"></script>
-    <script src="js/api.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/api.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const user = API.getCurrentUser();
@@ -162,7 +162,7 @@
             document.getElementById('settings_password').style.display = 'block';
             document.getElementById('logout_btn').style.display = 'inline-block';
             document.getElementById('profile_name').textContent = user.username;
-            document.getElementById('profile_avatar').src = user.avatar || 'images/ui/default_avatar.svg';
+            document.getElementById('profile_avatar').src = user.avatar || '/images/ui/default_avatar.svg';
             document.getElementById('profile_since').textContent = '养生修行者';
             document.getElementById('current_username').textContent = user.username;
             document.getElementById('input_username').value = user.username;

@@ -1,4 +1,6 @@
-# 清和居 · 中医文化日常养生平台 学生比赛作品
+# 清和居 · 中医文化日常养生平台
+
+> **学生比赛项目**：本项目为参赛作品，用于学习、交流与展示，非商业用途。
 
 一个以“中医养生文化”为主题的静态前端 + Node.js 后端项目：食谱养生、二十四节气、中医文化、养生社区、每日签到、体质自测（AI 问诊）。
 
@@ -14,9 +16,10 @@
 
 ```
 qingheju/
-├─ *.html                 前端页面（index 为入口落地页，home 为主站首页）
+├─ pages/                 所有前端页面（index 为入口落地页，home 为主站首页）
 ├─ css/ js/ images/       前端资源（js/vendor/lunar.js 为农历库）
 ├─ start.bat / start.ps1  Windows 一键启动脚本
+├─ start.sh               Linux / macOS 一键启动脚本
 ├─ server/                后端
 │  ├─ app.js              入口：中间件、静态托管、路由、404/错误处理
 │  ├─ config/             db、auth、ratelimit、validate、avatar、solarterm、ai、context、env（.env 加载）、time（时区）、body（请求体上限）、streak（连续签到）
@@ -26,6 +29,8 @@ qingheju/
 │  └─ .env.example        环境变量模板
 └─ README.md
 ```
+
+页面地址形如 `/pages/home.html`；访问根路径 `/` 返回入口页 `pages/index.html`。旧地址 `/home.html` 会 301 重定向到 `/pages/home.html`。
 
 ## 快速启动（Windows）
 
@@ -51,7 +56,7 @@ qingheju/
    .\start.ps1 -Port 3210      # 指定端口
    ```
 
-浏览器打开 <http://localhost:3112/home.html>。
+浏览器打开 <http://localhost:3112/>（入口页 `pages/index.html`）。
 
 手动方式：
 
@@ -60,6 +65,38 @@ cd server
 npm install
 npm start
 ```
+
+## 快速启动（Linux / macOS）
+
+1. 安装 Node.js 18+（例如 `sudo apt install nodejs npm`，或用 nvm 安装较新版本）。
+2. 启动并初始化数据库：
+
+   ```bash
+   sudo systemctl start mariadb          # 或 mysql
+   mysql -u root -p < server/schema.sql
+   ```
+
+3. 准备配置：
+
+   ```bash
+   cp server/.env.example server/.env
+   nano server/.env                      # 填 MYSQL_*、JWT_SECRET、AI_*
+   ```
+
+4. 启动：
+
+   ```bash
+   chmod +x start.sh
+   ./start.sh                  # 默认端口（server/app.js 里的 3112），不打开浏览器
+   ./start.sh -p 3210          # 指定端口
+   ./start.sh --browser        # 启动后顺便打开浏览器（可选）
+   ./start.sh -h               # 查看帮助
+   ```
+
+脚本会做和 `start.ps1` 相同的事：检查 Node 版本、首次自动装依赖、读取 `server/.env`、检查端口占用和数据库连通性、校验 `JWT_SECRET`，最后启动服务。
+
+> `start.sh` 默认**不打开浏览器**（服务器/远程环境更常见），需要时加 `--browser`；`--no-browser` 仍可显式指定，等价于默认行为。
+> `start.sh` 已按 LF 换行提交（`.gitattributes` 保证），git 里也记录了可执行位；如果克隆后提示没有执行权限，`chmod +x start.sh` 即可。
 
 ## 环境变量（server/.env）
 
@@ -130,14 +167,14 @@ npm run test:ratelimit   # 限流器
 本项目不绑定特定云平台，可运行在任何 Node.js 18+ 环境：
 
 - 安装依赖：`cd server && npm install`（有 `package-lock.json` 时用 `npm ci` 亦可）。
-- 启动：`cd server && npm start`，监听 `PORT` 环境变量（默认 3112）。
+- 启动：`cd server && npm start`，监听 `PORT` 环境变量（默认 3112）；Linux / macOS 也可以直接 `./start.sh`（带端口/DB/AI/JWT 预检查）。
 - 静态页面由同一个 Express 服务托管，不需要额外的前端服务。
 - `server/.env` 不会进仓库，部署时通过环境变量配置 `MYSQL_*` / `AI_*`。
 
 ## 备注
 
 - 二十四节气的日期与农历由 `config/solarterm.js` 按年计算（`js/vendor/lunar.js` 天文算法），支持 1900-2200；接口 `GET /api/solarterms?year=YYYY` 返回“立春(YYYY) → 大寒(YYYY+1)”的 24 条，默认当前节气年。数据库 `solar_terms` 只提供名称、图片、描述、养生建议，`term_date` / `lunar_date` 列仅作历史参考、接口不再读取。现有数据中“大暑 2026”与“冬至 2026”两条错误日期已修正为 2026-07-23、2026-12-22。
-- 静态资源采用白名单托管：只暴露 `css/`、`js/`、`images/` 和根目录真实存在的 `.html` 页面；`server/` 源码、`.env`、SQL 导出、`package.json` 等不再通过 HTTP 访问。数据库导出文件 `server/qingheju_dump.sql` 已从当前工作树和索引移除（本地备份不入库）；git 历史中的旧提交仍保留，如需彻底清除需重写历史。
+- 静态资源采用白名单托管：只暴露 `css/`、`js/`、`images/` 和 `pages/` 下真实存在的 `.html` 页面；`server/` 源码、`.env`、SQL 导出、`package.json` 等不再通过 HTTP 访问。所有页面在 `pages/` 目录里，页面内的静态资源引用统一写成 `/css/...`、`/js/...`、`/images/...` 绝对路径，页面之间的链接仍用同目录相对路径（`home.html` 等）。数据库导出文件 `server/qingheju_dump.sql` 已从当前工作树和索引移除（本地备份不入库）；git 历史中的旧提交仍保留，如需彻底清除需重写历史。
 - AI 接口需要登录，并按用户限流：默认 10 分钟 30 次，超出返回 429；可用 `AI_RATE_LIMIT_WINDOW_MS` / `AI_RATE_LIMIT_MAX` 调整。限流基于单进程内存，多实例部署需要换成共享存储（如 Redis）。
 - 用户名限制为 2-20 位中文、字母、数字、下划线或短横线，禁止引号/尖括号等字符；所有用户内容在页面输出时统一做 HTML 转义，防止存储型 XSS。
 - 输入长度与字段对齐：标题 ≤100、帖子内容 ≤15000、评论 ≤500、密码 6-64 位且 ≤72 字节、邮箱 ≤100；非法 ID、超长内容、评论不存在的帖子分别返回 400/404，不再变成 500。

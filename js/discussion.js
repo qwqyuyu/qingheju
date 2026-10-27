@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return `
                 <div class="post_card${p.featured ? ' featured' : ''}" data-id="${p.id}">
                     <div class="post_card_header">
-                        <img class="post_avatar" src="${escapeHtml(p.avatar || 'images/ui/default_avatar.svg')}" alt="${escapeHtml(p.username)}" onerror="this.style.background='#D8CFBF'">
+                        <img class="post_avatar" src="${escapeHtml(p.avatar || '/images/ui/default_avatar.svg')}" alt="${escapeHtml(p.username)}" onerror="this.style.background='#D8CFBF'">
                         <span class="post_username">${escapeHtml(p.username)}</span>
                         <span class="post_time">${escapeHtml(p.time)}</span>
                     </div>
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         content.innerHTML = `
             <div class="post_card_header" style="margin-bottom:14px;">
-                <img class="post_avatar" src="${escapeHtml(post.avatar || 'images/ui/default_avatar.svg')}" alt="${escapeHtml(post.username)}">
+                <img class="post_avatar" src="${escapeHtml(post.avatar || '/images/ui/default_avatar.svg')}" alt="${escapeHtml(post.username)}">
                 <span class="post_username">${escapeHtml(post.username)}</span>
                 <span class="post_time">${escapeHtml(post.time)}</span>
             </div>

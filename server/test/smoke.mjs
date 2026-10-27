@@ -293,12 +293,18 @@ async function main() {
     }
     ok('server/、.env、dump、package.json、README 均不可通过 HTTP 访问');
 
-    for (const p of ['/home.html', '/css/common.css', '/js/api.js', '/images/ui/default_avatar.svg']) {
+    for (const p of ['/pages/home.html', '/pages/index.html', '/css/common.css', '/js/api.js', '/images/ui/default_avatar.svg']) {
         const res = await fetch(base + p);
         assert.equal(res.status, 200, p + ' 应可访问');
     }
     assert.equal((await fetch(base + '/')).status, 200);
-    ok('HTML/CSS/JS/图片/首页正常访问');
+    ok('pages/ 下的页面、CSS/JS/图片、首页正常访问');
+
+    /* 旧地址兼容：/home.html 重定向到 /pages/home.html */
+    const legacy = await fetch(base + '/home.html', { redirect: 'manual' });
+    assert.equal(legacy.status, 301);
+    assert.equal(legacy.headers.get('location'), '/pages/home.html');
+    ok('旧地址 /home.html 301 重定向到 /pages/home.html');
 
     /* 16. AI 接口需要登录（不触发真实 AI 调用） */
     r = await api('POST', '/api/ai/chat', { messages: [{ role: 'user', content: '你好' }] }, false);

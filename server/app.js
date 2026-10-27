@@ -62,9 +62,10 @@ app.use((req, res, next) => {
     next();
 });
 
-/* 静态资源白名单：只暴露 css/、js/、images/ 与根目录的 HTML 页面。
-   server/ 源码、.env、数据库导出、package.json 等不再通过 HTTP 访问。 */
+/* 页面统一放在 pages/ 下：只提供该目录里真实存在的 .html。
+   server/ 源码、.env、数据库导出、package.json 等不通过 HTTP 访问。 */
 const ROOT = path.join(__dirname, '..');
+const PAGES_DIR = path.join(ROOT, 'pages');
 const staticOptions = {
     maxAge: '1h',
     index: false,
@@ -79,21 +80,23 @@ const staticOptions = {
 app.use('/css', express.static(path.join(ROOT, 'css'), staticOptions));
 app.use('/js', express.static(path.join(ROOT, 'js'), staticOptions));
 app.use('/images', express.static(path.join(ROOT, 'images'), staticOptions));
+app.use('/pages', express.static(PAGES_DIR, staticOptions));
 
-/* 根目录只提供真实存在的 .html 页面；启动时扫描一次，新增页面自动生效 */
+/* 启动时扫描一次 pages/，新增页面自动生效 */
 const pageFiles = new Set(
-    fs.readdirSync(ROOT).filter(name => name.toLowerCase().endsWith('.html'))
+    fs.readdirSync(PAGES_DIR).filter(name => name.toLowerCase().endsWith('.html'))
 );
 
+/* 首页固定为 pages/index.html */
 app.get('/', (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(path.join(ROOT, 'index.html'));
+    res.sendFile(path.join(PAGES_DIR, 'index.html'));
 });
 
+/* 兼容旧地址：/home.html 重定向到 /pages/home.html（只认白名单里的页面） */
 app.get('/:page', (req, res, next) => {
     if (!pageFiles.has(req.params.page)) return next();
-    res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(path.join(ROOT, req.params.page));
+    res.redirect(301, '/pages/' + req.params.page);
 });
 
 /* 路由模块 */

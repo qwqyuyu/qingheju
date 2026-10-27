@@ -16,7 +16,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '45分钟',
         season: ['summer'],
-        image: 'images/recipes/lvdoubaihetang.jpg',
+        image: '/images/recipes/lvdoubaihetang.jpg',
         desc: '清热解暑，养心安神，是夏季消暑的经典甜汤',
         ingredients: [
             { name: '绿豆', amount: '100g' },
@@ -40,7 +40,7 @@ var RECIPES = [
         difficulty: '中等',
         time: '90分钟',
         season: ['summer'],
-        image: 'images/recipes/dongguayimipaigu.jpg',
+        image: '/images/recipes/dongguayimipaigu.jpg',
         desc: '健脾祛湿，清热利尿，夏季祛湿消肿的经典靓汤',
         ingredients: [
             { name: '冬瓜', amount: '500g' },
@@ -66,7 +66,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '60分钟',
         season: ['summer'],
-        image: 'images/recipes/kuguahuangdoushourou.jpg',
+        image: '/images/recipes/kuguahuangdoushourou.jpg',
         desc: '清热消暑，明目解毒，苦后回甘的夏日清补汤',
         ingredients: [
             { name: '苦瓜', amount: '1根（约300g）' },
@@ -94,7 +94,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '50分钟',
         season: ['summer'],
-        image: 'images/recipes/heyelianzizhou.jpg',
+        image: '/images/recipes/heyelianzizhou.jpg',
         desc: '清暑化湿，养心安神，带着荷叶清香的消暑粥品',
         ingredients: [
             { name: '大米', amount: '100g' },
@@ -119,7 +119,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '40分钟',
         season: ['summer', 'autumn', 'winter'],
-        image: 'images/recipes/shanyaogouqizhou.jpg',
+        image: '/images/recipes/shanyaogouqizhou.jpg',
         desc: '健脾益气，滋阴润燥，四季皆宜的温补粥品',
         ingredients: [
             { name: '大米', amount: '100g' },
@@ -145,7 +145,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '15分钟',
         season: ['summer'],
-        image: 'images/recipes/kuguachaodang.jpg',
+        image: '/images/recipes/kuguachaodang.jpg',
         desc: '清热下火，简单快手，夏季家常餐桌的经典菜式',
         ingredients: [
             { name: '苦瓜', amount: '1根（约250g）' },
@@ -170,7 +170,7 @@ var RECIPES = [
         difficulty: '中等',
         time: '25分钟',
         season: ['summer', 'autumn'],
-        image: 'images/recipes/shanyaomuerchaoroupian.jpg',
+        image: '/images/recipes/shanyaomuerchaoroupian.jpg',
         desc: '健脾润肺，脆嫩爽口，荤素搭配的养生小炒',
         ingredients: [
             { name: '山药', amount: '200g' },
@@ -202,7 +202,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '15分钟',
         season: ['summer'],
-        image: 'images/recipes/liangbanhuangguamuer.jpg',
+        image: '/images/recipes/liangbanhuangguamuer.jpg',
         desc: '清脆爽口，开胃解腻，夏季消暑必备凉菜',
         ingredients: [
             { name: '黄瓜', amount: '2根' },
@@ -230,7 +230,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '20分钟',
         season: ['summer'],
-        image: "images/recipes/suanniqiezi'.jpg",
+        image: "/images/recipes/suanniqiezi'.jpg",
         desc: '软糯入味，蒜香浓郁，蒸制做法的经典家常凉菜',
         ingredients: [
             { name: '长茄子', amount: '2根' },
@@ -260,7 +260,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '40分钟',
         season: ['summer'],
-        image: 'images/recipes/suanmeitang.jpg',
+        image: '/images/recipes/suanmeitang.jpg',
         desc: '生津止渴，消食开胃，传统京味消暑饮品',
         ingredients: [
             { name: '乌梅', amount: '8-10颗' },
@@ -287,7 +287,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '10分钟',
         season: ['summer'],
-        image: 'images/recipes/jinyinhuabohecha.jpg',
+        image: '/images/recipes/jinyinhuabohecha.jpg',
         desc: '疏风散热，清利咽喉，夏季解暑的清香花草茶',
         ingredients: [
             { name: '金银花', amount: '5g' },
@@ -313,7 +313,7 @@ var RECIPES = [
         difficulty: '简单',
         time: '60分钟',
         season: ['summer', 'autumn', 'winter'],
-        image: 'images/recipes/yinerlianzigeng.jpg',
+        image: '/images/recipes/yinerlianzigeng.jpg',
         desc: '滋阴润肺，养心安神，四季皆宜的滋补甜品',
         ingredients: [
             { name: '银耳', amount: '1朵（约20g）' },
@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             grid.innerHTML = herbs.map(h => {
                 const seasonTip = h.seasonalTips ? h.seasonalTips[currentSeason] || '' : '';
-                const imgSrc = h.image || ('images/herbs/' + h.pinyin + '.svg');
+                const imgSrc = h.image || ('/images/herbs/' + h.pinyin + '.svg');
 
                 return `
                     <div class="herb_card" data-id="${h.id}" data-category="${h.category}">
@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function showHerbModal(herb) {
-            const imgPath = herb.image || ('images/herbs/' + herb.pinyin + '.svg');
+            const imgPath = herb.image || ('/images/herbs/' + herb.pinyin + '.svg');
             document.getElementById('herb_modal_image').src = imgPath;
             document.getElementById('herb_modal_image').alt = herb.name;
             document.getElementById('herb_modal_image').style.display = 'block';
@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dayNum = new Date().getDate();
             const dailyRecipe = RECIPES[dayNum % RECIPES.length];
 
-            document.getElementById('daily_push_image').src = dailyRecipe.image || 'images/recipes/placeholder.svg';
+            document.getElementById('daily_push_image').src = dailyRecipe.image || '/images/recipes/placeholder.svg';
             document.getElementById('daily_push_image').alt = dailyRecipe.name;
             document.getElementById('daily_push_name').textContent = dailyRecipe.name;
             document.getElementById('daily_push_desc').textContent = dailyRecipe.desc;
@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             grid.innerHTML = recipes.map(r => {
-                var imgSrc = r.image || 'images/recipes/placeholder.svg';
+                var imgSrc = r.image || '/images/recipes/placeholder.svg';
                 return `
                     <div class="recipe_card" data-id="${r.id}">
                         <img class="recipe_card_image" src="${imgSrc}" alt="${r.name}" loading="lazy">
@@ -640,7 +640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function showRecipeModal(recipe) {
-            document.getElementById('recipe_modal_image').src = recipe.image || 'images/recipes/placeholder.svg';
+            document.getElementById('recipe_modal_image').src = recipe.image || '/images/recipes/placeholder.svg';
             document.getElementById('recipe_modal_image').alt = recipe.name;
             document.getElementById('recipe_modal_name').textContent = recipe.name;
             document.getElementById('recipe_modal_difficulty').textContent = recipe.difficulty;

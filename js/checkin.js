@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardTitle = term.name;
             cardText = term.description;
             cardTip = '养生建议：' + (term.healthTip || '顺应自然，调和阴阳');
-            cardImgPath = term.image || ('images/solarterms/' + term.pinyin + '.svg');
+            cardImgPath = term.image || ('/images/solarterms/' + term.pinyin + '.svg');
             cardIsTerm = true;
         } else {
             try {
@@ -122,12 +122,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cardTitle = randomHerb.name;
                 cardText = randomHerb.effect;
                 cardTip = seasonTip ? `时令建议：${seasonTip}` : `性味归经：${randomHerb.nature} · ${randomHerb.meridian}`;
-                cardImgPath = (randomHerb.image) ? randomHerb.image : 'images/herbs/gouqi.png';
+                cardImgPath = (randomHerb.image) ? randomHerb.image : '/images/herbs/gouqi.png';
             } else {
                 cardTitle = '枸杞';
                 cardText = '滋补肝肾，益精明目。';
                 cardTip = '养生建议：可与菊花泡茶，养肝明目';
-                cardImgPath = 'images/herbs/gouqi.png';
+                cardImgPath = '/images/herbs/gouqi.png';
             }
             cardIsTerm = false;
         }
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         /* 应用卡片背景 */
         var bgIndex = isToday ? getTodayBgIndex() : (cardData.bgIndex || 1);
-        cardBack.style.background = "url('images/card_bg_" + bgIndex + ".png') center/cover no-repeat";
+        cardBack.style.background = "url('/images/card_bg_" + bgIndex + ".png') center/cover no-repeat";
 
         /* 设置卡片内容 */
         document.getElementById('card_title').textContent = cardData.title;

@@ -137,7 +137,7 @@ if (-not $env:JWT_SECRET -or $env:JWT_SECRET.Length -lt 32) {
 
 # ---------- 8. 启动 ----------
 Write-Host ''
-Write-Step "启动后端 → http://localhost:$Port/  （首页 /home.html）"
+Write-Step "启动后端 → http://localhost:$Port/  （首页 pages/index.html）"
 Write-Step '按 Ctrl+C 停止服务'
 Write-Host ''
 
@@ -146,7 +146,7 @@ if (-not $NoBrowser) {
         param($url)
         Start-Sleep -Seconds 3
         try { Start-Process $url } catch { }
-    } -ArgumentList "http://localhost:$Port/home.html" | Out-Null
+    } -ArgumentList "http://localhost:$Port/" | Out-Null
 }
 
 Push-Location $serverDir

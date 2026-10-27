@@ -113,8 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
         msgDiv.className = 'chat_msg ' + type;
 
         const avatarSrc = type === 'assistant'
-            ? 'images/constitution/ai_avatar.png'
-            : (user ? (user.avatar || 'images/ui/default_avatar.svg') : 'images/ui/default_avatar.svg');
+            ? '/images/constitution/ai_avatar.png'
+            : (user ? (user.avatar || '/images/ui/default_avatar.svg') : '/images/ui/default_avatar.svg');
 
         msgDiv.innerHTML = ''
             + '<img class="chat_msg_avatar" src="' + avatarSrc + '" alt="">'
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         typingDiv.className = 'chat_msg assistant';
         typingDiv.id = 'typing_indicator';
         typingDiv.innerHTML = ''
-            + '<img class="chat_msg_avatar" src="images/constitution/ai_avatar.png" alt="">'
+            + '<img class="chat_msg_avatar" src="/images/constitution/ai_avatar.png" alt="">'
             + '<div class="chat_typing"><span></span><span></span><span></span></div>';
         chatMessages.appendChild(typingDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
