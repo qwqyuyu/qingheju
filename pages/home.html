@@ -264,8 +264,8 @@
         <p>本站内容仅供参考，不构成医疗建议。如有健康问题请咨询专业医师。</p>
     </footer>
 
-    <script src="/js/common.js"></script>
-    <script src="/js/api.js"></script>
+    <script src="/js/common.js?v=20261030-p2"></script>
+    <script src="/js/api.js?v=20261030-p2"></script>
     <script>
         /* ========== 内容页专属脚本 ========== */
 
@@ -300,9 +300,11 @@
             /* 加载今日养生推荐 */
             const termsResult = await API.getSolarTerms();
             const solarTerms = termsResult.data || [];
-            const todayTerm = API.isTodaySolarTerm(solarTerms);
+            /* 优先用服务端的“今天”（APP_TIMEZONE），跨时区时不会差一天 */
+            const serverToday = (termsResult && termsResult.today) || window.localDate();
+            const todayTerm = API.isTodaySolarTerm(solarTerms, serverToday);
 
-            const info = getTodayWellnessInfo(solarTerms);
+            const info = getTodayWellnessInfo(solarTerms, serverToday);
 
             if (todayTerm) {
                 document.getElementById('section_title').textContent = '今日节气 · 顺时养生';
@@ -325,15 +327,18 @@
             document.getElementById('tip_mood').textContent = info.mood;
 
             /* ── 便签纸撕落完成标记 ── */
-            const todayKey = 'wellness_done_' + window.localDate();
+            /* 键按用户隔离：否则同设备换账号后会读到上一个账号的“已完成” */
+            const todayKey = window.userKey('wellness_done_' + serverToday);
             let doneState = {};
             try {
                 const saved = localStorage.getItem(todayKey);
                 if (saved) doneState = JSON.parse(saved);
-            } catch (e) { /* ignore */ }
+            } catch (e) { doneState = {}; }
 
+            /* 只清理“本账号”其他日期的记录，别动其他账号的 */
+            const donePrefix = window.userKey('wellness_done_');
             Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('wellness_done_') && key !== todayKey) {
+                if (key.indexOf(donePrefix) === 0 && key !== todayKey) {
                     localStorage.removeItem(key);
                 }
             });
@@ -388,13 +393,20 @@
                 .replace(/'/g, '&#39;');
         }
 
-        function getTodayWellnessInfo(solarTerms) {
+        /* todayStr 传入服务端日期时，季节/星期/节气判断全部以它为准 */
+        function getTodayWellnessInfo(solarTerms, todayStr) {
             const now = new Date();
-            const month = now.getMonth() + 1;
-            const day = now.getDate();
-            const dayOfWeek = now.getDay();
+            const parts = String(todayStr || '').split('-');
+            const hasServerDate = parts.length === 3 &&
+                parts[0].length === 4 && parts[1].length === 2 && parts[2].length === 2;
 
-            const todayStr = window.localDate(now);
+            const month = hasServerDate ? Number(parts[1]) : now.getMonth() + 1;
+            const day = hasServerDate ? Number(parts[2]) : now.getDate();
+            const dayOfWeek = hasServerDate
+                ? new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getDay()
+                : now.getDay();
+
+            if (!hasServerDate) todayStr = window.localDate(now);
             let currentTerm = null;
             for (let i = solarTerms.length - 1; i >= 0; i--) {
                 if (solarTerms[i].date <= todayStr) { currentTerm = solarTerms[i]; break; }

@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const terms = result.data;
-    const today = window.localDate();
+    /* 优先用服务端的“今天”（APP_TIMEZONE），跨时区时不会把当前节气认错一天 */
+    const today = (result && result.today) || window.localDate();
 
     /* 找到当前节气（最近一个日期 <= 今天的节气） */
     let currentTerm = null;

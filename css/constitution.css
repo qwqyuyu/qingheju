@@ -136,6 +136,33 @@
     border-radius: 12px 4px 12px 12px;
 }
 
+/* 气泡内排版：AI 回复会带 **粗体** 与 - 列表（由 constitution.js 生成）。
+   统一收掉浏览器默认的段落/列表外边距，避免消息之间被撑得过开。 */
+.chat_msg_bubble > :first-child { margin-top: 0; }
+.chat_msg_bubble > :last-child  { margin-bottom: 0; }
+.chat_msg_bubble p {
+    margin: 0 0 8px;
+}
+.chat_msg_bubble p:last-child {
+    margin-bottom: 0;
+}
+.chat_msg_bubble ul,
+.chat_msg_bubble ol {
+    margin: 0 0 8px;
+    padding-left: 1.35em;
+    /* common.css 里有全局 ul,ol { list-style: none }，气泡内要显式恢复符号 */
+    list-style: disc outside;
+}
+.chat_msg_bubble ol {
+    list-style: decimal outside;
+}
+.chat_msg_bubble li {
+    margin: 2px 0;
+}
+.chat_msg_bubble strong {
+    font-weight: 700;
+}
+
 /* 输入区 */
 .chat_input_area {
     display: flex;

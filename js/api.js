@@ -24,6 +24,22 @@ const API = (() => {
         return localStorage.getItem('auth_token') || '';
     }
 
+    /* 登录/注册接口的 401 属于业务结果（例如账号已不存在），不能触发跳转 */
+    const AUTH_FREE_PATHS = ['/api/login', '/api/register'];
+
+    /* 登录态失效：清掉本地登录信息并引导重新登录。
+       只在“已经是登录态”的接口上触发，登录页/注册页自身不跳，避免死循环。 */
+    function handleUnauthorized() {
+        logout();
+
+        const here = String((window.location && window.location.pathname) || '').split('/').pop() || '';
+        if (here === 'login.html' || here === 'register.html') return;
+
+        window.location.href = /^[a-z0-9_-]+\.html$/i.test(here)
+            ? 'login.html?redirect=' + encodeURIComponent(here)
+            : 'login.html';
+    }
+
     /* 通用请求封装 */
     async function request(method, url, body) {
         const headers = { 'Content-Type': 'application/json' };
@@ -35,6 +51,19 @@ const API = (() => {
 
         try {
             const res = await fetch(BASE + url, opts);
+
+            /* token 过期 / 被改密作废 / 账号已删除：统一在这里收口，
+               否则各页面会继续显示“我的”，操作却一直失败 */
+            if (res.status === 401 && AUTH_FREE_PATHS.indexOf(url.split('?')[0]) < 0) {
+                const denied = await res.json().catch(function () { return null; });
+                handleUnauthorized();
+                return {
+                    success: false,
+                    needLogin: true,
+                    message: (denied && denied.message) || '登录已过期，请重新登录'
+                };
+            }
+
             const data = await res.json();
             return data;
         } catch (err) {
@@ -75,8 +104,18 @@ const API = (() => {
         return result;
     }
 
+    /* 读取本地当前用户。
+       缓存可能被写坏（旧版本残留 / 手工修改 / 半截写入），
+       解析失败时清掉并当作未登录返回，绝不让 JSON 异常打断整页初始化。 */
     function getCurrentUser() {
-        return JSON.parse(localStorage.getItem('current_user') || 'null');
+        try {
+            const raw = localStorage.getItem('current_user');
+            const user = raw ? JSON.parse(raw) : null;
+            return (user && typeof user === 'object' && user.id) ? user : null;
+        } catch (e) {
+            try { localStorage.removeItem('current_user'); } catch (e2) { /* ignore */ }
+            return null;
+        }
     }
 
     async function getUser() {
@@ -86,6 +125,9 @@ const API = (() => {
     function logout() {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('current_user');
+        /* 清掉本设备上与账号绑定的缓存（签到日期、连续天数、卡片背景等），
+           否则换账号后旧账号的“今天已签到”会被新账号读到。 */
+        if (typeof window.clearUserCaches === 'function') window.clearUserCaches();
     }
 
     async function updateAvatar(imageData) {
@@ -327,8 +369,9 @@ const API = (() => {
         };
     }
 
-    function isTodaySolarTerm(solarTerms) {
-        var today = localDateStr();
+    /* “今天”是否某个节气。todayStr 可传入服务端日期，跨时区时以服务端为准 */
+    function isTodaySolarTerm(solarTerms, todayStr) {
+        var today = todayStr || localDateStr();
         return solarTerms.find(function(t) { return t.date === today; }) || null;
     }
 

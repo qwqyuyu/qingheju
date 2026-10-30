@@ -11,33 +11,67 @@ const Calendar = (() => {
     let solarTerms = [];
     let loadedTermYears = new Set();
     let signDates = [];
+    /* 服务端的“今天”（APP_TIMEZONE）。有值就优先用它，避免浏览器时区不同
+       导致“签到按钮按服务端日期、日历高亮按本地日期”自相矛盾。 */
+    let serverToday = '';
 
-    /* 初始化 */
-    async function init(year, month) {
-        currentYear = year || new Date().getFullYear();
-        currentMonth = month !== undefined ? month : new Date().getMonth(); /* 0-11 */
+    /* 初始化
+       init()                              按年月初始化（内部自己拉签到记录）
+       init({ year, month, history, today }) 复用调用方已经拉到的签到记录与日期
+       history 传入 { success: false } 时不再请求接口，直接用本地缓存渲染。 */
+    async function init(options, month) {
+        var history = null;
+
+        if (options && typeof options === 'object') {
+            currentYear = options.year || new Date().getFullYear();
+            currentMonth = options.month !== undefined ? options.month : new Date().getMonth(); /* 0-11 */
+            history = options.history || null;
+            if (options.today) serverToday = options.today;
+        } else {
+            currentYear = options || new Date().getFullYear();
+            currentMonth = month !== undefined ? month : new Date().getMonth(); /* 0-11 */
+        }
 
         /* 加载当前显示月份所属“节气年”的数据（1 月属于上一节气年） */
         await ensureTerms(currentYear, currentMonth);
 
-        /* 加载签到日期（优先从后端，降级到本地缓存） */
-        try {
-            const historyResult = await API.getCheckinHistory();
-            if (historyResult.success && historyResult.data) {
-                signDates = historyResult.data.signDates || [];
-                localStorage.setItem('sign_dates', JSON.stringify(signDates));
-                localStorage.setItem('sign_streak', (historyResult.data.streak || 0).toString());
-                localStorage.setItem('total_signs', (signDates.length).toString());
-                if (signDates.length > 0) localStorage.setItem('last_sign_date', signDates[0]);
-            } else {
-                signDates = JSON.parse(localStorage.getItem('sign_dates') || '[]');
+        /* 加载签到日期：接口优先；接口没给到（未登录/请求失败）才用本账号的本地缓存。
+           缓存键带用户前缀，所以这里读到的绝不可能是别的账号的数据。 */
+        if (history) {
+            if (history.success && history.data) applyHistory(history.data);
+            else signDates = readSignCache();
+        } else {
+            try {
+                const result = await API.getCheckinHistory();
+                if (result && result.success && result.data) applyHistory(result.data);
+                else signDates = readSignCache();
+            } catch (e) {
+                signDates = readSignCache();
             }
-        } catch (e) {
-            signDates = JSON.parse(localStorage.getItem('sign_dates') || '[]');
         }
 
         render();
         bindEvents();
+    }
+
+    /* 把接口返回的签到数据落到本地（通过 common.js 的唯一写入口） */
+    function applyHistory(data) {
+        signDates = (data && Array.isArray(data.signDates)) ? data.signDates.slice() : [];
+        if (data && data.serverToday) serverToday = data.serverToday;
+        if (typeof window.syncSignCache === 'function') {
+            window.syncSignCache({ signDates: signDates, streak: (data && data.streak) || 0 });
+        }
+    }
+
+    /* 读本账号的签到日期缓存 */
+    function readSignCache() {
+        try {
+            const raw = localStorage.getItem(window.userKey('sign_dates'));
+            const list = raw ? JSON.parse(raw) : [];
+            return Array.isArray(list) ? list : [];
+        } catch (e) {
+            return [];
+        }
     }
 
     /* 节气接口按“节气年”返回（立春 → 次年大寒）：1 月属于上一年 */
@@ -72,7 +106,8 @@ const Calendar = (() => {
         /* 上月最后几天 */
         const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
 
-        const todayStr = window.localDate();
+        /* 优先用服务端日期，保证和签到按钮的判定口径一致 */
+        const todayStr = serverToday || window.localDate();
 
         let cells = [];
 
@@ -180,8 +215,8 @@ const Calendar = (() => {
     }
 
     /* 刷新签到状态 */
-    function refreshSignDates() {
-        signDates = JSON.parse(localStorage.getItem('sign_dates') || '[]');
+    function refreshSignDates(dates) {
+        signDates = Array.isArray(dates) ? dates.slice() : readSignCache();
         render();
     }
 

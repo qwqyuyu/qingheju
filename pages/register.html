@@ -67,8 +67,8 @@
         <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
     </footer>
 
-    <script src="/js/common.js"></script>
-    <script src="/js/api.js"></script>
+    <script src="/js/common.js?v=20261030-p2"></script>
+    <script src="/js/api.js?v=20261030-p2"></script>
     <script>
         /* ========== 注册页脚本 ========== */
         document.getElementById('register_form').addEventListener('submit', async (e) => {
@@ -97,12 +97,19 @@
             const result = await API.register(username, email, password);
             if (result.success) {
                 errorEl.textContent = '';
-                alert('注册成功！即将跳转到登录页');
-                window.location.href = 'login.html';
+                /* 注册成功后服务端已经发好 token，直接进首页（原来多绕一次登录页，
+                   而登录页又会因为“已登录”自动跳走） */
+                alert('注册成功！');
+                window.location.href = 'index.html';
             } else {
                 errorEl.textContent = result.message || '注册失败，请稍后重试';
             }
         });
+
+        /* 已登录时不再展示注册页：否则会在没退出登录的情况下直接顶掉当前账号 */
+        if (API.getCurrentUser()) {
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 </html>

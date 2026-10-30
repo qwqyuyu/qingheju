@@ -59,9 +59,20 @@
         <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
     </footer>
 
-    <script src="/js/common.js"></script>
-    <script src="/js/api.js"></script>
+    <script src="/js/common.js?v=20261030-p2"></script>
+    <script src="/js/api.js?v=20261030-p2"></script>
     <script>
+        /* 登录成功后的落地页：支持 ?redirect=checkin.html（来自 401 拦截），
+           只接受同目录下的页面文件名，避免被构造成外站跳转 */
+        function loginTarget() {
+            try {
+                const v = new URLSearchParams(window.location.search).get('redirect') || '';
+                return /^[a-z0-9_-]+\.html$/i.test(v) ? v : 'index.html';
+            } catch (e) {
+                return 'index.html';
+            }
+        }
+
         /* ========== 登录页脚本 ========== */
         document.getElementById('login_form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -79,8 +90,7 @@
             const result = await API.login(username, password);
             if (result.success) {
                 errorEl.textContent = '';
-                /* 模拟跳转到首页 */
-                window.location.href = 'index.html';
+                window.location.href = loginTarget();
             } else {
                 errorEl.textContent = result.message || '登录失败，请稍后重试';
             }
@@ -88,7 +98,7 @@
 
         /* 如果已登录，直接跳转 */
         if (API.getCurrentUser()) {
-            window.location.href = 'index.html';
+            window.location.href = loginTarget();
         }
     </script>
 </body>

@@ -26,7 +26,7 @@
             <a href="discussion.html">养生社区</a>
             <a href="checkin.html">每日签到</a>
             <a href="constitution.html">体质自测</a>
-            <a href="profile.html" class="active" id="nav_user_link">我的</a>
+            <a href="login.html" id="nav_user_link">登录</a>
         </div>
     </nav>
 
@@ -143,17 +143,23 @@
         <p>清和居 © 2026 | 传承中医文化 · 弘扬养生之道</p>
     </footer>
 
-    <script src="/js/common.js"></script>
-    <script src="/js/api.js"></script>
+    <script src="/js/common.js?v=20261030-p2"></script>
+    <script src="/js/api.js?v=20261030-p2"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const user = API.getCurrentUser();
+            const navLink = document.getElementById('nav_user_link');
 
             if (!user) {
                 document.getElementById('login_prompt').style.display = 'block';
                 document.getElementById('profile_name').textContent = '未登录';
+                /* 未登录时导航要显示「登录」，否则会一直写着「我的」 */
+                if (navLink) { navLink.textContent = '登录'; navLink.href = 'login.html'; }
                 return;
             }
+
+            /* 已登录：导航与资料一致 */
+            if (navLink) { navLink.textContent = '我的'; navLink.href = 'profile.html'; }
 
             /* 已登录：显示各区块 */
             document.getElementById('login_prompt').style.display = 'none';

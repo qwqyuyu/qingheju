@@ -374,7 +374,81 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('post_editor').scrollIntoView({ behavior: 'smooth' });
     });
 
+    /* ──────────────────────────────────────
+       发帖草稿：离开页面/刷新后不丢已写的标题与正文
+       --------------------------------------
+       只存文本，不存图片（base64 太大，容易撞 localStorage 配额）。
+       按用户隔离，发布成功后清空。
+       ────────────────────────────────────── */
+    const DRAFT_TTL = 7 * 86400000;
+    const DRAFT_SAVE_DELAY = 400;
+    let draftTimer = null;
+
+    function draftKey() {
+        return window.userKey('post_draft');
+    }
+
+    function readDraft() {
+        try {
+            const raw = localStorage.getItem(draftKey());
+            if (!raw) return null;
+            const saved = JSON.parse(raw);
+            if (!saved || typeof saved !== 'object') return null;
+            if (!saved.at || Date.now() - saved.at > DRAFT_TTL) {
+                localStorage.removeItem(draftKey());
+                return null;
+            }
+            const title = typeof saved.title === 'string' ? saved.title : '';
+            const content = typeof saved.content === 'string' ? saved.content : '';
+            if (!title.trim() && !content.trim()) return null;
+            return { title, content };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function writeDraft() {
+        try {
+            const title = document.getElementById('post_title').value || '';
+            const content = document.getElementById('post_content').value || '';
+            if (!title.trim() && !content.trim()) {
+                localStorage.removeItem(draftKey());
+                return;
+            }
+            localStorage.setItem(draftKey(), JSON.stringify({ v: 1, at: Date.now(), title, content }));
+        } catch (e) {
+            /* 配额写满 / 隐私模式：草稿存不下不影响发帖 */
+        }
+    }
+
+    function scheduleSaveDraft() {
+        if (draftTimer) clearTimeout(draftTimer);
+        draftTimer = setTimeout(function () {
+            draftTimer = null;
+            writeDraft();
+        }, DRAFT_SAVE_DELAY);
+    }
+
+    function clearDraft() {
+        if (draftTimer) { clearTimeout(draftTimer); draftTimer = null; }
+        try { localStorage.removeItem(draftKey()); } catch (e) { /* ignore */ }
+    }
+
+    document.getElementById('post_title').addEventListener('input', scheduleSaveDraft);
+    document.getElementById('post_content').addEventListener('input', scheduleSaveDraft);
+
+    /* 恢复上次没发出去的草稿（有草稿就直接把编辑器打开） */
+    (function restoreDraft() {
+        if (!currentUser) return;
+        const draft = readDraft();
+        if (!draft) return;
+        document.getElementById('post_title').value = draft.title;
+        document.getElementById('post_content').value = draft.content;
+        document.getElementById('post_editor').style.display = 'block';
+    })();
+
     document.getElementById('cancel_post').addEventListener('click', () => {
+        /* 取消只是收起编辑器，草稿保留，下次进来还在 */
         document.getElementById('post_editor').style.display = 'none';
         document.getElementById('post_error').textContent = '';
     });
@@ -408,6 +482,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const result = await API.createPost(title, content, imageData, thumbData);
         if (result.success) {
+            /* 已经发布成功，草稿没用了 */
+            clearDraft();
             document.getElementById('post_editor').style.display = 'none';
             document.getElementById('post_title').value = '';
             document.getElementById('post_content').value = '';
@@ -417,6 +493,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             /* 新帖子在最前面：重置列表以便第一页能看到 */
             loadPosts(true);
         } else {
+            /* 401 已由 api.js 统一处理（清理登录态 + 跳登录并带回跳参数），
+               这里只提示，不再重复跳转，免得丢掉回跳参数 */
+            if (result.needLogin) {
+                errorEl.textContent = '登录已过期，请重新登录';
+                return;
+            }
             const msg = result.message || '';
             if (msg.includes('登录') || msg.includes('过期')) {
                 alert('登录已过期，请重新登录');

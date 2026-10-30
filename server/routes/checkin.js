@@ -20,7 +20,7 @@ router.post('/checkin', authMiddleware, async (req, res) => {
             [req.user.id, todayStr]
         );
         if (exists.length > 0) {
-            return res.status(409).json({ success: false, message: '今日已签到' });
+            return res.status(409).json({ success: false, code: 409, message: '今日已签到' });
         }
         /* 计算连续天数 */
         const ymd = addDays(todayStr, -1);
@@ -37,7 +37,7 @@ router.post('/checkin', authMiddleware, async (req, res) => {
         } catch (err) {
             /* 并发请求同时通过“今日已签到”检查时，唯一索引会兜底 */
             if (err.code === 'ER_DUP_ENTRY' || err.errno === 1062) {
-                return res.status(409).json({ success: false, message: '今日已签到' });
+                return res.status(409).json({ success: false, code: 409, message: '今日已签到' });
             }
             throw err;
         }
@@ -56,9 +56,13 @@ router.post('/checkin', authMiddleware, async (req, res) => {
     }
 });
 
-/* GET /api/checkin — 签到记录 */
+/* GET /api/checkin — 签到记录
+   除签到日期/连续天数外，额外返回服务端的“今天”与“今天是否已签到”。
+   前端据此决定按钮状态，避免用浏览器时钟和本地缓存猜日期
+   （跨时区、换设备、同设备换账号时都能得到一致结论）。 */
 router.get('/checkin', authMiddleware, async (req, res) => {
     try {
+        const todayStr = today();
         const [rows] = await pool.query(
             'SELECT checkin_date, streak FROM checkins WHERE user_id = ? ORDER BY checkin_date DESC',
             [req.user.id]
@@ -66,11 +70,17 @@ router.get('/checkin', authMiddleware, async (req, res) => {
         const signDates = rows.map(r => r.checkin_date);
         /* 记录里的 streak 是“签到当天”的值；断签后必须归零，否则会一直显示旧的连续天数 */
         const streak = rows.length > 0
-            ? activeStreak(rows[0].checkin_date, rows[0].streak, today())
+            ? activeStreak(rows[0].checkin_date, rows[0].streak, todayStr)
             : 0;
         res.json({
             success: true,
-            data: { signDates, streak, total: rows.length }
+            data: {
+                signDates,
+                streak,
+                total: rows.length,
+                serverToday: todayStr,
+                checkedInToday: signDates.includes(todayStr)
+            }
         });
     } catch (err) {
         console.error('get checkin error:', err);

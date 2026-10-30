@@ -8,6 +8,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const { termsOfYear, currentTermYear, MIN_YEAR, MAX_YEAR } = require('../config/solarterm');
+const { today } = require('../config/time');
 
 const router = express.Router();
 
@@ -56,7 +57,9 @@ router.get('/solarterms', async (req, res) => {
             };
         });
 
-        res.json({ success: true, year, data });
+        /* today 是服务端的“今天”（APP_TIMEZONE）。
+           前端用它判断“当前节气 / 今日推荐”，避免跨时区时用浏览器时钟偏差一天。 */
+        res.json({ success: true, year, today: today(), data });
     } catch (err) {
         console.error('get solarterms error:', err);
         res.status(500).json({ success: false, message: '服务器错误' });
