@@ -39,6 +39,8 @@ app.use((req, res, next) => {
         "img-src 'self' data: blob:",
         "font-src 'self' data:",
         "connect-src 'self'",
+        /* 中医文化页内嵌 B站 播放器（pages/culture.html） */
+        "frame-src 'self' https://player.bilibili.com",
         "base-uri 'self'",
         "form-action 'self'",
         "frame-ancestors 'none'",

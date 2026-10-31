@@ -227,11 +227,12 @@ npm run test:setup       # 配置向导：不需要数据库，不修改 server/
 - 签到页的知识卡片缓存在 localStorage：打开页面只请求一次节气表，并且只回填最近 30 天；更早的日期点开时再按需生成，避免连续签到几百天的用户一进页面就发几百个请求。
 - AI 出错时浏览器只拿到统一文案“AI 服务暂时不可用，请稍后重试”；上游的原始错误（可能包含网关地址、模型名等）只写服务端日志。客户端断开（关页面、停止）时服务端会通过 `AbortController` 取消上游请求，不会白白消耗 token。
 - `.idea/` 已被 `.gitignore` 忽略。
-- 已加基础安全响应头（CSP、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy`），并关闭 `X-Powered-By`；CORS 默认只允许同源，跨域需显式配置 `CORS_ORIGINS`。部署在 nginx / 云平台等反向代理后面时请设置 `TRUST_PROXY=1`，否则 `req.ip` 会是代理地址，按 IP 的登录/注册限流会被所有用户共享。
+- 已加基础安全响应头（CSP、`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy`），并关闭 `X-Powered-By`；CSP 的 `frame-src` 只放行 `https://player.bilibili.com`，供中医文化页内嵌 B站 视频使用，其余来源仍被拦截。CORS 默认只允许同源，跨域需显式配置 `CORS_ORIGINS`。部署在 nginx / 云平台等反向代理后面时请设置 `TRUST_PROXY=1`，否则 `req.ip` 会是代理地址，按 IP 的登录/注册限流会被所有用户共享。
 - 依赖已升级到 express 5.3.0、mysql2 3.24.6 等，`npm audit --omit=dev` 当前为 0 漏洞。
 - 登录使用 JWT，签名密钥只来自 `JWT_SECRET`；未配置或不足 32 位时服务拒绝启动，轮换密钥会让所有旧 token 立即失效。token 里只放用户 id 与 token 版本号，鉴权时按 id 查一次数据库确认用户仍存在且版本一致，所以改密或删号后旧 token 立即失效。
 - AI 上下文有双重限制：最多携带最近 `AI_MAX_MESSAGES`（默认 15）条消息，且输入总量不超过 `AI_CONTEXT_TOKENS`（默认 80000）tokens（含 system prompt）。裁剪后保证以 `user` 开头（必要时少一条）；超出预算时从最早的消息开始丢弃，若最新一条本身就超预算，会截断并追加“内容过长已截断”标记。token 为保守估算（中文按 1 字 1 token，其余按 4 字符 1 token），不依赖分词器。单条消息超过 `AI_MAX_MESSAGE_CHARS`（默认 20000 字符）会先截断并标记。前端对话页面同样只保留最近 15 条。
 - AI 接口默认流式输出：服务端以 SSE 返回 `data: {"delta":"..."}`，前端逐段渲染；`AI_STREAM=false` 时返回普通 JSON。三种格式（responses / chat / messages）都支持流式。
+- 中医文化页（`pages/culture.html`）的科普视频用 B站 内嵌播放器实现：每个条目在 `js/culture.js` 里都有 `video` 字段（当前留空），填入 `https://www.bilibili.com/video/BVxxxxxxx`、`av` 号或只填编号后，点击视频窗口才会注入 `iframe`（首屏不加载播放器）；切换抽屉或收起面板会销毁 `iframe`，避免声音继续播放。链接留空时显示“视频待配置”占位，不发起任何外部请求。
 - `AI_TEMPERATURE` 默认 `0.8`；填 `default` / `omit` / `none` 表示不传该参数。若模型（如 `claude-haiku-5-5`）只接受默认温度，服务端会自动去掉 `temperature` 重试一次并记住该模型。
 - AI 只有一套配置：`AI_BASE_URL`、`AI_FORMAT`、`AI_API_KEY`、`AI_MODEL`；`AI_FORMAT=messages` 时走 Anthropic Messages，`responses`/`chat` 时走 OpenAI 兼容接口。`/api/ai/chat` 与 `/api/ai/message` 行为相同，后者仅为兼容别名。
 - AI 的地址、Key、模型全部来自 `server/.env`（已被 `.gitignore` 忽略）；代码和 `.env.example` 里只有占位符，不包含真实值。

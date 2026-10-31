@@ -77,15 +77,25 @@
                             <div class="drawer_panel_tags" id="drawer_tags"></div>
                         </div>
                     </div>
-                    <!-- 科普教学视频占位区（演示样式） -->
+                    <!-- 科普教学视频区：点击画面后内嵌 B站 播放器 -->
                     <div class="drawer_video_area">
-                        <div class="drawer_video_frame">
+                        <div class="drawer_video_frame" id="drawer_video_frame" role="button" tabindex="0"
+                             aria-label="播放科普教学视频">
                             <div class="drawer_video_play"></div>
                             <span class="drawer_video_label">科普教学</span>
+                            <span class="drawer_video_badge" id="drawer_video_badge" hidden>视频待配置</span>
+                            <!-- 播放层：点击后由 JS 注入 B站 iframe -->
+                            <div class="drawer_video_player" id="drawer_video_player"></div>
                         </div>
                         <div class="drawer_video_info">
-                            <h4>相关科普教学视频</h4>
-                            <p>点击上方视频窗口，观看该疗法的历史渊源、操作演示与临床应用讲解，深入了解中医传统技法的精髓。</p>
+                            <h4 id="drawer_video_title">相关科普教学视频</h4>
+                            <p id="drawer_video_desc">点击上方视频窗口，观看该疗法的历史渊源、操作演示与临床应用讲解，深入了解中医传统技法的精髓。</p>
+                            <div class="drawer_video_actions" id="drawer_video_actions" hidden>
+                                <button type="button" class="drawer_video_btn" id="drawer_video_reset">重新加载</button>
+                                <button type="button" class="drawer_video_btn" id="drawer_video_stop">收起</button>
+                                <a class="drawer_video_link" id="drawer_video_link" href="#" target="_blank"
+                                   rel="noopener noreferrer">在B站观看 ↗</a>
+                            </div>
                         </div>
                     </div>
                 </div>
