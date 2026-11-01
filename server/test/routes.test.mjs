@@ -9,6 +9,8 @@
      3. 管理员可删他人帖子、评论；普通用户不行
      4. GET /api/checkin 断签后连续天数归零
      5. AI 错误不泄露上游信息；客户端断开会取消上游请求
+     6. 节气图片统一为站内绝对路径
+     7. 改头像 / 改用户名 / 改密码限流；登录不暴露用户名是否存在
    ========================================== */
 
 import assert from 'node:assert/strict';
@@ -52,6 +54,9 @@ Object.assign(process.env, {
     POST_RATE_LIMIT_MAX: '2',
     COMMENT_RATE_LIMIT_MAX: '2',
     LIKE_RATE_LIMIT_MAX: '2',
+    AVATAR_RATE_LIMIT_MAX: '2',
+    USERNAME_RATE_LIMIT_MAX: '2',
+    PASSWORD_RATE_LIMIT_MAX: '2',
     AI_BASE_URL: `http://127.0.0.1:${upstream.address().port}/v1`,
     AI_FORMAT: 'chat',
     AI_API_KEY: 'test-key',
@@ -348,6 +353,80 @@ const aiBody = { messages: [{ role: 'user', content: '你好' }] };
     assert.equal(byName.get('雨水'), '/images/solarterms/yushui.jpg', '已是绝对路径的保持不变');
     assert.equal(byName.get('惊蛰'), 'https://cdn.example.com/jingzhe.jpg', '外链原样返回');
     ok('节气接口：图片路径统一为 /images/...，页面在 /pages/ 下也不会 404');
+}
+
+/* ========== 7. 资料写接口限流 + 登录不暴露用户名是否存在 ========== */
+
+{
+    resetDb();
+    when(/^UPDATE users SET avatar = \?, avatar_version = avatar_version \+ 1 WHERE id = \?$/, () => [{ affectedRows: 1 }]);
+    when(/^SELECT avatar_version FROM users WHERE id = \?$/, () => [[{ avatar_version: 1 }]]);
+
+    const send = () => call('PUT', '/api/user/avatar', {
+        token: tokenOf(41),
+        body: { avatar: 'images/ui/default_avatar.svg' }
+    });
+    assert.equal((await send()).status, 200);
+    assert.equal((await send()).status, 200);
+    const limited = await send();
+    assert.equal(limited.status, 429, '改头像第 3 次应被限流');
+    assert.equal(limited.json.message, '头像修改过于频繁，请稍后再试');
+    assert.ok(Number(limited.headers.get('retry-after')) > 0);
+    ok('改头像限流：同一用户第 3 次返回 429，带 Retry-After');
+}
+
+{
+    resetDb();
+    when(/^SELECT id FROM users WHERE username = \? AND id != \?$/, () => [[]]);
+    when(/^UPDATE users SET username = \? WHERE id = \?$/, () => [{ affectedRows: 1 }]);
+
+    const send = () => call('PUT', '/api/user/username', {
+        token: tokenOf(42),
+        body: { username: 'new_name' }
+    });
+    assert.equal((await send()).status, 200);
+    assert.equal((await send()).status, 200);
+    const limited = await send();
+    assert.equal(limited.status, 429, '改用户名第 3 次应被限流');
+    assert.equal(limited.json.message, '用户名修改过于频繁，请稍后再试');
+    ok('改用户名限流：同一用户第 3 次返回 429');
+}
+
+{
+    const bcrypt = require('bcryptjs');
+    resetDb();
+    const hash = await bcrypt.hash('correct-password', 10);
+    when(/^SELECT password FROM users WHERE id = \?$/, () => [[{ password: hash }]]);
+
+    /* 前两次故意用错旧密码：能返回 400 说明请求已经走到处理函数，限流还没触发 */
+    const send = () => call('PUT', '/api/user/password', {
+        token: tokenOf(43),
+        body: { oldPassword: 'wrong-password', newPassword: 'new-password-123' }
+    });
+    const first = await send();
+    assert.equal(first.status, 400, JSON.stringify(first.json));
+    assert.equal(first.json.message, '当前密码错误');
+    assert.equal((await send()).status, 400);
+    const limited = await send();
+    assert.equal(limited.status, 429, '改密码第 3 次应被限流');
+    assert.equal(limited.json.message, '密码修改过于频繁，请稍后再试');
+    ok('改密码限流：第 3 次返回 429（改密接口不再可被高频调用）');
+}
+
+{
+    /* 查无此人也要跑一次 bcrypt：否则响应会快一个数量级，可用来枚举用户名 */
+    resetDb();
+    when(/^SELECT \* FROM users WHERE username = \?$/, () => [[]]);
+
+    const started = Date.now();
+    const r = await call('POST', '/api/login', { body: { username: 'nobody-here', password: 'whatever123' } });
+    const elapsed = Date.now() - started;
+
+    assert.equal(r.status, 200);
+    assert.equal(r.json.success, false);
+    assert.equal(r.json.message, '用户名或密码错误');
+    assert.ok(elapsed >= 30, '用户不存在时也应执行一次 bcrypt，实际耗时 ' + elapsed + 'ms');
+    ok('登录：用户不存在时同样执行 bcrypt（' + elapsed + 'ms），无法用时序枚举用户名');
 }
 
 /* ---------- 收尾 ---------- */

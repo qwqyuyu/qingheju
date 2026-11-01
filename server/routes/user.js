@@ -4,6 +4,7 @@
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
 const pool = require('../config/db');
 const { generateToken, authMiddleware } = require('../config/auth');
@@ -13,6 +14,11 @@ const { avatarUrl, AVATAR_DATA_RE, AVATAR_PATH_RE } = require('../config/avatar'
 
 const router = express.Router();
 const ROOT = path.join(__dirname, '..', '..');
+
+/* 用户不存在时也要消耗一次 bcrypt：拿一个非法哈希去 compare 是 0ms，
+   而真实比对约 70ms，相差一个数量级，足够用来枚举已注册的用户名。
+   这里准备一个随机口令的哈希（永远不会匹配成功），查无此人时拿它跑一遍。 */
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
 
 /* 注册：同一 IP 每小时最多 10 次（可用 REGISTER_RATE_LIMIT_MAX 调整） */
 const registerLimiter = createRateLimiter({
@@ -38,6 +44,28 @@ const loginUserLimiter = createRateLimiter({
             : '';
         return 'login:' + name.toLowerCase();
     }
+});
+
+/* 资料类写接口限流（按登录用户计数）：
+   改头像 10 分钟 20 次，改用户名 / 改密码 10 分钟 10 次。
+   这三个接口此前完全没有限流——登录态被盗（或用户共享设备）时，
+   改密接口可以被高频调用，因此单独给各自的桶。 */
+const avatarLimiter = createRateLimiter({
+    windowMs: process.env.AVATAR_RATE_LIMIT_WINDOW_MS,
+    max: process.env.AVATAR_RATE_LIMIT_MAX || 20,
+    message: '头像修改过于频繁，请稍后再试'
+});
+
+const usernameLimiter = createRateLimiter({
+    windowMs: process.env.USERNAME_RATE_LIMIT_WINDOW_MS,
+    max: process.env.USERNAME_RATE_LIMIT_MAX || 10,
+    message: '用户名修改过于频繁，请稍后再试'
+});
+
+const passwordLimiter = createRateLimiter({
+    windowMs: process.env.PASSWORD_RATE_LIMIT_WINDOW_MS,
+    max: process.env.PASSWORD_RATE_LIMIT_MAX || 10,
+    message: '密码修改过于频繁，请稍后再试'
 });
 
 /* POST /api/register — 注册 */
@@ -119,6 +147,9 @@ router.post('/login', loginIpLimiter, loginUserLimiter, async (req, res) => {
 
         const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
         if (rows.length === 0) {
+            /* 查无此人也跑一次 bcrypt：直接返回会让响应快一个数量级，
+               可以据此枚举哪些用户名已注册。返回文案与密码错误保持完全一致。 */
+            await bcrypt.compare(password, DUMMY_HASH);
             return res.json({ success: false, message: '用户名或密码错误' });
         }
         const user = rows[0];
@@ -218,7 +249,7 @@ router.get('/users/:id/avatar', async (req, res) => {
 });
 
 /* PUT /api/user/avatar — 修改头像（base64 图片或站内相对路径） */
-router.put('/user/avatar', authMiddleware, async (req, res) => {
+router.put('/user/avatar', authMiddleware, avatarLimiter, async (req, res) => {
     try {
         const { avatar } = req.body || {};
         if (!avatar || typeof avatar !== 'string') {
@@ -256,7 +287,7 @@ router.put('/user/avatar', authMiddleware, async (req, res) => {
 });
 
 /* PUT /api/user/username — 修改用户名 */
-router.put('/user/username', authMiddleware, async (req, res) => {
+router.put('/user/username', authMiddleware, usernameLimiter, async (req, res) => {
     try {
         const { username } = req.body || {};
 
@@ -292,7 +323,7 @@ router.put('/user/username', authMiddleware, async (req, res) => {
 });
 
 /* PUT /api/user/password — 修改密码 */
-router.put('/user/password', authMiddleware, async (req, res) => {
+router.put('/user/password', authMiddleware, passwordLimiter, async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body || {};
 

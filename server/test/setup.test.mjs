@@ -98,6 +98,8 @@ try {
         'MYSQL_DATABASE=qingheju',
         'JWT_SECRET=' + 'k'.repeat(40),
         'CUSTOM_FLAG=1',
+        'AVATAR_RATE_LIMIT_MAX=30',
+        'PASSWORD_RATE_LIMIT_MAX=25',
         'AI_BASE_URL=https://gateway.example/v1',
         'AI_FORMAT=chat',
         'AI_MODEL=test-model',
@@ -111,9 +113,13 @@ try {
     assert.equal(map.get('MYSQL_PORT'), '3307');
     assert.equal(map.get('MYSQL_PASSWORD'), 'p@ss word#', '带空格和 # 的密码应能原样读回');
     assert.equal(map.get('CUSTOM_FLAG'), '1', '用户自定义键应保留');
+    /* 向导不管理的可选键（限流等）也必须原样保留，不能被重写时丢掉 */
+    assert.equal(map.get('AVATAR_RATE_LIMIT_MAX'), '30', '限流类可选键应保留');
+    assert.equal(map.get('PASSWORD_RATE_LIMIT_MAX'), '25', '限流类可选键应保留');
     assert.equal(map.get('AI_FORMAT'), 'chat');
     assert.equal(map.get('AI_MODEL'), 'test-model');
     assert.ok(text.includes('MYSQL_PASSWORD="p@ss word#"'), '含空格的值应加引号写入');
+    assert.ok(text.includes('server/.env.example'), '应提示可选配置（限流等）去哪里查');
     ok('保留自定义键，含空格/# 的值加引号写入且能被正确解析');
 
     /* 6. 帮助信息 */

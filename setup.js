@@ -193,6 +193,13 @@ function buildEnvText(map, file) {
     out.push('# 本地监听端口（start.ps1 / start.sh 会覆盖为启动参数）');
     out.push(line('PORT'));
 
+    /* 向导只管上面这些键。限流（注册/登录/发帖/评论/点赞/改头像/改用户名/改密码）、
+       请求体上限、AI 上下文等都有内置默认值，这里只提示位置、不写入具体数值，
+       免得把当前默认值固化进每个人的 .env（以后调整默认值时反而不生效）。 */
+    out.push('');
+    out.push('# 其它可选配置（限流、请求体上限、AI 上下文等）都有内置默认值，');
+    out.push('# 需要调整时按 server/.env.example 里的同名键写在下面即可，向导会原样保留');
+
     /* 保留用户自己加的其它配置 */
     const extras = [...map.keys()].filter(k => !MANAGED_ORDER.includes(k));
     if (extras.length > 0) {

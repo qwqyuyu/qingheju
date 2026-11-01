@@ -77,7 +77,9 @@
         document.getElementById('login_form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+            /* 密码不做 trim：注册 / 改密都不去掉首尾空格，登录若 trim 会导致
+               “带空格的密码注册成功却永远登录不上”。密码原样提交。 */
+            const password = document.getElementById('password').value;
             const errorEl = document.getElementById('login_error');
 
             /* 前端校验非空 */
