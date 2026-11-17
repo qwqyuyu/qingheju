@@ -129,6 +129,23 @@ try {
     /* 7. 非法的 --out 参数应报错 */
     assert.notEqual(run(['--out']), 0);
     ok('--out 缺少路径时返回非 0');
+
+    /* 8. --admin 的用户名校验发生在连库之前（本机没有库也应立刻失败） */
+    assert.notEqual(run(['--admin', 'a b', '--out', envFile]), 0);
+    ok('--admin：非法用户名直接返回非 0，不尝试连库');
+
+    /* 9. --admin 缺少配置文件时给出提示并以非 0 退出 */
+    assert.notEqual(run(['--admin', 'root', '--out', path.join(tmpDir, 'nope.env')]), 0);
+    ok('--admin：配置文件不存在时返回非 0');
+
+    /* 10. 帮助里要能查到管理员用法（不然云端部署的人不知道有这条命令）。
+       注意：这里把 stdout 重定向到文件而不是用 pipe——某些受限环境不允许管道捕获子进程输出。 */
+    const helpFile = path.join(tmpDir, 'help.txt');
+    const helpFd = fs.openSync(helpFile, 'w');
+    spawnSync(process.execPath, [SETUP, '--help'], { stdio: ['ignore', helpFd, 'ignore'] });
+    fs.closeSync(helpFd);
+    assert.ok(readText(helpFile).includes('--admin'), '--help 应说明 --admin 用法');
+    ok('--help 含 --admin 用法说明');
 } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
 }
