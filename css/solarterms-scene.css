@@ -5,8 +5,9 @@
 
 .scene_hero {
     position: relative;
-    height: clamp(460px, 64vh, 640px);
-    margin: 8px 0 32px;
+    /* 高度让位给下方纸卡：视口越高长卷越大，但最多用完“减去导航与解读卡片”后的空间 */
+    height: clamp(320px, calc(100vh - var(--nav-height) - 300px), 620px);
+    margin: 8px 0 20px;
     border: 1px solid var(--color-bronze);
     border-radius: var(--radius-lg);
     background: #dfe6dc;
@@ -263,7 +264,7 @@
 /* ---------- 窄屏 ---------- */
 @media (max-width: 900px) {
     .scene_hero {
-        height: clamp(400px, 58vh, 520px);
+        height: clamp(300px, calc(100vh - var(--nav-height) - 280px), 520px);
     }
 
     .scene_text {
@@ -285,7 +286,7 @@
 
 @media (max-width: 640px) {
     .scene_hero {
-        height: 420px;
+        height: clamp(260px, calc(100vh - var(--nav-height) - 300px), 380px);
         border-radius: var(--radius-md);
     }
 

@@ -2,8 +2,6 @@
    solarterms.js — 二十四节气养生页逻辑
    ========================================== */
 
-let activeTermModal = null;
-
 /* 长卷与卡片共用的选中/当前索引（页面级状态） */
 let currentIndex = 0;
 let selectedIndex = 0;
@@ -121,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* 卡片点击 → 同步长卷 + 纸卡，然后打开详情弹窗。 */
+    /* 卡片点击 → 长卷 + 纸卡联动，并滚动到“长卷与解读同时可见”的位置（不再弹窗）。 */
     grid.addEventListener('click', (e) => {
         const card = e.target.closest('.term_card');
         if (!card) return;
@@ -133,9 +131,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scene && typeof scene.setIndex === 'function') scene.setIndex(index);
         renderPanel(term, index === currentIndex);
         syncCards();
-        card.focus();
-        showTermModal(term);
+        revealSceneAndPanel();
     });
+
+    /* 长卷整块完整显示：长卷顶部停在导航栏下方，纸卡顺带进入同一屏。
+       只有纸卡高到放不下时，才再补一点滚动，且保证纸卡标题不被推出视口。 */
+    function revealSceneAndPanel() {
+        const sceneHero = document.getElementById('scene_hero');
+        const panel = document.getElementById('term_hero');
+        if (!panel) return;
+
+        const navBar = document.querySelector('.navbar');
+        const navH = (navBar && navBar.offsetHeight) || 64;
+        const vh = window.innerHeight || 800;
+
+        const panelRect = panel.getBoundingClientRect();
+        const panelTop = panelRect.top + window.scrollY;
+        const panelBottom = panelTop + panelRect.height;
+        const sceneTop = sceneHero
+            ? sceneHero.getBoundingClientRect().top + window.scrollY
+            : panelTop;
+
+        let target = Math.max(0, sceneTop - navH - 8);
+
+        if (panelBottom > target + vh) {
+            const needed = panelBottom - vh + 16;
+            const cap = panelTop - navH - 24;
+            target = Math.max(target, Math.min(needed, cap));
+        }
+
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: target, behavior: reduced ? 'auto' : 'smooth' });
+
+        /* 焦点跟到纸卡：读屏与键盘用户能直接读到新内容 */
+        panel.setAttribute('tabindex', '-1');
+        panel.focus({ preventScroll: true });
+    }
 
     loadSolarTerms();
 });
@@ -176,7 +207,7 @@ function renderGrid(terms, currentTerm) {
     grid.innerHTML = terms.map(t => {
         const isCurrent = t.name === (currentTerm && currentTerm.name);
         return `
-            <button type="button" class="term_card card_interactive${isCurrent ? ' current' : ''}" data-term="${esc(t.name)}" title="查看${esc(t.name)}详情" aria-label="查看${esc(t.name)}节气详情${isCurrent ? '，当前节气' : ''}" aria-pressed="false">
+            <button type="button" class="term_card card_interactive${isCurrent ? ' current' : ''}" data-term="${esc(t.name)}" title="切换到${esc(t.name)}" aria-controls="scene_hero term_hero" aria-label="切换到${esc(t.name)}节气${isCurrent ? '，当前节气' : ''}，长卷与解读同步更新" aria-pressed="false">
                 ${isCurrent ? '<span class="term_current_tag">当前</span>' : ''}
                 <span class="term_selected_tag" aria-hidden="true">已选</span>
                 <img class="term_card_img" src="${esc(termImage(t))}" alt="${esc(t.name)}" onerror="this.style.opacity='0.3';this.removeAttribute('onerror')">
@@ -195,77 +226,5 @@ function syncCards() {
         const active = index === selectedIndex;
         card.classList.toggle('selected', active);
         card.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-}
-
-function showTermModal(term) {
-    /* 关闭可能残留的旧弹窗，同时释放旧焦点陷阱。 */
-    if (activeTermModal && typeof activeTermModal._close === 'function') {
-        activeTermModal._close(true);
-    } else if (activeTermModal) {
-        activeTermModal.remove();
-    }
-
-    const overlay = document.createElement('div');
-    overlay.className = 'term_modal_overlay';
-    overlay.innerHTML =
-        '<div class="term_modal_box paper_dialog" role="dialog" aria-modal="true" aria-labelledby="term_modal_title" tabindex="-1">' +
-        '<button type="button" class="term_modal_close" aria-label="关闭节气详情">&times;</button>' +
-        '<img class="term_modal_img" src="' + esc(termImage(term)) + '" alt="' + esc(term.name) + '">' +
-        '<h2 class="term_modal_name" id="term_modal_title">' + esc(term.name) + '</h2>' +
-        '<p class="term_modal_date">公历 ' + esc(termDate(term)) + '　农历 ' + esc(term.lunarDate || '暂缺') + '</p>' +
-        '<p class="term_modal_desc">' + esc(term.description || '暂无节气介绍') + '</p>' +
-        '<div class="term_modal_tip"><span class="term_modal_tip_label">养生建议</span>' + esc(term.healthTip || '顺应自然，调和阴阳') + '</div>' +
-        '</div>';
-    document.body.appendChild(overlay);
-    activeTermModal = overlay;
-
-    const box = overlay.querySelector('.term_modal_box');
-    const closeButton = overlay.querySelector('.term_modal_close');
-    let closed = false;
-    let releaseFocus = null;
-    let removeTimer = null;
-
-    function removeOverlay() {
-        if (removeTimer) clearTimeout(removeTimer);
-        if (overlay.parentNode) overlay.remove();
-        if (activeTermModal === overlay) activeTermModal = null;
-    }
-
-    function close(immediate) {
-        if (closed) return;
-        closed = true;
-        if (releaseFocus) releaseFocus();
-        overlay.classList.remove('show');
-
-        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (immediate || reduced) {
-            removeOverlay();
-            return;
-        }
-        overlay.addEventListener('transitionend', function onTransitionEnd(e) {
-            if (e.target !== overlay) return;
-            overlay.removeEventListener('transitionend', onTransitionEnd);
-            removeOverlay();
-        });
-        /* 禁用动画或 transitionend 被浏览器省略时也能完成清理。 */
-        removeTimer = setTimeout(removeOverlay, 320);
-    }
-
-    overlay._close = close;
-    closeButton.addEventListener('click', () => close(false));
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) close(false);
-    });
-
-    /* 焦点进入、Tab 循环、Esc 关闭、关闭后返回触发卡片。 */
-    releaseFocus = UI.trapFocus(box, {
-        onEscape: function() { close(false); },
-        initialFocus: closeButton
-    });
-
-    /* 触发入场动画 */
-    requestAnimationFrame(function() {
-        if (!closed) overlay.classList.add('show');
     });
 }
