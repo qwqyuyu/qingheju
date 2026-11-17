@@ -126,50 +126,64 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     var activeDrawerId = null;
+    var releaseDrawerFocus = null;
 
-    /* 构建药屉网格 */
+    const cabinetGrid = document.getElementById('cabinet_grid');
+    const drawerPanel = document.getElementById('drawer_panel');
+
+    /* 构建药屉网格；数据为本地同步数据，不引入额外请求 */
     function buildCabinet() {
-        const grid = document.getElementById('cabinet_grid');
-        if (!grid) return;
+        if (!cabinetGrid) return;
 
-        grid.innerHTML = items.map(item => `
-            <div class="drawer_item" data-id="${item.id}">
-                <div class="drawer_face">
-                    <div class="drawer_stamp">${item.category}</div>
-                    <div class="drawer_ring_wrap">
-                        <div class="drawer_ring"></div>
-                    </div>
-                    <span class="drawer_label">${item.name}</span>
-                </div>
-            </div>
+        cabinetGrid.innerHTML = items.map(item => `
+            <button type="button" class="drawer_item" data-id="${UI.escapeHtml(item.id)}"
+                    aria-controls="drawer_panel" aria-expanded="false" aria-label="打开${UI.escapeHtml(item.name)}详情">
+                <span class="drawer_face">
+                    <span class="drawer_stamp">${UI.escapeHtml(item.category)}</span>
+                    <span class="drawer_ring_wrap">
+                        <span class="drawer_ring" aria-hidden="true"></span>
+                    </span>
+                    <span class="drawer_label">${UI.escapeHtml(item.name)}</span>
+                </span>
+            </button>
         `).join('');
 
-        /* 绑定抽屉点击 */
-        grid.querySelectorAll('.drawer_item').forEach(drawer => {
+        /* 原生按钮让抽屉天然支持 Tab、Enter 与空格 */
+        cabinetGrid.querySelectorAll('.drawer_item').forEach(drawer => {
             drawer.addEventListener('click', () => {
-                const id = parseInt(drawer.dataset.id);
-                toggleDrawer(id);
+                toggleDrawer(parseInt(drawer.dataset.id, 10), drawer);
             });
         });
     }
 
-    /* 切换抽屉面板 */
-    function toggleDrawer(id) {
-        const panel = document.getElementById('drawer_panel');
-        const grid = document.getElementById('cabinet_grid');
-        const allDrawers = grid.querySelectorAll('.drawer_item');
-
+    /* 切换抽屉面板：先更新选中与展开状态，再填充内容，保证点击即时反馈 */
+    function toggleDrawer(id, trigger) {
         if (activeDrawerId === id) {
-            /* 关闭当前 */
-            closePanel(panel, allDrawers);
+            closePanel();
             return;
         }
 
-        /* 打开新抽屉 */
         const item = items.find(i => i.id === id);
-        if (!item) return;
+        if (!item || !trigger) return;
 
-        /* 填充内容 */
+        if (releaseDrawerFocus) {
+            releaseDrawerFocus();
+            releaseDrawerFocus = null;
+        }
+        trigger.focus({ preventScroll: true });
+
+        /* 立即反馈，不等待图片或视频等任何后续资源 */
+        cabinetGrid.querySelectorAll('.drawer_item').forEach(drawer => {
+            const selected = drawer === trigger;
+            drawer.classList.toggle('pressed', selected);
+            drawer.setAttribute('aria-expanded', String(selected));
+        });
+        activeDrawerId = id;
+        drawerPanel.classList.add('open');
+        drawerPanel.setAttribute('aria-hidden', 'false');
+        drawerPanel.removeAttribute('inert');
+
+        /* 填充内容，保持现有内容顺序 */
         document.getElementById('drawer_image').src = item.image;
         document.getElementById('drawer_image').alt = item.name;
         document.getElementById('drawer_name').textContent = item.name;
@@ -177,40 +191,50 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('drawer_desc').textContent = item.description;
         document.getElementById('drawer_quote').textContent = item.reference;
         document.getElementById('drawer_tags').innerHTML = item.tags.map(t =>
-            `<span class="meta_tag">${t}</span>`
+            `<span class="meta_tag">${UI.escapeHtml(t)}</span>`
         ).join('');
 
         /* 切换视频：先销毁上一条的播放器，再按新条目重置占位画面 */
         setupVideo(item);
 
-        /* 更新按压状态 */
-        allDrawers.forEach(d => d.classList.remove('pressed'));
-        const activeDrawer = grid.querySelector(`.drawer_item[data-id="${id}"]`);
-        if (activeDrawer) activeDrawer.classList.add('pressed');
+        releaseDrawerFocus = UI.trapFocus(drawerPanel, {
+            onEscape: closePanel,
+            initialFocus: document.getElementById('drawer_close')
+        });
 
-        /* 展开面板 */
-        panel.classList.add('open');
-        activeDrawerId = id;
-
-        /* 滚动面板到视野 */
+        /* 滚动面板到视野；减少动态效果时改为即时定位 */
         setTimeout(() => {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (activeDrawerId !== id || !drawerPanel.classList.contains('open')) return;
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            drawerPanel.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
         }, 100);
     }
 
-    /* 关闭面板 */
-    function closePanel(panel, allDrawers) {
-        /* 面板收起后 iframe 不再可见，必须销毁，否则声音会继续播 */
+    /* 关闭面板并返回触发抽屉 */
+    function closePanel() {
+        const wasOpen = drawerPanel.classList.contains('open') || activeDrawerId !== null;
         stopVideo();
-        panel.classList.remove('open');
-        allDrawers.forEach(d => d.classList.remove('pressed'));
+        drawerPanel.classList.remove('open');
+        drawerPanel.setAttribute('aria-hidden', 'true');
+        cabinetGrid.querySelectorAll('.drawer_item').forEach(drawer => {
+            drawer.classList.remove('pressed');
+            drawer.setAttribute('aria-expanded', 'false');
+        });
         activeDrawerId = null;
+
+        if (releaseDrawerFocus) {
+            const release = releaseDrawerFocus;
+            releaseDrawerFocus = null;
+            release();
+        }
+        drawerPanel.setAttribute('inert', '');
+        return wasOpen;
     }
 
     /* ==========================================
        科普教学视频（内嵌 B站 播放器）
        ------------------------------------------
-       · 链接留空：保留暗色占位画面 + “视频待配置”角标，点击不做跳转；
+       · 链接留空：保留暗色占位画面与“视频暂未配置”角标，点击会明确提示；
        · 填好链接：点击画面才注入 iframe（首屏不加载播放器，省流量）；
        · 切换条目 / 收起面板：直接移除 iframe，声音立即停止。
        ========================================== */
@@ -275,6 +299,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (videoActions) videoActions.hidden = true;
     }
 
+    function notifyMissingVideo() {
+        const message = '该视频暂未配置';
+        if (videoDesc) {
+            videoDesc.textContent = message + (currentItemName ? '：「' + currentItemName + '」' : '') + '的科普教学视频正在整理中。';
+        }
+        UI.toast(message, 'info');
+    }
+
+    function activateVideo() {
+        if (currentVideo) playVideo();
+        else notifyMissingVideo();
+    }
+
     /* 点击画面后注入播放器 */
     function playVideo() {
         if (!currentVideo || !currentVideo.embed || !videoPlayer || !videoFrame) return;
@@ -289,6 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         iframe.setAttribute('allowfullscreen', 'true');
         iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
         iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+        iframe.setAttribute('tabindex', '0');
 
         videoPlayer.innerHTML = '';
         videoPlayer.appendChild(iframe);
@@ -309,22 +347,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!videoFrame) return;
 
-        /* 没有配置链接：保留占位画面，给出角标提示，点击不做任何事 */
+        /* 没有配置链接：保留键盘可达的说明入口，点击与回车都会明确提示 */
         if (!currentVideo) {
             videoFrame.classList.add('is_empty');
-            videoFrame.classList.remove('has_poster');
-            videoFrame.removeAttribute('role');
-            videoFrame.setAttribute('tabindex', '-1');
-            videoFrame.setAttribute('aria-disabled', 'true');
-            videoFrame.setAttribute('aria-label', '科普教学视频待配置');
-            if (videoBadge) videoBadge.hidden = false;
-            if (videoTitle) videoTitle.textContent = '相关科普教学视频';
-            if (videoDesc) videoDesc.textContent = '该条目的科普教学视频正在整理中，敬请期待。';
+            videoFrame.classList.remove('has_poster', 'is_playing');
+            videoFrame.style.removeProperty('--video-poster');
+            videoFrame.setAttribute('role', 'button');
+            videoFrame.setAttribute('tabindex', '0');
+            videoFrame.removeAttribute('aria-disabled');
+            videoFrame.setAttribute('aria-label', '该视频暂未配置，激活查看说明');
+            if (videoBadge) {
+                videoBadge.hidden = false;
+                videoBadge.textContent = '视频暂未配置';
+            }
+            if (videoTitle) videoTitle.textContent = '「' + item.name + '」视频暂未配置';
+            if (videoDesc) videoDesc.textContent = '该视频暂未配置：「' + item.name + '」的科普教学视频正在整理中。';
             if (videoLink) videoLink.hidden = true;
             if (videoActions) videoActions.hidden = true;
-            if (item) {
-                console.info('[culture] 「' + item.name + '」尚未配置视频，在 js/culture.js 对应条目的 video 字段填入 B站 链接即可启用内嵌播放。');
-            }
             return;
         }
 
@@ -346,16 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (videoActions) videoActions.hidden = true;
     }
 
-    /* 点击画面播放（键盘 Enter / 空格同样可用） */
+    /* 点击画面播放或说明未配置状态（键盘 Enter / 空格同样可用） */
     if (videoFrame) {
-        videoFrame.addEventListener('click', () => {
-            if (currentVideo) playVideo();
-        });
+        videoFrame.addEventListener('click', activateVideo);
         videoFrame.addEventListener('keydown', (e) => {
-            if (!currentVideo) return;
+            if (UI.isComposing(e)) return;
             if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
-                playVideo();
+                activateVideo();
             }
         });
     }
@@ -376,15 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* 关闭按钮 */
-    document.getElementById('drawer_close').addEventListener('click', () => {
-        const panel = document.getElementById('drawer_panel');
-        const grid = document.getElementById('cabinet_grid');
-        const allDrawers = grid.querySelectorAll('.drawer_item');
-        closePanel(panel, allDrawers);
-    });
+    document.getElementById('drawer_close').addEventListener('click', closePanel);
 
     /* 初始化 */
-    if (items.length > 0) {
-        buildCabinet();
-    }
+    buildCabinet();
 });

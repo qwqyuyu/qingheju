@@ -5,6 +5,23 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+    const postList = document.getElementById('post_list');
+    const loadMoreWrap = document.getElementById('load_more_wrap');
+    const loadMoreBtn = document.getElementById('load_more_btn');
+    const loadMoreHint = document.getElementById('load_more_hint');
+    const postEditor = document.getElementById('post_editor');
+    const postError = document.getElementById('post_error');
+    const imageInput = document.getElementById('post_image');
+    const imagePreview = document.getElementById('post_image_preview');
+    const imageError = document.getElementById('post_image_error');
+    const imageStatus = document.getElementById('post_image_status');
+    const removeImageBtn = document.getElementById('remove_post_image');
+    const submitPostBtn = document.getElementById('submit_post');
+    const modal = document.getElementById('post_modal');
+    const modalDialog = modal.querySelector('[role="dialog"]');
+    const modalContent = document.getElementById('modal_post_content');
+    const modalCloseBtn = document.getElementById('modal_post_close');
+
     /* 更新导航登录状态；同时刷新一次资料，拿到 is_admin（旧会话里可能没有） */
     let currentUser = API.getCurrentUser();
     if (currentUser) {
@@ -24,362 +41,733 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) { /* 忽略，保留本地缓存 */ }
     }
 
-    /* 能否删除某个用户的内容：本人或管理员（服务端会再次校验，这里只决定是否显示按钮） */
     function canDelete(authorName) {
         return !!currentUser && (!!currentUser.is_admin || currentUser.username === authorName);
+    }
+
+    function escapeHtml(text) {
+        return UI.escapeHtml(text == null ? '' : String(text));
+    }
+
+    function errorMessage(result, fallback) {
+        return (result && (result.message || result.msg)) || fallback;
     }
 
     let allPosts = [];
     let currentPage = 0;
     let totalPosts = 0;
     let loadingPosts = false;
+    let postsRequestToken = 0;
+    let reloadAfterPending = false;
+    let loadMoreError = '';
     const PAGE_SIZE = 10;
 
-    /* 加载帖子（reset=true 重新从第一页加载） */
-    async function loadPosts(reset) {
-        if (loadingPosts) return;
-        loadingPosts = true;
-        const page = reset ? 1 : currentPage + 1;
-        document.getElementById('loading_posts').style.display = 'block';
-        try {
-            const result = await API.getPosts({ page: page, pageSize: PAGE_SIZE });
-            if (result.success && result.data) {
-                const items = result.data.items || [];
-                allPosts = reset ? items : allPosts.concat(items);
-                currentPage = page;
-                totalPosts = result.data.total || 0;
-                renderPostList(allPosts);
-                updateLoadMore();
-            }
-        } catch (e) {
-            if (reset) allPosts = [];
+    /* 点赞按帖子串行：请求期间忽略重复点击，并保存乐观更新前的快照。 */
+    const likePending = new Map();
+    const likeConfirmed = new Map();
+    const likeVersions = new Map();
+
+    /* 详情 token 防止 A/B 快速切换串位；评论另有每帖版本，防止旧列表覆盖新评论。 */
+    let detailToken = 0;
+    let activePostId = null;
+    let activePost = null;
+    let releaseModalFocus = null;
+    const commentsCache = new Map();
+    const commentRequestVersions = new Map();
+    const commentPending = new Set();
+
+    function findPost(postId) {
+        return allPosts.find(p => Number(p.id) === Number(postId));
+    }
+
+    function mergeLikeState(post) {
+        const id = Number(post.id);
+        const pending = likePending.get(id);
+        const confirmed = likeConfirmed.get(id);
+        if (confirmed) {
+            post.liked = confirmed.liked;
+            post.likes = confirmed.likes;
         }
-        document.getElementById('loading_posts').style.display = 'none';
-        loadingPosts = false;
+        if (pending) {
+            post.liked = pending.optimistic.liked;
+            post.likes = pending.optimistic.likes;
+        }
+        return post;
     }
 
-    /* 更新“加载更多”按钮和计数 */
+    function likeButtonContent(post) {
+        const liked = !!post.liked;
+        const likes = Number(post.likes) || 0;
+        const heart = UI.icon('heart', 17, { fill: liked });
+        return `<span class="like_icon">${heart}</span>` +
+            `<span class="like_text">${liked ? '已赞' : '点赞'}</span>` +
+            `<span class="like_count">${likes}</span>`;
+    }
+
+    function commentIcon() {
+        return '<span class="post_stat_icon">' + UI.icon('comment', 17) + '</span>';
+    }
+
+    function updateLikeModel(postId, state) {
+        const post = findPost(postId);
+        if (post) {
+            post.liked = state.liked;
+            post.likes = state.likes;
+        }
+        if (activePost && Number(activePost.id) === Number(postId)) {
+            activePost.liked = state.liked;
+            activePost.likes = state.likes;
+        }
+    }
+
+    function syncLikeButtons(postId) {
+        const post = findPost(postId) || (activePost && Number(activePost.id) === Number(postId) ? activePost : null);
+        if (!post) return;
+        const pending = likePending.get(Number(postId));
+        document.querySelectorAll(`[data-action="like"][data-id="${Number(postId)}"]`).forEach(btn => {
+            const liked = !!post.liked;
+            const likes = Number(post.likes) || 0;
+            btn.classList.toggle('liked', liked);
+            btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+            btn.setAttribute('aria-label', `${liked ? '已点赞，点击取消' : '点赞'}，当前 ${likes} 个赞`);
+            if (pending) {
+                btn.disabled = true;
+                btn.classList.add('is_busy');
+                btn.setAttribute('aria-busy', 'true');
+                /* UI.run 正在管理的按钮保留其原始标签快照，其它重渲染按钮直接同步。 */
+                if (!btn.dataset.uiLabel) {
+                    btn.innerHTML = `<span class="btn_spinner" aria-hidden="true"></span><span>${pending.optimistic.liked ? '点赞中…' : '取消中…'}</span>`;
+                }
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('is_busy');
+                btn.removeAttribute('aria-busy');
+                btn.innerHTML = likeButtonContent(post);
+            }
+        });
+    }
+
+    function syncCommentCount(postId) {
+        const post = findPost(postId) || (activePost && Number(activePost.id) === Number(postId) ? activePost : null);
+        if (!post) return;
+        const count = Math.max(0, Number(post.commentCount) || 0);
+        document.querySelectorAll(`[data-action="comment"][data-id="${Number(postId)}"]`).forEach(btn => {
+            btn.innerHTML = `${commentIcon()}<span>${count} 评论</span>`;
+            btn.setAttribute('aria-label', `查看 ${count} 条评论`);
+        });
+        if (Number(activePostId) === Number(postId)) {
+            const title = document.getElementById('comments_title');
+            if (title) title.textContent = `评论 (${count})`;
+        }
+    }
+
+    function setCommentCount(postId, count) {
+        const next = Math.max(0, Number(count) || 0);
+        const post = findPost(postId);
+        if (post) post.commentCount = next;
+        if (activePost && Number(activePost.id) === Number(postId)) activePost.commentCount = next;
+        syncCommentCount(postId);
+    }
+
     function updateLoadMore() {
-        const wrap = document.getElementById('load_more_wrap');
-        if (!wrap) return;
         const hasMore = allPosts.length < totalPosts;
-        wrap.style.display = hasMore ? 'block' : 'none';
-        const hint = document.getElementById('load_more_hint');
-        if (hint) hint.textContent = '已显示 ' + allPosts.length + ' / 共 ' + totalPosts + ' 条';
+        loadMoreWrap.style.display = hasMore ? 'block' : 'none';
+        loadMoreHint.textContent = loadMoreError || `已显示 ${allPosts.length} / 共 ${totalPosts} 条`;
+        loadMoreHint.classList.toggle('is_error', !!loadMoreError);
     }
 
-    /* 渲染帖子列表 */
     function renderPostList(posts) {
-        const container = document.getElementById('post_list');
         if (!posts || posts.length === 0) {
-            container.innerHTML = '<p class="no_data">暂无讨论，快来发布第一条帖子吧！</p>';
+            postList.innerHTML = UI.stateHTML('empty', {
+                text: '暂无讨论，快来发布第一条帖子吧！',
+                hint: '分享养生心得，从第一条帖子开始。',
+                actionText: '发布新帖'
+            });
             return;
         }
 
-        container.innerHTML = posts.map(p => {
-            const isLiked = p.liked;
+        postList.innerHTML = posts.map(p => {
+            const id = Number(p.id);
+            const pending = likePending.get(id);
+            const liked = !!p.liked;
+            const likes = Number(p.likes) || 0;
+            const comments = Number(p.commentCount) || 0;
+            const likeLabel = pending
+                ? `<span class="btn_spinner" aria-hidden="true"></span><span>${pending.optimistic.liked ? '点赞中…' : '取消中…'}</span>`
+                : likeButtonContent(p);
             return `
-                <div class="post_card${p.featured ? ' featured' : ''}" data-id="${p.id}">
+                <article class="post_card card_interactive${p.featured ? ' featured' : ''}" data-id="${id}">
                     <div class="post_card_header">
-                        <img class="post_avatar" src="${escapeHtml(p.avatar || '/images/ui/default_avatar.svg')}" alt="${escapeHtml(p.username)}" onerror="this.style.background='#D8CFBF'">
+                        <img class="post_avatar" src="${escapeHtml(p.avatar || '/images/ui/default_avatar.svg')}" alt="${escapeHtml(p.username)}的头像" onerror="this.style.background='#D8CFBF'">
                         <span class="post_username">${escapeHtml(p.username)}</span>
                         <span class="post_time">${escapeHtml(p.time)}</span>
                     </div>
-                    <h3 class="post_title">${p.featured ? '<span class="post_featured_badge">精选</span>' : ''}${escapeHtml(p.title)}</h3>
+                    <h3 class="post_title">
+                        ${p.featured ? '<span class="post_featured_badge">精选</span>' : ''}<a class="post_title_link" href="#post-${id}" data-action="open" data-id="${id}" aria-label="查看帖子：${escapeHtml(p.title)}">${escapeHtml(p.title)}</a>
+                    </h3>
                     <p class="post_content_preview">${escapeHtml(String(p.preview || p.content || '').substring(0, 150))}</p>
                     ${p.image ? `<div class="post_thumb_wrap"><img class="post_thumb_img" src="${escapeHtml(p.image)}" alt="帖子图片" loading="lazy"></div>` : ''}
                     <div class="post_card_footer">
-                        <span class="post_stat ${isLiked ? 'liked' : ''}" data-action="like" data-id="${p.id}">
-                            ♥ ${p.likes || 0}
-                        </span>
-                        <span class="post_stat" data-action="comment" data-id="${p.id}">
-                            💬 ${p.commentCount || 0} 评论
-                        </span>
-                        ${currentUser && currentUser.is_admin ? `<span class="post_feature_btn" data-action="feature" data-id="${p.id}" data-featured="${p.featured ? 1 : 0}">${p.featured ? '取消精选' : '设为精选'}</span>` : ''}
-                        ${canDelete(p.username) ? `<span class="post_delete_btn" data-action="delete" data-id="${p.id}">删除</span>` : ''}
+                        <button type="button" class="post_stat post_like_btn${liked ? ' liked' : ''}${pending ? ' is_busy' : ''}" data-action="like" data-id="${id}" aria-pressed="${liked ? 'true' : 'false'}" aria-label="${liked ? '已点赞，点击取消' : '点赞'}，当前 ${likes} 个赞"${pending ? ' disabled aria-busy="true"' : ''}>${likeLabel}</button>
+                        <button type="button" class="post_stat" data-action="comment" data-id="${id}" aria-label="查看 ${comments} 条评论">${commentIcon()}<span>${comments} 评论</span></button>
+                        ${currentUser && currentUser.is_admin ? `<button type="button" class="post_feature_btn" data-action="feature" data-id="${id}" data-featured="${p.featured ? 1 : 0}">${p.featured ? '取消精选' : '设为精选'}</button>` : ''}
+                        ${canDelete(p.username) ? `<button type="button" class="post_delete_btn" data-action="delete" data-id="${id}">删除</button>` : ''}
                     </div>
-                </div>
+                </article>
             `;
         }).join('');
-
-        /* 绑定帖子事件 */
-        bindPostEvents();
     }
 
-    function bindPostEvents() {
-        /* 点击帖子查看详情 */
-        document.querySelectorAll('.post_card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                /* 如果点击了点赞按钮则不弹出详情 */
-                if (e.target.closest('[data-action="like"]') || e.target.closest('[data-action="delete"]') || e.target.closest('[data-action="feature"]')) return;
-                const id = parseInt(card.dataset.id);
-                const post = allPosts.find(p => p.id === id);
-                if (post) showPostDetail(post);
-            });
-        });
+    /* 加载帖子（reset=true 重新从第一页加载）；失败时保留已有列表。 */
+    async function loadPosts(reset) {
+        if (loadingPosts) {
+            if (reset) reloadAfterPending = true;
+            return;
+        }
+        loadingPosts = true;
+        const requestToken = ++postsRequestToken;
+        const page = reset ? 1 : currentPage + 1;
+        loadMoreError = '';
+        postList.setAttribute('aria-busy', 'true');
 
-        /* 删除帖子 */
-        document.querySelectorAll('[data-action="delete"]').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (!await showConfirm('确定要删除这篇帖子吗？删除后无法恢复。')) return;
-                const postId = parseInt(btn.dataset.id);
-                const result = await API.deletePost(postId);
-                if (result.success) {
-                    /* 删除后重置到第一页，避免 offset 分页错位 */
+        if (reset) {
+            loadMoreWrap.style.display = 'none';
+            if (allPosts.length === 0) {
+                postList.innerHTML = UI.stateHTML('loading', { text: '正在加载帖子…' });
+            } else {
+                UI.announce('正在刷新帖子…');
+            }
+        } else {
+            UI.busy(loadMoreBtn, true, '加载中…');
+        }
+
+        try {
+            const result = await API.getPosts({ page, pageSize: PAGE_SIZE });
+            if (requestToken !== postsRequestToken) return;
+            if (!result || !result.success || !result.data) {
+                throw new Error(errorMessage(result, '帖子加载失败，请稍后重试'));
+            }
+            const items = (result.data.items || []).map(mergeLikeState);
+            allPosts = reset ? items : allPosts.concat(items);
+            currentPage = page;
+            totalPosts = Number(result.data.total) || 0;
+            renderPostList(allPosts);
+        } catch (error) {
+            if (requestToken !== postsRequestToken) return;
+            const message = error.message || '帖子加载失败，请稍后重试';
+            if (allPosts.length === 0) {
+                postList.innerHTML = UI.stateHTML('error', {
+                    text: message,
+                    hint: '请检查网络连接后重试。',
+                    actionText: '重试'
+                });
+            } else {
+                renderPostList(allPosts);
+                loadMoreError = reset ? '刷新失败，可再次操作刷新' : '加载失败，请再次点击“加载更多”';
+                UI.toast(message, 'error');
+            }
+        } finally {
+            if (requestToken === postsRequestToken) {
+                loadingPosts = false;
+                postList.removeAttribute('aria-busy');
+                UI.busy(loadMoreBtn, false);
+                updateLoadMore();
+                if (reloadAfterPending) {
+                    reloadAfterPending = false;
                     loadPosts(true);
-                    document.getElementById('post_modal').classList.remove('show');
-                } else {
-                    alert(result.message || '删除失败，请稍后再试');
                 }
-            });
-        });
+            }
+        }
+    }
 
-        /* 精选（仅管理员可见按钮） */
-        document.querySelectorAll('[data-action="feature"]').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const postId = parseInt(btn.dataset.id);
-                const next = btn.dataset.featured !== '1';
-                const result = await API.setFeatured(postId, next);
-                if (result.success) {
-                    loadPosts(true);
-                } else {
-                    alert(result.message || '操作失败');
-                }
-            });
-        });
+    function refreshPosts() {
+        if (loadingPosts) {
+            reloadAfterPending = true;
+            return;
+        }
+        loadPosts(true);
+    }
 
-        /* 点赞功能（支持点赞/取消点赞） */
-        document.querySelectorAll('[data-action="like"]').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const postId = parseInt(btn.dataset.id);
+    async function handleLike(btn) {
+        const postId = Number(btn.dataset.id);
+        if (likePending.has(postId)) return;
+        const post = findPost(postId);
+        if (!post) return;
+        if (!currentUser) {
+            UI.toast('请先登录后再点赞', 'info');
+            window.location.href = 'login.html?redirect=discussion.html';
+            return;
+        }
+
+        const previous = { liked: !!post.liked, likes: Math.max(0, Number(post.likes) || 0) };
+        const optimistic = {
+            liked: !previous.liked,
+            likes: Math.max(0, previous.likes + (previous.liked ? -1 : 1))
+        };
+        const version = (likeVersions.get(postId) || 0) + 1;
+        likeVersions.set(postId, version);
+
+        await UI.run(btn, async () => {
+            likePending.set(postId, { version, previous, optimistic });
+            updateLikeModel(postId, optimistic);
+            syncLikeButtons(postId);
+            try {
                 const result = await API.likePost(postId);
-                if (result.success && result.data) {
-                    const post = allPosts.find(p => p.id === postId);
-                    const liked = !!result.data.liked;
-                    const likes = (typeof result.data.likes === 'number')
-                        ? result.data.likes
-                        : (post ? post.likes : 0);
-
-                    btn.classList.toggle('liked', liked);
-                    if (post) { post.likes = likes; post.liked = liked; }
-                    btn.innerHTML = `♥ ${likes}`;
-                } else if (result && result.code === 429) {
-                    /* 被限流时给个提示；其它失败（如未登录）保持原来的静默行为 */
-                    alert(result.message || '操作过于频繁，请稍后再试');
+                if (likeVersions.get(postId) !== version) return;
+                if (result && result.success && result.data) {
+                    const confirmed = {
+                        liked: !!result.data.liked,
+                        likes: typeof result.data.likes === 'number'
+                            ? result.data.likes
+                            : (findPost(postId) ? findPost(postId).likes : optimistic.likes)
+                    };
+                    likeConfirmed.set(postId, confirmed);
+                    updateLikeModel(postId, confirmed);
+                } else {
+                    updateLikeModel(postId, previous);
+                    UI.toast(errorMessage(result, '点赞失败，已恢复原状态'), 'error');
                 }
-            });
-        });
+            } catch (error) {
+                if (likeVersions.get(postId) === version) {
+                    updateLikeModel(postId, previous);
+                    UI.toast('网络错误，点赞已恢复原状态', 'error');
+                }
+            } finally {
+                if (likeVersions.get(postId) === version) likePending.delete(postId);
+            }
+        }, optimistic.liked ? '点赞中…' : '取消中…');
+
+        /* UI.busy 恢复的是点击前标签，这里再以最终模型覆盖，杜绝视觉回退。 */
+        syncLikeButtons(postId);
     }
 
-    /* 显示帖子详情弹窗 */
-    async function showPostDetail(post) {
-        /* 从后端加载评论 */
-        let comments = [];
-        try {
-            const result = await API.getComments(post.id);
-            if (result.success && result.data) {
-                comments = result.data;
-            }
-        } catch (e) {}
-
-        /* 列表接口只返回缩略图和正文预览；详情弹窗再取原图与全文 */
-        let originalImage = post.image || '';
-        let fullContent = post.preview || post.content || '';
-        try {
-            const detail = await API.getPost(post.id);
-            if (detail.success && detail.data) {
-                if (detail.data.image) originalImage = detail.data.image;
-                if (typeof detail.data.content === 'string' && detail.data.content) {
-                    fullContent = detail.data.content;
+    async function deletePost(postId, btn) {
+        if (!await confirmDestructive('确定要删除这篇帖子吗？删除后无法恢复。')) return;
+        await UI.run(btn, async () => {
+            try {
+                const result = await API.deletePost(postId);
+                if (result && result.success) {
+                    if (Number(activePostId) === Number(postId)) closePostDetail();
+                    allPosts = allPosts.filter(p => Number(p.id) !== Number(postId));
+                    UI.toast('帖子已删除', 'success');
+                    refreshPosts();
+                } else {
+                    UI.toast(errorMessage(result, '删除失败，请稍后再试'), 'error');
                 }
+            } catch (error) {
+                UI.toast('网络错误，删除失败', 'error');
             }
-        } catch (e) { /* 取不到就回退到缩略图和预览 */ }
+        }, '删除中…');
+    }
 
-        const modal = document.getElementById('post_modal');
-        const content = document.getElementById('modal_post_content');
+    async function setFeatured(btn) {
+        const postId = Number(btn.dataset.id);
+        const next = btn.dataset.featured !== '1';
+        await UI.run(btn, async () => {
+            try {
+                const result = await API.setFeatured(postId, next);
+                if (result && result.success) {
+                    const post = findPost(postId);
+                    if (post) post.featured = next;
+                    UI.toast(next ? '已设为精选' : '已取消精选', 'success');
+                    refreshPosts();
+                } else {
+                    UI.toast(errorMessage(result, '操作失败'), 'error');
+                }
+            } catch (error) {
+                UI.toast('网络错误，操作失败', 'error');
+            }
+        }, next ? '精选中…' : '取消中…');
+    }
 
-        const canDeletePost = canDelete(post.username);
+    function openPostById(postId) {
+        const post = findPost(postId);
+        if (post) showPostDetail(post);
+    }
 
-        content.innerHTML = `
-            <div class="post_card_header" style="margin-bottom:14px;">
-                <img class="post_avatar" src="${escapeHtml(post.avatar || '/images/ui/default_avatar.svg')}" alt="${escapeHtml(post.username)}">
+    /* 列表事件委托：重渲染后无需重新绑定，也能跨按钮执行每帖锁。 */
+    postList.addEventListener('click', (event) => {
+        const actionBtn = event.target.closest('[data-action]');
+        if (actionBtn) {
+            const action = actionBtn.dataset.action;
+            const postId = Number(actionBtn.dataset.id);
+            if (action === 'open') {
+                event.preventDefault();
+                openPostById(postId);
+            } else if (action === 'comment') {
+                openPostById(postId);
+            } else if (action === 'like') {
+                handleLike(actionBtn);
+            } else if (action === 'delete') {
+                deletePost(postId, actionBtn);
+            } else if (action === 'feature') {
+                setFeatured(actionBtn);
+            }
+            return;
+        }
+        const card = event.target.closest('.post_card');
+        if (card) openPostById(Number(card.dataset.id));
+    });
+
+    UI.bindRetry(postList, (event, btn) => {
+        if (btn.closest('.state_empty')) openPostEditor();
+        else loadPosts(true);
+    });
+
+    /* ============ 帖子详情：正文与评论独立加载、独立重试 ============ */
+
+    function isCurrentDetail(postId, token) {
+        return modal.classList.contains('show') && Number(activePostId) === Number(postId) && detailToken === token;
+    }
+
+    function renderModalShell(post) {
+        const postId = Number(post.id);
+        const commenting = commentPending.has(postId);
+        modalContent.innerHTML = `
+            <div class="post_card_header modal_author">
+                <img class="post_avatar" src="${escapeHtml(post.avatar || '/images/ui/default_avatar.svg')}" alt="${escapeHtml(post.username)}的头像">
                 <span class="post_username">${escapeHtml(post.username)}</span>
                 <span class="post_time">${escapeHtml(post.time)}</span>
             </div>
-            <h2>${escapeHtml(post.title)}</h2>
-            <div class="post_full_body">${escapeHtml(fullContent)}</div>
-            ${originalImage ? `<img src="${escapeHtml(originalImage)}" style="max-width:100%;border-radius:8px;margin-bottom:16px;" alt="帖子图片">` : ''}
-            ${canDeletePost ? `<div style="text-align:right;margin-bottom:16px;"><button class="modal_post_delete" id="modal_delete_post">删除帖子</button></div>` : ''}
-            <div class="comments_section">
-                <p class="comments_title">评论 (${comments.length})</p>
-                <div class="comments_list" id="comments_list">
-                    ${comments.length > 0 ? comments.map(c => {
-                        const canDeleteComment = canDelete(c.username);
-                        return `
-                        <div class="comment_item">
-                            <div class="comment_header">
-                                <span class="comment_user">${escapeHtml(c.username)}</span>
-                                <span class="comment_time">${escapeHtml(c.time)}</span>
-                                ${canDeleteComment ? `<span class="comment_delete_btn" data-comment-id="${c.id}">删除</span>` : ''}
-                            </div>
-                            <p class="comment_content">${escapeHtml(c.content)}</p>
-                        </div>
-                    `;}).join('') : '<p class="no_comment">暂无评论，来说两句吧</p>'}
-                </div>
+            <h2 id="modal_post_title">${escapeHtml(post.title)}</h2>
+            <div class="post_detail_body" id="post_detail_body">${UI.stateHTML('loading', { text: '正在加载正文…' })}</div>
+            <div class="post_detail_image_wrap" id="post_detail_image"></div>
+            ${canDelete(post.username) ? `<div class="modal_post_actions"><button type="button" class="modal_post_delete" id="modal_delete_post" data-post-id="${postId}">删除帖子</button></div>` : ''}
+            <section class="comments_section" aria-labelledby="comments_title">
+                <p class="comments_title" id="comments_title">评论 (${Math.max(0, Number(post.commentCount) || 0)})</p>
+                <div class="comments_list" id="comments_list" data-post-id="${postId}">${UI.stateHTML('loading', { text: '正在加载评论…' })}</div>
                 ${currentUser ? `
                 <div class="comment_input_area">
-                    <input type="text" id="comment_input" class="form_input" placeholder="写下你的评论...">
-                    <button class="btn btn_primary" id="submit_comment" data-post-id="${post.id}">发送</button>
+                    <label class="visually-hidden" for="comment_input">评论内容</label>
+                    <input type="text" id="comment_input" class="form_input" placeholder="写下你的评论..." maxlength="500" aria-describedby="comment_error">
+                    <button type="button" class="btn btn_primary${commenting ? ' is_busy' : ''}" id="submit_comment" data-post-id="${postId}"${commenting ? ' disabled aria-busy="true"' : ''}>${commenting ? '<span class="btn_spinner" aria-hidden="true"></span><span>评论中…</span>' : '发送'}</button>
                 </div>
-                ` : '<p style="text-align:center;color:#999;font-size:13px;">请<a href="login.html">登录</a>后发表评论</p>'}
-            </div>
+                <p class="form_field_error" id="comment_error" role="alert"></p>
+                ` : '<p class="comment_login_hint">请<a href="login.html?redirect=discussion.html">登录</a>后发表评论</p>'}
+            </section>
         `;
-
-        modal.classList.add('show');
-
-        /* 弹窗内删除帖子 */
-        const modalDeleteBtn = document.getElementById('modal_delete_post');
-        if (modalDeleteBtn) {
-            modalDeleteBtn.addEventListener('click', async () => {
-                if (!await showConfirm('确定要删除这篇帖子吗？删除后无法恢复。')) return;
-                const result = await API.deletePost(post.id);
-                if (result.success) {
-                    loadPosts(true);
-                    modal.classList.remove('show');
-                } else {
-                    alert(result.message || '删除失败，请稍后再试');
-                }
-            });
-        }
-
-        /* 弹窗内删除评论 */
-        document.querySelectorAll('.comment_delete_btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (!await showConfirm('确定要删除这条评论吗？')) return;
-                const commentId = parseInt(btn.dataset.commentId);
-                const result = await API.deleteComment(post.id, commentId);
-                if (result.success) {
-                    btn.closest('.comment_item').remove();
-                    /* 更新帖子评论数 */
-                    post.commentCount = Math.max(0, (post.commentCount || 0) - 1);
-                    const postCard = document.querySelector(`.post_card[data-id="${post.id}"]`);
-                    if (postCard) {
-                        const commentStat = postCard.querySelector('[data-action="comment"]');
-                        if (commentStat) commentStat.textContent = `💬 ${post.commentCount} 评论`;
-                    }
-                    /* 更新弹窗评论数 */
-                    const commentsTitle = document.querySelector('.comments_title');
-                    const count = document.querySelectorAll('#comments_list .comment_item').length;
-                    if (commentsTitle) commentsTitle.textContent = `评论 (${count})`;
-                    if (count === 0) {
-                        document.getElementById('comments_list').innerHTML = '<p class="no_comment">暂无评论，来说两句吧</p>';
-                    }
-                } else {
-                    alert(result.message || '删除失败，请稍后再试');
-                }
-            });
-        });
-
-        /* 评论提交 */
-        const submitBtn = document.getElementById('submit_comment');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', async () => {
-                const input = document.getElementById('comment_input');
-                const commentText = input.value.trim();
-                if (!commentText) return;
-
-                const result = await API.addComment(post.id, commentText);
-                if (result.success) {
-                    /* 直接在当前UI中添加评论 */
-                    const commentsList = document.getElementById('comments_list');
-                    const noComment = commentsList.querySelector('.no_comment');
-                    if (noComment) noComment.remove();
-                    commentsList.insertAdjacentHTML('beforeend', `
-                        <div class="comment_item">
-                            <div class="comment_header">
-                                <span class="comment_user">${escapeHtml(currentUser.username)}</span>
-                                <span class="comment_time">刚刚</span>
-                                <span class="comment_delete_btn" data-comment-id="${result.data.id}">删除</span>
-                            </div>
-                            <p class="comment_content">${escapeHtml(commentText)}</p>
-                        </div>
-                    `);
-                    /* 绑定新评论的删除事件 */
-                    const newComment = commentsList.lastElementChild;
-                    const newDeleteBtn = newComment.querySelector('.comment_delete_btn');
-                    if (newDeleteBtn) {
-                        newDeleteBtn.addEventListener('click', async (e) => {
-                            e.stopPropagation();
-                            if (!await showConfirm('确定要删除这条评论吗？')) return;
-                            const cid = parseInt(newDeleteBtn.dataset.commentId);
-                            const r = await API.deleteComment(post.id, cid);
-                            if (r.success) {
-                                newComment.remove();
-                                post.commentCount = Math.max(0, (post.commentCount || 0) - 1);
-                                const pc = document.querySelector(`.post_card[data-id="${post.id}"]`);
-                                if (pc) {
-                                    const cs = pc.querySelector('[data-action="comment"]');
-                                    if (cs) cs.textContent = `💬 ${post.commentCount} 评论`;
-                                }
-                                const ct = document.querySelector('.comments_title');
-                                const cnt = document.querySelectorAll('#comments_list .comment_item').length;
-                                if (ct) ct.textContent = `评论 (${cnt})`;
-                                if (cnt === 0) {
-                                    document.getElementById('comments_list').innerHTML = '<p class="no_comment">暂无评论，来说两句吧</p>';
-                                }
-                            } else {
-                                alert(r.message || '删除失败，请稍后再试');
-                            }
-                        });
-                    }
-                    /* 更新评论数 */
-                    post.commentCount = (post.commentCount || 0) + 1;
-                    const postCard = document.querySelector(`.post_card[data-id="${post.id}"]`);
-                    if (postCard) {
-                        const commentStat = postCard.querySelector('[data-action="comment"]');
-                        if (commentStat) commentStat.textContent = `💬 ${post.commentCount} 评论`;
-                    }
-                    const commentsTitle = document.querySelector('.comments_title');
-                    const count = document.querySelectorAll('#comments_list .comment_item').length;
-                    if (commentsTitle) commentsTitle.textContent = `评论 (${count})`;
-                    input.value = '';
-                } else {
-                    /* 之前失败时没有任何提示；被限流（429）或评论不合法时要让用户看见 */
-                    alert(result.message || '评论失败，请稍后再试');
-                }
-            });
-        }
-
-        /* 关闭弹窗 */
-        document.getElementById('modal_post_close').addEventListener('click', () => {
-            modal.classList.remove('show');
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('show');
-        });
     }
 
-    /* 发布新帖 */
-    document.getElementById('new_post_btn').addEventListener('click', () => {
-        if (!currentUser) {
-            alert('请先登录后再发帖');
-            window.location.href = 'login.html';
+    function showPostDetail(post) {
+        const postId = Number(post.id);
+        const token = ++detailToken;
+        activePostId = postId;
+        activePost = post;
+        const alreadyOpen = modal.classList.contains('show');
+
+        /* 先渲染当前帖子的独立容器，再发请求；旧响应只能按 token + ID 回写。 */
+        renderModalShell(post);
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal_open');
+        if (!alreadyOpen) {
+            releaseModalFocus = UI.trapFocus(modalDialog, {
+                onEscape: closePostDetail,
+                initialFocus: modalCloseBtn
+            });
+        }
+
+        loadPostBody(postId, token);
+        loadComments(postId, token);
+    }
+
+    function closePostDetail() {
+        if (!modal.classList.contains('show')) return;
+        ++detailToken;
+        activePostId = null;
+        activePost = null;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal_open');
+        if (releaseModalFocus) {
+            releaseModalFocus();
+            releaseModalFocus = null;
+        }
+    }
+
+    async function loadPostBody(postId, token) {
+        if (!isCurrentDetail(postId, token)) return;
+        const body = document.getElementById('post_detail_body');
+        const imageWrap = document.getElementById('post_detail_image');
+        body.setAttribute('aria-busy', 'true');
+        body.innerHTML = UI.stateHTML('loading', { text: '正在加载正文…' });
+        imageWrap.innerHTML = '';
+        try {
+            const detail = await API.getPost(postId);
+            if (!isCurrentDetail(postId, token)) return;
+            if (!detail || !detail.success || !detail.data || Number(detail.data.id) !== Number(postId)) {
+                throw new Error(errorMessage(detail, '正文加载失败，请重试'));
+            }
+            const data = detail.data;
+            body.innerHTML = `<div class="post_full_body">${escapeHtml(data.content || '')}</div>`;
+            imageWrap.innerHTML = data.image
+                ? `<img class="post_detail_image" src="${escapeHtml(data.image)}" alt="帖子原图">`
+                : '';
+            const listPost = findPost(postId);
+            if (listPost) {
+                listPost.content = data.content || '';
+                /* 列表模型继续保存缩略图，原图只用于当前详情区域。 */
+                listPost.fullImage = data.image || '';
+            }
+            if (activePost && Number(activePost.id) === Number(postId)) {
+                activePost.content = data.content || '';
+                activePost.fullImage = data.image || '';
+            }
+        } catch (error) {
+            if (!isCurrentDetail(postId, token)) return;
+            body.innerHTML = UI.stateHTML('error', {
+                text: error.message || '正文加载失败，请重试',
+                hint: '评论区域不受影响，可继续查看或发表评论。',
+                actionText: '重试正文'
+            });
+            imageWrap.innerHTML = '';
+        } finally {
+            if (isCurrentDetail(postId, token)) body.removeAttribute('aria-busy');
+        }
+    }
+
+    function renderComments(postId, comments) {
+        if (Number(activePostId) !== Number(postId)) return;
+        const list = document.getElementById('comments_list');
+        if (!list || Number(list.dataset.postId) !== Number(postId)) return;
+        if (!comments.length) {
+            list.innerHTML = UI.stateHTML('empty', {
+                text: '暂无评论',
+                hint: '来说两句吧。'
+            });
+        } else {
+            list.innerHTML = comments.map(c => `
+                <article class="comment_item" data-comment-id="${Number(c.id)}">
+                    <div class="comment_header">
+                        <span class="comment_user">${escapeHtml(c.username)}</span>
+                        <span class="comment_time">${escapeHtml(c.time)}</span>
+                        ${canDelete(c.username) ? `<button type="button" class="comment_delete_btn" data-comment-id="${Number(c.id)}" aria-label="删除这条评论">删除</button>` : ''}
+                    </div>
+                    <p class="comment_content">${escapeHtml(c.content)}</p>
+                </article>
+            `).join('');
+        }
+        setCommentCount(postId, comments.length);
+    }
+
+    async function loadComments(postId, token) {
+        if (!isCurrentDetail(postId, token)) return;
+        const version = (commentRequestVersions.get(postId) || 0) + 1;
+        commentRequestVersions.set(postId, version);
+        const list = document.getElementById('comments_list');
+        if (!list || Number(list.dataset.postId) !== Number(postId)) return;
+        list.setAttribute('aria-busy', 'true');
+        list.innerHTML = UI.stateHTML('loading', { text: '正在加载评论…' });
+        try {
+            const result = await API.getComments(postId);
+            if (commentRequestVersions.get(postId) !== version) return;
+            if (!result || !result.success || !Array.isArray(result.data)) {
+                throw new Error(errorMessage(result, '评论加载失败，请重试'));
+            }
+            commentsCache.set(postId, result.data.slice());
+            if (!isCurrentDetail(postId, token)) return;
+            renderComments(postId, result.data);
+        } catch (error) {
+            if (commentRequestVersions.get(postId) !== version || !isCurrentDetail(postId, token)) return;
+            list.innerHTML = UI.stateHTML('error', {
+                text: error.message || '评论加载失败，请重试',
+                hint: '正文仍可阅读，评论输入会在重试成功后保留。',
+                actionText: '重试评论'
+            });
+        } finally {
+            if (commentRequestVersions.get(postId) === version && isCurrentDetail(postId, token)) {
+                list.removeAttribute('aria-busy');
+            }
+        }
+    }
+
+    function invalidateCommentRequests(postId) {
+        commentRequestVersions.set(postId, (commentRequestVersions.get(postId) || 0) + 1);
+    }
+
+    function syncCommentComposer(postId) {
+        if (Number(activePostId) !== Number(postId)) return;
+        const btn = document.getElementById('submit_comment');
+        if (!btn || Number(btn.dataset.postId) !== Number(postId)) return;
+        const pending = commentPending.has(postId);
+        btn.disabled = pending;
+        btn.classList.toggle('is_busy', pending);
+        if (pending) {
+            btn.setAttribute('aria-busy', 'true');
+            btn.innerHTML = '<span class="btn_spinner" aria-hidden="true"></span><span>评论中…</span>';
+        } else {
+            btn.removeAttribute('aria-busy');
+            btn.innerHTML = '发送';
+        }
+    }
+
+    async function submitComment() {
+        const btn = document.getElementById('submit_comment');
+        const input = document.getElementById('comment_input');
+        if (!btn || !input) return;
+        const postId = Number(btn.dataset.postId);
+        if (Number(activePostId) !== Number(postId) || commentPending.has(postId)) return;
+        const rawValue = input.value;
+        const text = rawValue.trim();
+        const errorEl = document.getElementById('comment_error');
+        if (!text) {
+            errorEl.textContent = '请输入评论内容';
+            input.focus();
             return;
         }
-        document.getElementById('post_editor').style.display = 'block';
-        document.getElementById('post_editor').scrollIntoView({ behavior: 'smooth' });
+        errorEl.textContent = '';
+        commentPending.add(postId);
+        try {
+            await UI.run(btn, async () => {
+                try {
+                    const result = await API.addComment(postId, text);
+                    if (!result || !result.success) {
+                        const message = errorMessage(result, '评论失败，请稍后再试');
+                        if (Number(activePostId) === Number(postId) && document.getElementById('comment_error')) {
+                            document.getElementById('comment_error').textContent = message;
+                        }
+                        UI.toast(message, 'error');
+                        return;
+                    }
+
+                    invalidateCommentRequests(postId);
+                    const saved = result.data || { id: Date.now(), username: currentUser.username, content: text, time: '刚刚' };
+                    if (commentsCache.has(postId)) {
+                        const next = commentsCache.get(postId).slice();
+                        if (!next.some(c => Number(c.id) === Number(saved.id))) next.push(saved);
+                        commentsCache.set(postId, next);
+                        setCommentCount(postId, next.length);
+                        if (isCurrentDetail(postId, detailToken)) renderComments(postId, next);
+                    } else {
+                        const post = findPost(postId) || activePost;
+                        setCommentCount(postId, Math.max(0, Number(post && post.commentCount) || 0) + 1);
+                        if (isCurrentDetail(postId, detailToken)) loadComments(postId, detailToken);
+                    }
+
+                    /* 请求期间若用户继续输入，只清空已提交的原文，保留后续输入。 */
+                    if (input.value === rawValue) input.value = '';
+                    if (Number(activePostId) === Number(postId) && document.getElementById('comment_error')) {
+                        document.getElementById('comment_error').textContent = '';
+                    }
+                    UI.toast('评论已发布', 'success');
+                } catch (error) {
+                    if (Number(activePostId) === Number(postId) && document.getElementById('comment_error')) {
+                        document.getElementById('comment_error').textContent = '网络错误，评论内容已保留，请重试';
+                    }
+                    UI.toast('网络错误，评论内容已保留', 'error');
+                }
+            }, '评论中…');
+        } finally {
+            commentPending.delete(postId);
+            syncCommentComposer(postId);
+        }
+    }
+
+    async function deleteComment(btn) {
+        const commentId = Number(btn.dataset.commentId);
+        const list = document.getElementById('comments_list');
+        if (!list) return;
+        const postId = Number(list.dataset.postId);
+        if (!await confirmDestructive('确定要删除这条评论吗？删除后无法恢复。')) return;
+        await UI.run(btn, async () => {
+            try {
+                const result = await API.deleteComment(postId, commentId);
+                if (!result || !result.success) {
+                    UI.toast(errorMessage(result, '删除失败，请稍后再试'), 'error');
+                    return;
+                }
+                invalidateCommentRequests(postId);
+                if (commentsCache.has(postId)) {
+                    const next = commentsCache.get(postId).filter(c => Number(c.id) !== commentId);
+                    commentsCache.set(postId, next);
+                    setCommentCount(postId, next.length);
+                    if (Number(activePostId) === Number(postId)) renderComments(postId, next);
+                } else {
+                    const post = findPost(postId) || activePost;
+                    setCommentCount(postId, Math.max(0, (Number(post && post.commentCount) || 0) - 1));
+                    if (Number(activePostId) === Number(postId)) loadComments(postId, detailToken);
+                }
+                UI.toast('评论已删除', 'success');
+            } catch (error) {
+                UI.toast('网络错误，删除失败', 'error');
+            }
+        }, '删除中…');
+    }
+
+    UI.bindRetry(modalContent, (event, btn) => {
+        const postId = Number(activePostId);
+        const token = detailToken;
+        if (!postId) return;
+        if (btn.closest('#post_detail_body')) loadPostBody(postId, token);
+        else if (btn.closest('#comments_list')) loadComments(postId, token);
     });
 
-    /* ──────────────────────────────────────
-       发帖草稿：离开页面/刷新后不丢已写的标题与正文
-       --------------------------------------
-       只存文本，不存图片（base64 太大，容易撞 localStorage 配额）。
-       按用户隔离，发布成功后清空。
-       ────────────────────────────────────── */
+    modalContent.addEventListener('click', (event) => {
+        const commentDelete = event.target.closest('.comment_delete_btn');
+        if (commentDelete) {
+            deleteComment(commentDelete);
+            return;
+        }
+        if (event.target.closest('#submit_comment')) {
+            submitComment();
+            return;
+        }
+        const postDelete = event.target.closest('#modal_delete_post');
+        if (postDelete) deletePost(Number(postDelete.dataset.postId), postDelete);
+    });
+
+    modalContent.addEventListener('keydown', (event) => {
+        if (event.target.id !== 'comment_input' || event.key !== 'Enter') return;
+        if (UI.isComposing(event)) return;
+        event.preventDefault();
+        submitComment();
+    });
+
+    modalContent.addEventListener('input', (event) => {
+        if (event.target.id === 'comment_input') {
+            const errorEl = document.getElementById('comment_error');
+            if (errorEl) errorEl.textContent = '';
+        }
+    });
+
+    modalCloseBtn.addEventListener('click', closePostDetail);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closePostDetail();
+    });
+
+    /* 避免详情与确认弹窗的两个焦点陷阱同时响应 Esc/Tab。 */
+    async function confirmDestructive(message) {
+        const modalWasOpen = modal.classList.contains('show');
+        if (modalWasOpen && releaseModalFocus) {
+            releaseModalFocus();
+            releaseModalFocus = null;
+        }
+        const confirmed = await showConfirm(message);
+        if (modalWasOpen && modal.classList.contains('show')) {
+            releaseModalFocus = UI.trapFocus(modalDialog, {
+                onEscape: closePostDetail,
+                initialFocus: modalCloseBtn
+            });
+        }
+        return confirmed;
+    }
+
+    /* ============ 发帖与文本草稿 ============ */
+
+    function openPostEditor() {
+        if (!currentUser) {
+            UI.toast('请先登录后再发帖', 'info');
+            window.location.href = 'login.html?redirect=discussion.html';
+            return;
+        }
+        postEditor.style.display = 'block';
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        postEditor.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+        document.getElementById('post_title').focus({ preventScroll: true });
+    }
+
+    document.getElementById('new_post_btn').addEventListener('click', openPostEditor);
+
     const DRAFT_TTL = 7 * 86400000;
     const DRAFT_SAVE_DELAY = 400;
     let draftTimer = null;
@@ -434,97 +822,195 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { localStorage.removeItem(draftKey()); } catch (e) { /* ignore */ }
     }
 
-    document.getElementById('post_title').addEventListener('input', scheduleSaveDraft);
-    document.getElementById('post_content').addEventListener('input', scheduleSaveDraft);
+    document.getElementById('post_title').addEventListener('input', event => {
+        event.target.removeAttribute('aria-invalid');
+        postError.textContent = '';
+        scheduleSaveDraft();
+    });
+    document.getElementById('post_content').addEventListener('input', event => {
+        event.target.removeAttribute('aria-invalid');
+        postError.textContent = '';
+        scheduleSaveDraft();
+    });
 
-    /* 恢复上次没发出去的草稿（有草稿就直接把编辑器打开） */
     (function restoreDraft() {
         if (!currentUser) return;
         const draft = readDraft();
         if (!draft) return;
         document.getElementById('post_title').value = draft.title;
         document.getElementById('post_content').value = draft.content;
-        document.getElementById('post_editor').style.display = 'block';
+        postEditor.style.display = 'block';
     })();
 
     document.getElementById('cancel_post').addEventListener('click', () => {
-        /* 取消只是收起编辑器，草稿保留，下次进来还在 */
-        document.getElementById('post_editor').style.display = 'none';
-        document.getElementById('post_error').textContent = '';
+        /* 取消只收起编辑器，文本草稿与已选图片都保留。 */
+        postEditor.style.display = 'none';
+        postError.textContent = '';
     });
 
-    document.getElementById('submit_post').addEventListener('click', async () => {
-        const title = document.getElementById('post_title').value.trim();
-        const content = document.getElementById('post_content').value.trim();
-        const errorEl = document.getElementById('post_error');
+    /* ============ 图片选择：校验、读取状态、明确移除 ============ */
 
-        if (!title) { errorEl.textContent = '请输入标题'; return; }
-        if (!content) { errorEl.textContent = '请输入内容'; return; }
+    let imageReadToken = 0;
+    let imageState = { status: 'idle', file: null, dataUrl: '', thumbData: '' };
 
-        /* 处理图片：原图原样上传，另生成一张缩略图给列表用 */
-        let imageData = '';
-        let thumbData = '';
-        const fileInput = document.getElementById('post_image');
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            imageData = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => resolve('');
-                reader.readAsDataURL(file);
-            });
+    function clearImagePreview() {
+        imagePreview.style.display = 'none';
+        imagePreview.removeAttribute('src');
+    }
+
+    function updateImageControls() {
+        removeImageBtn.hidden = imageState.status === 'idle';
+        submitPostBtn.disabled = imageState.status === 'reading' || submitPostBtn.classList.contains('is_busy');
+    }
+
+    function resetImageSelection() {
+        ++imageReadToken;
+        imageState = { status: 'idle', file: null, dataUrl: '', thumbData: '' };
+        imageInput.value = '';
+        imageError.textContent = '';
+        imageStatus.textContent = '';
+        clearImagePreview();
+        updateImageControls();
+    }
+
+    imageInput.addEventListener('change', async event => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return; /* 取消文件选择器不清空之前已选图片 */
+        const token = ++imageReadToken;
+        imageError.textContent = '';
+        imageStatus.textContent = '';
+        clearImagePreview();
+
+        const validation = UI.validateImageFile(file);
+        if (!validation.ok) {
+            imageState = { status: 'error', file, dataUrl: '', thumbData: '' };
+            imageError.textContent = `${validation.message}。请重新选择，或点击“移除图片”后再按无图发布。`;
+            UI.toast(validation.message, 'error');
+            updateImageControls();
+            return;
+        }
+
+        imageState = { status: 'reading', file, dataUrl: '', thumbData: '' };
+        imageStatus.textContent = `正在读取图片：${file.name}`;
+        updateImageControls();
+        try {
+            const dataUrl = await UI.readImageFile(file);
+            if (token !== imageReadToken) return;
+            if (typeof dataUrl !== 'string' || !dataUrl) throw new Error('图片读取失败，请重新选择');
+            imageState = { status: 'ready', file, dataUrl, thumbData: '' };
+            imagePreview.src = dataUrl;
+            imagePreview.style.display = 'block';
+            imageStatus.textContent = `已选择：${file.name}，发布时将包含此图片。`;
+        } catch (error) {
+            if (token !== imageReadToken) return;
+            imageState = { status: 'error', file, dataUrl: '', thumbData: '' };
+            clearImagePreview();
+            imageStatus.textContent = '';
+            imageError.textContent = '图片读取失败。请重新选择，或点击“移除图片”；未处理前不会发布为无图帖子。';
+            UI.toast('图片读取失败，请重新选择或明确移除', 'error');
+        } finally {
+            if (token === imageReadToken) updateImageControls();
+        }
+    });
+
+    removeImageBtn.addEventListener('click', () => {
+        resetImageSelection();
+        imageStatus.textContent = '已明确移除图片，本次发布将不带图片。';
+        imageInput.focus();
+    });
+
+    function setPostEditorLocked(locked) {
+        ['post_title', 'post_content', 'post_image', 'cancel_post', 'remove_post_image'].forEach(id => {
+            document.getElementById(id).disabled = locked;
+        });
+    }
+
+    submitPostBtn.addEventListener('click', async () => {
+        const titleInput = document.getElementById('post_title');
+        const contentInput = document.getElementById('post_content');
+        const title = titleInput.value.trim();
+        const content = contentInput.value.trim();
+        postError.textContent = '';
+        titleInput.removeAttribute('aria-invalid');
+        contentInput.removeAttribute('aria-invalid');
+
+        if (!title) {
+            postError.textContent = '请输入标题';
+            titleInput.setAttribute('aria-invalid', 'true');
+            titleInput.focus();
+            return;
+        }
+        if (!content) {
+            postError.textContent = '请输入内容';
+            contentInput.setAttribute('aria-invalid', 'true');
+            contentInput.focus();
+            return;
+        }
+        if (imageState.status === 'reading') {
+            postError.textContent = '图片仍在读取，请稍候再发布';
+            return;
+        }
+        if (imageState.status === 'error') {
+            postError.textContent = '所选图片尚未成功读取，请重新选择或明确移除图片后再发布';
+            imageInput.focus();
+            return;
+        }
+
+        writeDraft(); /* 立即落一次草稿，发布失败也不受防抖影响。 */
+        await UI.run(submitPostBtn, async () => {
+            setPostEditorLocked(true);
             try {
-                thumbData = await makePostThumb(file);
-            } catch (e) {
-                thumbData = '';
-            }
-        }
+                let imageData = '';
+                let thumbData = '';
+                const snapshot = imageState;
+                if (snapshot.status === 'ready') {
+                    const validation = UI.validateImageFile(snapshot.file);
+                    if (!validation.ok) {
+                        imageError.textContent = `${validation.message}，请重新选择或移除图片`;
+                        return;
+                    }
+                    imageData = snapshot.dataUrl;
+                    if (!imageData) {
+                        imageError.textContent = '图片数据不可用，请重新选择或明确移除图片';
+                        return;
+                    }
+                    try {
+                        thumbData = snapshot.thumbData || await makePostThumb(snapshot.file);
+                        snapshot.thumbData = thumbData;
+                    } catch (error) {
+                        imageError.textContent = '缩略图生成失败，请重新选择图片，或明确移除后再发布';
+                        UI.toast('图片处理失败，未提交帖子', 'error');
+                        return;
+                    }
+                }
 
-        const result = await API.createPost(title, content, imageData, thumbData);
-        if (result.success) {
-            /* 已经发布成功，草稿没用了 */
-            clearDraft();
-            document.getElementById('post_editor').style.display = 'none';
-            document.getElementById('post_title').value = '';
-            document.getElementById('post_content').value = '';
-            document.getElementById('post_image').value = '';
-            document.getElementById('post_error').textContent = '';
-            document.getElementById('post_image_preview').style.display = 'none';
-            /* 新帖子在最前面：重置列表以便第一页能看到 */
-            loadPosts(true);
-        } else {
-            /* 401 已由 api.js 统一处理（清理登录态 + 跳登录并带回跳参数），
-               这里只提示，不再重复跳转，免得丢掉回跳参数 */
-            if (result.needLogin) {
-                errorEl.textContent = '登录已过期，请重新登录';
-                return;
+                const result = await API.createPost(title, content, imageData, thumbData);
+                if (result && result.success) {
+                    clearDraft();
+                    postEditor.style.display = 'none';
+                    titleInput.value = '';
+                    contentInput.value = '';
+                    postError.textContent = '';
+                    resetImageSelection();
+                    UI.toast('帖子发布成功', 'success');
+                    refreshPosts();
+                } else {
+                    const message = result && result.needLogin
+                        ? '登录已过期，请重新登录；标题、正文和草稿已保留'
+                        : errorMessage(result, '发布失败，请稍后再试；标题、正文、图片和草稿已保留');
+                    postError.textContent = message;
+                    UI.toast(message, 'error');
+                }
+            } catch (error) {
+                postError.textContent = '网络错误，发布失败；标题、正文、图片和草稿已保留';
+                UI.toast(postError.textContent, 'error');
+            } finally {
+                setPostEditorLocked(false);
             }
-            const msg = result.message || '';
-            if (msg.includes('登录') || msg.includes('过期')) {
-                alert('登录已过期，请重新登录');
-                API.logout();
-                window.location.href = 'login.html';
-                return;
-            }
-            errorEl.textContent = msg || '发布失败，请稍后再试';
-        }
+        }, '发布中…');
     });
 
-    /* 图片预览 */
-    document.getElementById('post_image').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const preview = document.getElementById('post_image_preview');
-                preview.src = ev.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    /* 列表缩略图：最长边 800px，原图保持不动 */
+    /* 列表缩略图：最长边 800px，原图保持不动。 */
     function makePostThumb(file) {
         return new Promise((resolve, reject) => {
             const url = URL.createObjectURL(file);
@@ -539,6 +1025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     canvas.width = w;
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
+                    if (!ctx) throw new Error('当前浏览器无法生成缩略图');
                     ctx.fillStyle = '#fff';
                     ctx.fillRect(0, 0, w, h);
                     ctx.drawImage(img, 0, 0, w, h);
@@ -557,20 +1044,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function escapeHtml(text) {
-        return String(text == null ? '' : text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    /* 加载更多 */
-    const loadMoreBtn = document.getElementById('load_more_btn');
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', () => loadPosts(false));
-    }
+    loadMoreBtn.addEventListener('click', () => loadPosts(false));
 
     /* 初始化 */
     loadPosts(true);

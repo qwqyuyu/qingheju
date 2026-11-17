@@ -120,21 +120,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelector('.nav_links');
 
     if (navToggle && navLinks) {
+        /* 移动菜单同步展开状态给辅助技术 */
+        if (!navLinks.id) navLinks.id = 'nav_links';
+        navToggle.setAttribute('aria-controls', navLinks.id);
+        navToggle.setAttribute('aria-expanded', 'false');
+
+        function setMenu(open) {
+            navLinks.classList.toggle('open', open);
+            navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
         navToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('open');
+            setMenu(!navLinks.classList.contains('open'));
         });
 
         /* 点击菜单项后关闭 */
         navLinks.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
-                navLinks.classList.remove('open');
+                setMenu(false);
             });
         });
 
         /* 点击页面其他区域关闭菜单 */
         document.addEventListener('click', (e) => {
             if (!navToggle.contains(e.target) && !navLinks.contains(e.target)) {
-                navLinks.classList.remove('open');
+                setMenu(false);
+            }
+        });
+
+        /* Esc 关闭并把焦点还给汉堡按钮 */
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navLinks.classList.contains('open')) {
+                setMenu(false);
+                navToggle.focus();
             }
         });
     }
@@ -154,16 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* === 滚动时导航栏阴影效果 === */
+    /* === 滚动时导航栏阴影效果（用类切换，避免内联样式覆盖材质阴影） === */
     const navbar = document.querySelector('.navbar');
     if (navbar) {
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 10) {
-                navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.2)';
-            } else {
-                navbar.style.boxShadow = 'none';
-            }
-        });
+            navbar.classList.toggle('is_scrolled', window.scrollY > 10);
+        }, { passive: true });
     }
 
     /* === 自定义确认弹窗（Promise化，替代原生confirm） === */
@@ -173,11 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
             var existing = document.querySelector('.confirm_overlay');
             if (existing) existing.remove();
 
+            var previousFocus = document.activeElement;
             var overlay = document.createElement('div');
             overlay.className = 'confirm_overlay';
             overlay.innerHTML =
-                '<div class="confirm_box">' +
-                '<h3 class="confirm_title">提示</h3>' +
+                '<div class="confirm_box" role="dialog" aria-modal="true" aria-labelledby="confirm_title_text">' +
+                '<h3 class="confirm_title" id="confirm_title_text">提示</h3>' +
                 '<p class="confirm_body">' + message + '</p>' +
                 '<div class="confirm_actions">' +
                 '<button class="confirm_btn_cancel">取消</button>' +
@@ -189,17 +204,44 @@ document.addEventListener('DOMContentLoaded', () => {
             /* 触发入场动画 */
             requestAnimationFrame(function() { overlay.classList.add('show'); });
 
+            var releaseFocus = null;
+            var box = overlay.querySelector('.confirm_box');
+            var cancelBtn = overlay.querySelector('.confirm_btn_cancel');
+            var dangerBtn = overlay.querySelector('.confirm_btn_danger');
+
+            /* 焦点进入弹窗、Tab 循环、关闭后焦点返回触发点 */
+            if (window.UI && typeof window.UI.trapFocus === 'function') {
+                releaseFocus = window.UI.trapFocus(box, {
+                    onEscape: function() { cleanup(false); },
+                    initialFocus: cancelBtn
+                });
+            } else {
+                cancelBtn.focus();
+            }
+
             function cleanup(result) {
+                if (releaseFocus) releaseFocus();
                 overlay.classList.remove('show');
                 overlay.addEventListener('transitionend', function() { overlay.remove(); });
+                /* 减少动态效果时 transitionend 可能不触发，兜底移除 */
+                setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 320);
+                if (previousFocus && previousFocus.focus && document.contains(previousFocus)) {
+                    previousFocus.focus();
+                }
                 resolve(result);
             }
 
-            overlay.querySelector('.confirm_btn_cancel').addEventListener('click', function() { cleanup(false); });
-            overlay.querySelector('.confirm_btn_danger').addEventListener('click', function() { cleanup(true); });
+            cancelBtn.addEventListener('click', function() { cleanup(false); });
+            dangerBtn.addEventListener('click', function() { cleanup(true); });
             overlay.addEventListener('click', function(e) {
                 if (e.target === overlay) cleanup(false);
             });
+            /* 无 UI.trapFocus 时的 Esc 兜底 */
+            if (!releaseFocus) {
+                overlay.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') cleanup(false);
+                });
+            }
         });
     };
 });

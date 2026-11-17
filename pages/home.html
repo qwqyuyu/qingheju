@@ -114,25 +114,25 @@
 
                 <!-- 左上：食谱养生 -->
                 <a href="recipe.html" class="ring_segment segment_recipe">
-                    <span class="ring_icon">🍵</span>
+                    <span class="ring_icon" aria-hidden="true"><svg class="ui_icon" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18c0 5-4 8-9 8s-9-3-9-8z"/><path d="M8 8c0-1.5 1-2 1-3.5M12 8c0-1.5 1-2 1-3.5M16 8c0-1.5 1-2 1-3.5"/></svg></span>
                     <h3 class="ring_name">食谱养生</h3>
                     <p class="ring_desc">药材食材·时令搭配</p>
                 </a>
                 <!-- 右上：中医文化 -->
                 <a href="culture.html" class="ring_segment segment_culture">
-                    <span class="ring_icon">🏛</span>
+                    <span class="ring_icon" aria-hidden="true"><svg class="ui_icon" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-2-1.5-4.5-2-7-2v14c2.5 0 5 .5 7 2 2-1.5 4.5-2 7-2V4c-2.5 0-5 .5-7 2z"/><path d="M12 6v14"/></svg></span>
                     <h3 class="ring_name">中医文化</h3>
                     <p class="ring_desc">传统疗法·博大精深</p>
                 </a>
                 <!-- 右下：养生社区 -->
                 <a href="discussion.html" class="ring_segment segment_discussion">
-                    <span class="ring_icon">💬</span>
+                    <span class="ring_icon" aria-hidden="true"><svg class="ui_icon" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 4.5h9v6.5H7l-3.5 3z"/><path d="M10.5 11h10v6H17l-3 2.5V17h-3.5z"/></svg></span>
                     <h3 class="ring_name">养生社区</h3>
                     <p class="ring_desc">心得交流·共同进步</p>
                 </a>
                 <!-- 左下：体质自测 -->
                 <a href="constitution.html" class="ring_segment segment_constitution">
-                    <span class="ring_icon">🩺</span>
+                    <span class="ring_icon" aria-hidden="true"><svg class="ui_icon" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="4" width="15" height="17" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="M7.5 13h2l1.5-3 2.5 6 1.5-3h2"/></svg></span>
                     <h3 class="ring_name">体质自测</h3>
                     <p class="ring_desc">AI助手·辨识体质</p>
                 </a>
@@ -166,9 +166,13 @@
             <h2 class="section_title" id="section_title">今日养生 · 顺时调养</h2>
             <div class="section_divider"></div>
 
+            <!-- 节气请求独立状态；失败不影响社区热帖 -->
+            <div class="wellness_state" id="wellness_state" aria-live="polite"></div>
+
+            <div class="wellness_content" id="wellness_content" hidden>
             <!-- 日期与季节 -->
             <div class="wellness_header">
-                <span class="wellness_date_icon" id="term_icon">🌸</span>
+                <span class="wellness_date_icon" id="term_icon"><svg class="ui_icon" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7"/><path d="M12 14c0-3.3 2.7-6 6-6 0 3.3-2.7 6-6 6z"/><path d="M12 16c0-2.8-2.2-5-5-5 0 2.8 2.2 5 5 5z"/></svg></span>
                 <div class="wellness_date_info">
                     <span class="wellness_date_text" id="term_name">加载中...</span>
                     <span class="term_period_tag" id="term_period"></span>
@@ -176,18 +180,25 @@
                 <p class="wellness_desc" id="term_desc"></p>
             </div>
 
+            <div class="wellness_progress" id="wellness_progress">
+                <strong id="wellness_progress_text" role="status" aria-live="polite" aria-atomic="true">今日已完成 0/4</strong>
+                <span>点击便签标记完成，可再次点击撤销</span>
+            </div>
+
             <!-- 四张便签纸 -->
             <div class="sticky_notes">
                 <div class="sticky_note" data-note="morning">
-                    <div class="done_note">
+                    <button type="button" class="sticky_note_action" aria-pressed="false" aria-label="晨间运动，未完成。点击标记为已完成" aria-describedby="tip_morning"></button>
+                    <div class="done_note" aria-hidden="true">
                         <div class="done_check">
                             <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
                         </div>
                         <span class="done_text">已完成</span>
+                        <span class="done_undo">再次点击可撤销</span>
                     </div>
                     <div class="note_layer note_top">
                         <div class="pushpin"></div>
-                        <h4>🌅 晨间运动</h4>
+                        <h4><svg class="note_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M8 19a4 4 0 0 1 8 0"/><path d="M12 4v3M6.3 7.3l2 2M17.7 7.3l-2 2M3 13h2M19 13h2"/></svg>晨间运动</h4>
                         <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
                     </div>
                     <div class="note_layer note_bottom">
@@ -195,15 +206,17 @@
                     </div>
                 </div>
                 <div class="sticky_note" data-note="diet">
-                    <div class="done_note">
+                    <button type="button" class="sticky_note_action" aria-pressed="false" aria-label="饮食推荐，未完成。点击标记为已完成" aria-describedby="tip_diet"></button>
+                    <div class="done_note" aria-hidden="true">
                         <div class="done_check">
                             <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
                         </div>
                         <span class="done_text">已完成</span>
+                        <span class="done_undo">再次点击可撤销</span>
                     </div>
                     <div class="note_layer note_top">
                         <div class="pushpin"></div>
-                        <h4>🍽 饮食推荐</h4>
+                        <h4><svg class="note_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18c0 5-4 8-9 8s-9-3-9-8z"/><path d="M8 8c0-1.5 1-2 1-3.5M12 8c0-1.5 1-2 1-3.5M16 8c0-1.5 1-2 1-3.5"/></svg>饮食推荐</h4>
                         <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
                     </div>
                     <div class="note_layer note_bottom">
@@ -211,15 +224,17 @@
                     </div>
                 </div>
                 <div class="sticky_note" data-note="sleep">
-                    <div class="done_note">
+                    <button type="button" class="sticky_note_action" aria-pressed="false" aria-label="作息建议，未完成。点击标记为已完成" aria-describedby="tip_sleep"></button>
+                    <div class="done_note" aria-hidden="true">
                         <div class="done_check">
                             <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
                         </div>
                         <span class="done_text">已完成</span>
+                        <span class="done_undo">再次点击可撤销</span>
                     </div>
                     <div class="note_layer note_top">
                         <div class="pushpin"></div>
-                        <h4>😴 作息建议</h4>
+                        <h4><svg class="note_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5z"/><path d="M17 4l.7 1.6L19.3 6.3l-1.6.7L17 8.6l-.7-1.6-1.6-.7 1.6-.7z"/></svg>作息建议</h4>
                         <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
                     </div>
                     <div class="note_layer note_bottom">
@@ -227,21 +242,24 @@
                     </div>
                 </div>
                 <div class="sticky_note" data-note="mood">
-                    <div class="done_note">
+                    <button type="button" class="sticky_note_action" aria-pressed="false" aria-label="情志调养，未完成。点击标记为已完成" aria-describedby="tip_mood"></button>
+                    <div class="done_note" aria-hidden="true">
                         <div class="done_check">
                             <svg viewBox="0 0 80 60"><path d="M10 30 L30 50 L70 10"/></svg>
                         </div>
                         <span class="done_text">已完成</span>
+                        <span class="done_undo">再次点击可撤销</span>
                     </div>
                     <div class="note_layer note_top">
                         <div class="pushpin"></div>
-                        <h4>💚 情志调养</h4>
+                        <h4><svg class="note_icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20c-1.8-2.2-2.6-4.6-2.6-7.2C9.4 9.6 10.5 7 12 5c1.5 2 2.6 4.6 2.6 7.8 0 2.6-.8 5-2.6 7.2z"/><path d="M12 20c-3.6 0-6.5-2.2-7.5-5.5 1.8-.6 3.4-.3 4.8.8M12 20c3.6 0 6.5-2.2 7.5-5.5-1.8-.6-3.4-.3-4.8.8"/></svg>情志调养</h4>
                         <svg class="tear_edge" viewBox="0 0 400 18" preserveAspectRatio="none"><filter id="tearShadow"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000" flood-opacity="0.2"/></filter><polyline class="tear_shadow" points="0,10 3,3 6,8 9,2 12,10 15,4 18,8 21,1 24,11 27,5 30,8 33,2 36,10 39,4 42,7 45,1 48,10 51,3 54,9 57,2 60,11 63,5 66,8 69,1 72,10 75,4 78,7 81,3 84,10 87,2 90,9 93,5 96,8 99,1 102,11 105,4 108,7 111,3 114,10 117,2 120,9 123,5 126,8 129,1 132,10 135,4 138,7 141,3 144,11 147,5 150,8 153,2 156,10 159,4 162,7 165,1 168,9 171,3 174,8 177,2 180,11 183,5 186,7 189,1 192,10 195,4 198,8 201,3 204,9 207,2 210,7 213,5 216,10 219,1 222,8 225,4 228,7 231,3 234,10 237,2 240,9 243,5 246,8 249,1 252,11 255,4 258,7 261,3 264,10 267,2 270,9 273,5 276,8 279,1 282,10 285,4 288,7 291,3 294,11 297,5 300,8 303,2 306,10 309,4 312,7 315,1 318,9 321,3 324,8 327,2 330,11 333,5 336,7 339,1 342,10 345,4 348,8 351,3 354,9 357,2 360,7 363,5 366,10 369,1 372,8 375,4 378,7 381,3 384,10 387,2 390,9 393,5 396,8 399,1 400,10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/><polyline class="tear_line" points="0,8 3,1 6,6 9,0 12,8 15,2 18,6 21,0 24,9 27,3 30,6 33,0 36,8 39,2 42,5 45,0 48,8 51,1 54,7 57,0 60,9 63,3 66,6 69,0 72,8 75,2 78,5 81,1 84,8 87,0 90,7 93,3 96,6 99,0 102,9 105,2 108,5 111,1 114,8 117,0 120,7 123,3 126,6 129,0 132,8 135,2 138,5 141,1 144,9 147,3 150,6 153,0 156,8 159,2 162,5 165,0 168,7 171,1 174,6 177,0 180,9 183,3 186,5 189,0 192,8 195,2 198,6 201,1 204,7 207,0 210,5 213,3 216,8 219,0 222,6 225,2 228,5 231,1 234,8 237,0 240,7 243,3 246,6 249,0 252,9 255,2 258,5 261,1 264,8 267,0 270,7 273,3 276,6 279,0 282,8 285,2 288,5 291,1 294,9 297,3 300,6 303,0 306,8 309,2 312,5 315,0 318,7 321,1 324,6 327,0 330,9 333,3 336,5 339,0 342,8 345,2 348,6 351,1 354,7 357,0 360,5 363,3 366,8 369,0 372,6 375,2 378,5 381,1 384,8 387,0 390,7 393,3 396,6 399,0 400,8" fill="none" stroke="#B8956E" stroke-width="2.5" filter="url(#tearShadow)"/></svg>
                     </div>
                     <div class="note_layer note_bottom">
                         <p id="tip_mood">加载中...</p>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </section>
@@ -266,10 +284,11 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script>
         /* ========== 内容页专属脚本 ========== */
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
 
             /* 检查登录状态 */
             const user = API.getCurrentUser();
@@ -279,118 +298,267 @@
                 navUserLink.href = 'profile.html';
             }
 
-            /* ── 墨迹扩散 hover 触发 ── */
+            /* ── 墨迹扩散：鼠标、键盘与触摸均可触发，减少动态效果时停用 ── */
             const featureSection = document.querySelector('.feature_section');
+            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
             const hoverMap = {
                 '.segment_recipe':       'ink_active_tl',
                 '.segment_culture':      'ink_active_tr',
                 '.segment_discussion':   'ink_active_br',
                 '.segment_constitution': 'ink_active_bl'
             };
+            const inkClasses = Object.values(hoverMap);
+            const clearInk = () => inkClasses.forEach(cls => featureSection.classList.remove(cls));
+            const showInk = cls => {
+                if (motionQuery.matches) return;
+                clearInk();
+                featureSection.classList.add(cls);
+            };
+            const hideInk = cls => featureSection.classList.remove(cls);
+
             if (featureSection) {
                 Object.entries(hoverMap).forEach(([sel, cls]) => {
                     const seg = document.querySelector(sel);
-                    if (seg) {
-                        seg.addEventListener('mouseenter', () => featureSection.classList.add(cls));
-                        seg.addEventListener('mouseleave', () => featureSection.classList.remove(cls));
-                    }
+                    if (!seg) return;
+                    seg.addEventListener('mouseenter', () => showInk(cls));
+                    seg.addEventListener('mouseleave', () => hideInk(cls));
+                    seg.addEventListener('focus', () => showInk(cls));
+                    seg.addEventListener('blur', () => hideInk(cls));
+                    seg.addEventListener('pointerdown', event => {
+                        if (event.pointerType !== 'mouse') showInk(cls);
+                    });
+                    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => {
+                        seg.addEventListener(type, event => {
+                            if (event.pointerType !== 'mouse') hideInk(cls);
+                        });
+                    });
                 });
+                if (typeof motionQuery.addEventListener === 'function') {
+                    motionQuery.addEventListener('change', event => {
+                        if (event.matches) clearInk();
+                    });
+                }
             }
 
-            /* 加载今日养生推荐 */
-            const termsResult = await API.getSolarTerms();
-            const solarTerms = termsResult.data || [];
-            /* 优先用服务端的“今天”（APP_TIMEZONE），跨时区时不会差一天 */
-            const serverToday = (termsResult && termsResult.today) || window.localDate();
-            const todayTerm = API.isTodaySolarTerm(solarTerms, serverToday);
-
-            const info = getTodayWellnessInfo(solarTerms, serverToday);
-
-            if (todayTerm) {
-                document.getElementById('section_title').textContent = '今日节气 · 顺时养生';
-                document.getElementById('term_icon').textContent = getTermEmoji(todayTerm.name);
-                document.getElementById('term_name').textContent = todayTerm.name;
-                document.getElementById('term_desc').textContent = todayTerm.description;
-                document.getElementById('term_desc').style.display = 'block';
-                document.getElementById('term_period').textContent = info.dateStr;
-            } else {
-                document.getElementById('section_title').textContent = '今日养生 · 顺时调养';
-                document.getElementById('term_icon').textContent = info.seasonEmoji;
-                document.getElementById('term_name').textContent = info.dateStr;
-                document.getElementById('term_desc').style.display = 'none';
-                document.getElementById('term_period').textContent = info.termPeriod;
-            }
-
-            document.getElementById('tip_morning').textContent = info.morning;
-            document.getElementById('tip_diet').textContent = info.diet;
-            document.getElementById('tip_sleep').textContent = info.sleep;
-            document.getElementById('tip_mood').textContent = info.mood;
-
-            /* ── 便签纸撕落完成标记 ── */
-            /* 键按用户隔离：否则同设备换账号后会读到上一个账号的“已完成” */
-            const todayKey = window.userKey('wellness_done_' + serverToday);
+            /* ── 便签纸撕落完成标记（原生按钮支持键盘与触摸）── */
+            const wellnessSection = document.querySelector('.solar_term_section');
+            const wellnessState = document.getElementById('wellness_state');
+            const wellnessContent = document.getElementById('wellness_content');
+            const progressText = document.getElementById('wellness_progress_text');
+            const notes = Array.from(document.querySelectorAll('.sticky_note[data-note]'));
+            const noteLabels = {
+                morning: '晨间运动', diet: '饮食推荐', sleep: '作息建议', mood: '情志调养'
+            };
+            let todayKey = window.userKey('wellness_done_' + window.localDate());
             let doneState = {};
-            try {
-                const saved = localStorage.getItem(todayKey);
-                if (saved) doneState = JSON.parse(saved);
-            } catch (e) { doneState = {}; }
+            let wellnessLoading = false;
+            let wellnessRequestId = 0;
 
-            /* 只清理“本账号”其他日期的记录，别动其他账号的 */
-            const donePrefix = window.userKey('wellness_done_');
-            Object.keys(localStorage).forEach(key => {
-                if (key.indexOf(donePrefix) === 0 && key !== todayKey) {
-                    localStorage.removeItem(key);
-                }
-            });
+            function renderDoneState() {
+                let completed = 0;
+                notes.forEach(note => {
+                    const key = note.dataset.note;
+                    const isDone = !!doneState[key];
+                    const action = note.querySelector('.sticky_note_action');
+                    if (isDone) completed += 1;
+                    note.classList.toggle('done', isDone);
+                    action.setAttribute('aria-pressed', String(isDone));
+                    action.setAttribute('aria-label', (noteLabels[key] || '养生便签') +
+                        (isDone ? '，已完成。再次点击可撤销' : '，未完成。点击标记为已完成'));
+                });
+                progressText.textContent = '今日已完成 ' + completed + '/' + notes.length;
+            }
 
-            document.querySelectorAll('.sticky_note[data-note]').forEach(note => {
-                const key = note.dataset.note;
-                if (doneState[key]) note.classList.add('done');
-            });
-
-            document.querySelectorAll('.sticky_note[data-note]').forEach(note => {
-                note.addEventListener('click', function() {
-                    const key = this.dataset.note;
-                    if (this.classList.contains('done')) {
-                        this.classList.remove('done');
-                        delete doneState[key];
-                    } else {
-                        this.classList.add('done');
-                        doneState[key] = true;
+            function loadDoneState(serverToday) {
+                /* 保留原键结构及账号隔离，仅更新当前服务端日期对应的记录。 */
+                todayKey = window.userKey('wellness_done_' + serverToday);
+                doneState = {};
+                try {
+                    const saved = localStorage.getItem(todayKey);
+                    const parsed = saved ? JSON.parse(saved) : null;
+                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        doneState = parsed;
                     }
-                    try { localStorage.setItem(todayKey, JSON.stringify(doneState)); } catch (e) { /* ignore */ }
+                } catch (e) { doneState = {}; }
+
+                /* 只清理“本账号”其他日期的记录，别动其他账号的。 */
+                try {
+                    const donePrefix = window.userKey('wellness_done_');
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.indexOf(donePrefix) === 0 && key !== todayKey) {
+                            localStorage.removeItem(key);
+                        }
+                    });
+                } catch (e) { /* 存储不可用时仍保留本次页面内的完成状态 */ }
+                renderDoneState();
+            }
+
+            notes.forEach(note => {
+                const action = note.querySelector('.sticky_note_action');
+                action.addEventListener('click', () => {
+                    const key = note.dataset.note;
+                    const willComplete = !doneState[key];
+                    if (willComplete) {
+                        doneState[key] = true;
+                    } else {
+                        delete doneState[key];
+                    }
+                    renderDoneState();
+
+                    let saved = true;
+                    try {
+                        localStorage.setItem(todayKey, JSON.stringify(doneState));
+                    } catch (e) { saved = false; }
+
+                    if (!saved) {
+                        UI.toast('状态已更新，但本地保存失败，刷新后可能恢复', 'error');
+                    } else if (willComplete) {
+                        UI.toast('已完成，可再次点击撤销', 'success');
+                    } else {
+                        UI.toast('已取消完成，可再次点击标记', 'info');
+                    }
                 });
             });
 
-            /* 加载最新帖子预览 */
-            try {
-                const result = await API.getPosts({ pageSize: 3 });
-                const posts = (result.data && result.data.items) || [];
-                const previewContainer = document.getElementById('post_preview');
-                const recentPosts = posts.slice(0, 3);
-                if (recentPosts.length > 0) {
-                    previewContainer.innerHTML = recentPosts.map(p => `
-                        <a href="discussion.html" class="post_preview_item">
-                            <span class="post_preview_title">${escapeHtml(p.title)}</span>
-                            <span class="post_preview_meta">${escapeHtml(p.username)} · ${escapeHtml(p.time)}</span>
-                            <span class="post_preview_likes">♥ ${p.likes || 0}</span>
-                        </a>
-                    `).join('');
+            function renderWellness(info, todayTerm, serverToday) {
+                if (todayTerm) {
+                    document.getElementById('section_title').textContent = '今日节气 · 顺时养生';
+                    document.getElementById('term_icon').innerHTML = UI.icon(getTermIcon(todayTerm.name), 30);
+                    document.getElementById('term_name').textContent = todayTerm.name;
+                    document.getElementById('term_desc').textContent = todayTerm.description;
+                    document.getElementById('term_desc').style.display = 'block';
+                    document.getElementById('term_period').textContent = info.dateStr;
                 } else {
-                    previewContainer.innerHTML = '<p class="no_data">暂无讨论，快来发布第一条帖子吧！</p>';
+                    document.getElementById('section_title').textContent = '今日养生 · 顺时调养';
+                    document.getElementById('term_icon').innerHTML = UI.icon(info.seasonEmoji, 30);
+                    document.getElementById('term_name').textContent = info.dateStr;
+                    document.getElementById('term_desc').style.display = 'none';
+                    document.getElementById('term_period').textContent = info.termPeriod;
                 }
-            } catch (e) {
-                document.getElementById('post_preview').innerHTML = '<p class="no_data">加载中...</p>';
+
+                /* 便签仍由原有本地逻辑生成，不新增文案请求。 */
+                document.getElementById('tip_morning').textContent = info.morning;
+                document.getElementById('tip_diet').textContent = info.diet;
+                document.getElementById('tip_sleep').textContent = info.sleep;
+                document.getElementById('tip_mood').textContent = info.mood;
+                loadDoneState(serverToday);
+                wellnessContent.hidden = false;
             }
+
+            /* 节气独立加载：失败时给出本地季节便签，并保留局部重试。 */
+            async function loadWellness() {
+                if (wellnessLoading) return;
+                wellnessLoading = true;
+                const requestId = ++wellnessRequestId;
+                wellnessSection.setAttribute('aria-busy', 'true');
+                wellnessContent.hidden = true;
+                wellnessState.hidden = false;
+                wellnessState.innerHTML = UI.stateHTML('loading', {
+                    text: '正在加载今日节气与养生建议…'
+                });
+
+                try {
+                    const termsResult = await API.getSolarTerms();
+                    if (requestId !== wellnessRequestId) return;
+                    if (!termsResult || termsResult.success === false || !Array.isArray(termsResult.data)) {
+                        throw new Error((termsResult && (termsResult.message || termsResult.msg)) || '节气数据暂不可用');
+                    }
+
+                    const solarTerms = termsResult.data;
+                    /* 优先用服务端的“今天”（APP_TIMEZONE），跨时区时不会差一天。 */
+                    const serverToday = termsResult.today || window.localDate();
+                    const todayTerm = API.isTodaySolarTerm(solarTerms, serverToday);
+                    const info = getTodayWellnessInfo(solarTerms, serverToday);
+                    renderWellness(info, todayTerm, serverToday);
+
+                    if (solarTerms.length === 0) {
+                        wellnessState.innerHTML = UI.stateHTML('empty', {
+                            text: '暂无节气数据',
+                            hint: '以下养生便签已按当前季节生成。'
+                        });
+                    } else {
+                        wellnessState.hidden = true;
+                        wellnessState.innerHTML = '';
+                    }
+                } catch (error) {
+                    if (requestId !== wellnessRequestId) return;
+                    const localToday = window.localDate();
+                    const info = getTodayWellnessInfo([], localToday);
+                    renderWellness(info, null, localToday);
+                    wellnessState.hidden = false;
+                    wellnessState.innerHTML = UI.stateHTML('error', {
+                        text: '节气信息加载失败',
+                        hint: ((error && error.message) ? error.message + '；' : '') +
+                            '便签已按本地季节生成，可重试更新节气内容。',
+                        actionText: '重试'
+                    });
+                } finally {
+                    if (requestId === wellnessRequestId) {
+                        wellnessLoading = false;
+                        wellnessSection.setAttribute('aria-busy', 'false');
+                    }
+                }
+            }
+
+            /* ── 社区热帖独立加载，与节气请求互不影响 ── */
+            const previewContainer = document.getElementById('post_preview');
+            let postsLoading = false;
+            let postsRequestId = 0;
+
+            async function loadPosts() {
+                if (postsLoading) return;
+                postsLoading = true;
+                const requestId = ++postsRequestId;
+                previewContainer.setAttribute('aria-busy', 'true');
+                previewContainer.innerHTML = UI.stateHTML('loading', {
+                    text: '正在加载社区热帖…'
+                });
+
+                try {
+                    const result = await API.getPosts({ pageSize: 3 });
+                    if (requestId !== postsRequestId) return;
+                    if (!result || result.success === false) {
+                        throw new Error((result && (result.message || result.msg)) || '帖子数据暂不可用');
+                    }
+                    const posts = (result.data && Array.isArray(result.data.items)) ? result.data.items : [];
+                    const recentPosts = posts.slice(0, 3);
+                    if (recentPosts.length > 0) {
+                        previewContainer.innerHTML = recentPosts.map(p => `
+                            <a href="discussion.html" class="post_preview_item">
+                                <span class="post_preview_title">${escapeHtml(p.title)}</span>
+                                <span class="post_preview_meta">${escapeHtml(p.username)} · ${escapeHtml(p.time)}</span>
+                                <span class="post_preview_likes">${UI.icon('heart', 14)} ${escapeHtml(p.likes || 0)}</span>
+                            </a>
+                        `).join('');
+                    } else {
+                        previewContainer.innerHTML = UI.stateHTML('empty', {
+                            text: '暂无讨论',
+                            hint: '快来发布第一条帖子吧！'
+                        });
+                    }
+                } catch (error) {
+                    if (requestId !== postsRequestId) return;
+                    previewContainer.innerHTML = UI.stateHTML('error', {
+                        text: '社区热帖加载失败',
+                        hint: (error && error.message) || '请检查网络后重试',
+                        actionText: '重试'
+                    });
+                } finally {
+                    if (requestId === postsRequestId) {
+                        postsLoading = false;
+                        previewContainer.setAttribute('aria-busy', 'false');
+                    }
+                }
+            }
+
+            UI.bindRetry(wellnessState, loadWellness);
+            UI.bindRetry(previewContainer, loadPosts);
+            loadWellness();
+            loadPosts();
         });
 
         function escapeHtml(text) {
-            return String(text == null ? '' : text)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            return UI.escapeHtml(text);
         }
 
         /* todayStr 传入服务端日期时，季节/星期/节气判断全部以它为准 */
@@ -416,25 +584,25 @@
             let seasonEmoji, morning, diet, sleep, mood;
 
             if (month >= 3 && month <= 5) {
-                seasonEmoji = '🌸';
+                seasonEmoji = 'sprout';
                 morning = '宜早起（6:00-7:00），到户外散步或打太极拳，舒展筋骨，吸收春日阳气，以助肝气生发。';
                 diet = '宜清淡，多吃荠菜、香椿、春笋等时令蔬菜，少食酸味多食辛甘以养肝。';
                 sleep = '宜早睡早起，保证7-8小时睡眠，睡前可用温水泡脚助眠。';
                 mood = '保持心情舒畅，戒怒忌郁，多到户外踏青赏花，让身心与春天一起舒展。';
             } else if (month >= 6 && month <= 8) {
-                seasonEmoji = '☀️';
+                seasonEmoji = 'sun';
                 morning = '宜在日出前后（5:30-6:30）运动，推荐八段锦、太极等柔缓运动，微汗即可，避免大汗伤津耗气。';
                 diet = '宜清补，多食苦瓜、冬瓜、莲子、绿豆等清热解暑，少食油腻辛辣，可饮酸梅汤生津止渴。';
                 sleep = '宜晚睡早起（不晚于23:00），午间小憩20-30分钟养心，切忌贪凉整夜吹空调入睡。';
                 mood = '保持心神宁静，避免烦躁易怒，可听舒缓音乐、练习静坐以清心安神，心静自然凉。';
             } else if (month >= 9 && month <= 11) {
-                seasonEmoji = '🍂';
+                seasonEmoji = 'leaf';
                 morning = '宜在日出后（6:30-7:30）运动，注意添衣防秋凉，推荐散步、八段锦等平和运动。';
                 diet = '宜滋阴润燥，多食银耳、百合、雪梨、蜂蜜等，少食辛辣烧烤，多饮温水防秋燥伤肺。';
                 sleep = '宜早卧早起，与鸡俱兴，睡前勿多思虑以免伤肺气，可温水泡脚助眠。';
                 mood = '保持内心平静，收敛神气，可登高望远、读书品茶以畅胸怀，悲秋之时多与亲友相聚。';
             } else {
-                seasonEmoji = '❄️';
+                seasonEmoji = 'snowflake';
                 morning = '宜待日光而出（7:00-8:00），避免过早户外运动受寒，可做室内八段锦或站桩，以身体微热为度。';
                 diet = '宜温补，多食羊肉、核桃、黑芝麻、红枣等，少食生冷，可饮生姜红糖水暖身驱寒。';
                 sleep = '宜早卧晚起，必待日光，保证充足睡眠以养肾精，睡前热水泡脚至微汗最佳。';
@@ -448,14 +616,14 @@
             return { dateStr, seasonEmoji, termPeriod, morning, diet, sleep, mood };
         }
 
-        function getTermEmoji(termName) {
-            const map = {
-                '立春':'🌱','雨水':'🌧','惊蛰':'⚡','春分':'🌸','清明':'🌿','谷雨':'🌾',
-                '立夏':'🌞','小满':'🌾','芒种':'🌾','夏至':'☀️','小暑':'🔥','大暑':'☀️',
-                '立秋':'🍂','处暑':'🌤','白露':'💧','秋分':'🌾','寒露':'🌫','霜降':'❄️',
-                '立冬':'🌬','小雪':'🌨','大雪':'❄️','冬至':'🧊','小寒':'🥶','大寒':'☃️'
-            };
-            return map[termName] || '🌿';
+        function getTermIcon(termName) {
+            const spring = ['立春', '雨水', '惊蛰', '春分', '清明', '谷雨'];
+            const summer = ['立夏', '小满', '芒种', '夏至', '小暑', '大暑'];
+            const autumn = ['立秋', '处暑', '白露', '秋分', '寒露', '霜降'];
+            if (spring.indexOf(termName) >= 0) return 'sprout';
+            if (summer.indexOf(termName) >= 0) return 'sun';
+            if (autumn.indexOf(termName) >= 0) return 'leaf';
+            return 'snowflake';
         }
     </script>
 </body>

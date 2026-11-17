@@ -36,17 +36,19 @@
             <h2 class="auth_title">欢迎回来</h2>
             <p class="auth_subtitle">登录您的账号，继续养生之旅</p>
 
-            <form id="login_form" class="auth_form">
+            <form id="login_form" class="auth_form" novalidate>
                 <div class="form_group">
                     <label for="username">用户名</label>
-                    <input type="text" id="username" class="form_input" placeholder="请输入用户名" required>
+                    <input type="text" id="username" class="form_input" placeholder="请输入用户名" autocomplete="username" aria-describedby="username_error" required>
+                    <div class="form_field_error" id="username_error"></div>
                 </div>
                 <div class="form_group">
                     <label for="password">密码</label>
-                    <input type="password" id="password" class="form_input" placeholder="请输入密码" required>
+                    <input type="password" id="password" class="form_input" placeholder="请输入密码" autocomplete="current-password" aria-describedby="password_error" required>
+                    <div class="form_field_error" id="password_error"></div>
                 </div>
-                <div class="form_error" id="login_error"></div>
-                <button type="submit" class="btn btn_primary auth_btn">登 录</button>
+                <div class="form_error" id="login_error" role="alert" aria-live="assertive"></div>
+                <button type="submit" class="btn btn_primary auth_btn" id="login_btn">登 录</button>
             </form>
 
             <p class="auth_switch">还没有账号？<a href="register.html">立即注册</a></p>
@@ -61,41 +63,73 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script>
-        /* 登录成功后的落地页：支持 ?redirect=checkin.html（来自 401 拦截），
-           只接受同目录下的页面文件名，避免被构造成外站跳转 */
+        /* 登录成功后的落地页：只接受白名单格式的本地页面文件名，防开放跳转。 */
         function loginTarget() {
             try {
-                const v = new URLSearchParams(window.location.search).get('redirect') || '';
-                return /^[a-z0-9_-]+\.html$/i.test(v) ? v : 'index.html';
+                const value = new URLSearchParams(window.location.search).get('redirect') || '';
+                if (/^[a-z0-9_-]+\.html$/.test(value) && value !== 'login.html' && value !== 'register.html') {
+                    return value;
+                }
+                return 'index.html';
             } catch (e) {
                 return 'index.html';
             }
         }
 
-        /* ========== 登录页脚本 ========== */
-        document.getElementById('login_form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            /* 密码不做 trim：注册 / 改密都不去掉首尾空格，登录若 trim 会导致
-               “带空格的密码注册成功却永远登录不上”。密码原样提交。 */
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('login_error');
+        const loginForm = document.getElementById('login_form');
+        const loginButton = document.getElementById('login_btn');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginError = document.getElementById('login_error');
 
-            /* 前端校验非空 */
+        function setFieldError(input, message) {
+            const error = document.getElementById(input.id + '_error');
+            error.textContent = message || '';
+            if (message) input.setAttribute('aria-invalid', 'true');
+            else input.removeAttribute('aria-invalid');
+        }
+
+        [usernameInput, passwordInput].forEach(function (input) {
+            input.addEventListener('input', function () {
+                setFieldError(input, '');
+                loginError.textContent = '';
+            });
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (loginButton.classList.contains('is_busy')) return;
+
+            const username = usernameInput.value.trim();
+            /* 密码保留首尾空格，与注册和修改密码的规则一致。 */
+            const password = passwordInput.value;
+            setFieldError(usernameInput, '');
+            setFieldError(passwordInput, '');
+            loginError.textContent = '';
+
             if (!username || !password) {
-                errorEl.textContent = '请填写用户名和密码';
+                if (!username) setFieldError(usernameInput, '请输入用户名');
+                if (!password) setFieldError(passwordInput, '请输入密码');
+                (username ? passwordInput : usernameInput).focus();
                 return;
             }
 
-            /* 调用模拟登录接口 */
-            const result = await API.login(username, password);
-            if (result.success) {
-                errorEl.textContent = '';
-                window.location.href = loginTarget();
-            } else {
-                errorEl.textContent = result.message || '登录失败，请稍后重试';
-            }
+            await UI.run(loginButton, async function () {
+                try {
+                    const result = await API.login(username, password);
+                    if (result && result.success) {
+                        window.location.href = loginTarget();
+                        return;
+                    }
+                    /* 服务端为避免账号枚举，将账号或密码错误合并返回，作为表单级错误展示。 */
+                    loginError.textContent = (result && (result.message || result.msg)) || '登录失败，请稍后重试';
+                } catch (err) {
+                    loginError.textContent = '网络连接失败，请检查网络后重试';
+                    UI.toast(loginError.textContent, 'error');
+                }
+            }, '登录中…');
         });
 
         /* 如果已登录，直接跳转 */

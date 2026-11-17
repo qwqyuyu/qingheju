@@ -173,3 +173,67 @@
         font-size: 15px;
     }
 }
+
+/* === 纸笺材质与字段反馈 === */
+.auth_card {
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        linear-gradient(145deg, rgba(255,253,248,0.98), rgba(248,242,229,0.98));
+    border-bottom: 3px solid var(--color-paper-edge);
+    box-shadow:
+        0 2px 4px rgba(50, 30, 15, 0.16),
+        var(--shadow-overlay);
+}
+
+.auth_form {
+    min-width: 0;
+}
+
+.auth_form .form_group {
+    min-width: 0;
+    margin-bottom: 16px;
+}
+
+.auth_form .form_input {
+    min-width: 0;
+}
+
+.form_error {
+    color: var(--color-error);
+    line-height: 1.5;
+}
+
+.form_error:empty {
+    min-height: 0;
+}
+
+.auth_switch a,
+.auth_back a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+.auth_btn.is_busy {
+    letter-spacing: 1px;
+}
+
+@media (max-width: 380px) {
+    .auth_container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .auth_card {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth_back a,
+    .auth_card {
+        transition: none !important;
+    }
+}

@@ -8,7 +8,10 @@
     align-items: center;
     gap: 20px;
     padding: 30px;
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -34,6 +37,8 @@
     color: var(--color-primary);
     margin-bottom: 4px;
     letter-spacing: 2px;
+    overflow-wrap: anywhere;
+    min-width: 0;
 }
 
 .profile_since {
@@ -45,7 +50,10 @@
 .login_prompt {
     text-align: center;
     padding: 60px 20px;
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     margin-bottom: 24px;
@@ -59,7 +67,10 @@
 
 /* === 统计区块 === */
 .profile_section {
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -147,7 +158,10 @@
     max-width: 800px;
     margin: 0 auto 30px;
     padding: 28px 30px;
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -216,7 +230,10 @@
 
 /* === 设置区块 === */
 .settings_section {
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -357,5 +374,211 @@
 
     .about_section p {
         text-indent: 1em;
+    }
+}
+
+/* === 纸面材质、可访问上传与弹窗 === */
+.profile_header,
+.profile_section,
+.settings_section,
+.login_prompt {
+    background: linear-gradient(180deg, #FFFDF7, var(--color-paper));
+    box-shadow: var(--shadow-paper);
+    border-bottom: 2px solid var(--color-paper-edge);
+}
+
+.profile_info,
+.settings_display,
+.settings_value,
+.profile_post_item {
+    min-width: 0;
+}
+
+.settings_value,
+.profile_post_item h4,
+.post_meta {
+    overflow-wrap: anywhere;
+}
+
+.profile_avatar_wrap {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 86px;
+    height: 86px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #fff;
+}
+
+.profile_avatar_wrap:focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 3px;
+}
+
+.profile_avatar_wrap.is_busy {
+    cursor: wait;
+}
+
+.profile_avatar_wrap.is_busy .profile_avatar_overlay,
+.profile_avatar_wrap:focus-visible .profile_avatar_overlay {
+    opacity: 1;
+}
+
+.profile_avatar_overlay {
+    gap: 4px;
+    pointer-events: none;
+}
+
+.profile_avatar_overlay .btn_spinner {
+    width: 15px;
+    height: 15px;
+}
+
+.settings_input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: linear-gradient(180deg, #EFE7D6, #F8F2E5 42%, var(--color-paper));
+    box-shadow: var(--shadow-inset);
+}
+
+.settings_input:focus {
+    border-color: var(--color-gold);
+    box-shadow: var(--shadow-inset), var(--focus-ring);
+    outline: none;
+}
+
+.settings_input[aria-invalid="true"] {
+    border-color: var(--color-error);
+}
+
+.settings_field {
+    flex: 1;
+    min-width: 0;
+}
+
+.settings_edit {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 20px;
+    background: rgba(42, 31, 22, 0.52);
+}
+
+.settings_edit[hidden] {
+    display: none !important;
+}
+
+.settings_dialog_panel {
+    width: min(520px, 100%);
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding: 26px;
+}
+
+.settings_dialog_title {
+    margin: 0 0 22px;
+    color: var(--color-primary);
+    font-size: 23px;
+    letter-spacing: 1px;
+}
+
+.settings_form_error {
+    min-height: 0;
+    margin: 4px 0;
+    color: var(--color-error);
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.settings_form_error:empty {
+    display: none;
+}
+
+.settings_actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn_sm {
+    min-height: 44px;
+}
+
+.settings_msg {
+    overflow-wrap: anywhere;
+}
+
+.profile_post_item {
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.profile_post_item:hover {
+    background: #F7F0E2;
+}
+
+@media (hover: none) {
+    .profile_avatar_overlay {
+        inset: auto 0 0;
+        min-height: 28px;
+        border-radius: 0 0 50% 50%;
+        padding: 4px;
+        background: rgba(0, 0, 0, 0.58);
+        opacity: 1;
+        font-size: 12px;
+        letter-spacing: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    .profile_header,
+    .profile_section,
+    .settings_section {
+        padding: 20px 16px;
+    }
+
+    .profile_header {
+        gap: 14px;
+    }
+
+    .settings_dialog_panel {
+        padding: 22px 16px;
+    }
+
+    .settings_edit {
+        padding: 16px;
+    }
+
+    .settings_hint {
+        margin-top: -8px;
+    }
+
+    .settings_display {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profile_avatar_overlay,
+    .profile_post_item,
+    .settings_input {
+        transition: none !important;
+    }
+
+    .profile_avatar_overlay .btn_spinner {
+        animation: none !important;
     }
 }

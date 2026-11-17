@@ -3,7 +3,7 @@
    功能：签到按钮交互、3D翻转卡片动画、节气/药材知识卡片展示
    ========================================== */
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
 
     /* 更新导航登录状态 */
     const user = API.getCurrentUser();
@@ -14,6 +14,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const checkinBtn = document.getElementById('checkin_btn');
     const statusEl = document.getElementById('checkin_status');
+    const checkinRetry = document.getElementById('checkin_retry');
+    const overlay = document.getElementById('card_overlay');
+    const flipCard = document.getElementById('flip_card');
+    const cardClose = document.getElementById('card_close');
+    const cardState = document.getElementById('card_state');
+    const cardContent = document.getElementById('card_content');
+    const cardImage = document.getElementById('card_image');
+    const cardBackHint = document.getElementById('card_back_hint');
 
     /* ──────────────────────────────────────
        签到状态以服务端为准
@@ -25,13 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     var signedToday = false;               /* 服务端认定的“今天是否已签到” */
     var serverToday = window.localDate();  /* 服务端时区下的今天 */
     var historyFailed = false;             /* 签到记录没取到（断网/登录过期） */
-    var busy = false;                       /* 防止连点 */
-
-    /* 只拉一次签到记录：按钮状态、统计、日历三处共用 */
-    var history = user ? await fetchCheckinHistory() : null;
-    if (user && !applyHistory(history)) {
-        historyFailed = true;
-    }
+    var busy = false;                      /* 防止连点 */
+    var initializing = false;              /* 初始化期间禁止签到 */
 
     /* 节气表只取一次：卡片按日期匹配节气，回填历史卡片时不再逐日请求接口 */
     var solarTermsCache = null;
@@ -43,52 +46,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     const CARD_STORE_VERSION = 2;
     const CARD_STORE_LIMIT = 120;
 
+    /* 卡片请求、动画与焦点均独立于签到请求 */
+    var cardRequestId = 0;
+    var cardLoading = false;
+    var releaseCardFocus = null;
+    var cardReady = false;    /* 内容已就绪，可点击翻开封面 */
+    var cardFlipped = false;  /* 已翻开到内容面 */
+    var cardCloseTimers = [];
+
     async function getSolarTermsOnce() {
         if (solarTermsCache) return solarTermsCache;
         try {
             const result = await API.getSolarTerms();
-            solarTermsCache = (result && result.success && Array.isArray(result.data)) ? result.data : [];
+            if (result && result.success && Array.isArray(result.data)) {
+                solarTermsCache = result.data;
+            }
         } catch (e) {
-            solarTermsCache = [];
+            /* 不缓存失败结果；卡片区域重试时会重新请求。 */
         }
-        return solarTermsCache;
+        return solarTermsCache || [];
     }
 
-    /* 初始化日历：把已经拉到的结果传进去，不再重复请求接口 */
-    await Calendar.init({ history: history || { success: false }, today: serverToday });
-
-    /* 回填历史缺失的卡片数据 */
-    await backfillMissingCards();
-
-    /* 卡片缓存只保留最近一段，长期用户不至于无限增长 */
-    pruneCardData();
-
-    /* 加载签到统计 */
-    loadSignStats();
-
-    /* 渲染签到按钮的初始状态 */
-    updateCheckinButton();
+    /* 初始化失败时允许只重试状态确认，不把失败伪装成可签到。 */
+    checkinRetry.addEventListener('click', initialize);
 
     /* 签到按钮点击事件 */
     checkinBtn.addEventListener('click', async () => {
-        if (busy) return;
+        if (busy || initializing || historyFailed || checkinBtn.disabled) return;
 
         /* 已签到：再点只是查看今日卡片（依据来自服务端，不是本地缓存） */
         if (signedToday) {
-            await showCard(serverToday);
+            await window.showCheckinCard(serverToday);
             return;
         }
 
         busy = true;
+        var outcome = null;
+        setStatus('正在保存签到，请稍候', '');
+        UI.busy(checkinBtn, true, '签到中…');
+
         try {
             const result = await API.checkin();
 
             if (result && result.success) {
-                signedToday = true;
+                /* 只有服务端确认成功后才更新已签到状态、缓存与盖印。 */
                 const dateStr = (result.data && result.data.date) || serverToday;
                 serverToday = dateStr;
+                signedToday = true;
 
-                /* 合并写入本地缓存：加上今天，连续天数用服务端返回值 */
+                /* 合并写入本地缓存：加上今天，连续天数用服务端返回值（用法保持不变） */
                 const signDates = readSignDates();
                 if (signDates.indexOf(dateStr) < 0) signDates.unshift(dateStr);
                 window.syncSignCache({
@@ -96,35 +102,163 @@ document.addEventListener('DOMContentLoaded', async () => {
                     streak: (result.data && result.data.streak) || 1
                 });
 
-                setSignedState();
-                loadSignStats();
-                Calendar.refreshSignDates(signDates);
-
-                /* 显示卡片动画 */
-                await showCard(dateStr);
-                return;
+                outcome = { ok: true, isNew: true, dateStr: dateStr, signDates: signDates };
+            } else if (isAlreadyChecked(result)) {
+                /* 409 只是提示可能已签到，必须重新向服务端确认后才能盖印。 */
+                const synced = await resyncHistory();
+                if (synced && signedToday) {
+                    outcome = {
+                        ok: true,
+                        isNew: false,
+                        dateStr: serverToday,
+                        signDates: readSignDates()
+                    };
+                } else {
+                    outcome = { ok: false, message: '签到状态确认失败，请重试' };
+                }
+            } else {
+                outcome = {
+                    ok: false,
+                    message: (result && (result.message || result.msg)) || '签到失败，请稍后重试'
+                };
             }
-
-            if (isAlreadyChecked(result)) {
-                /* 服务端说今天已经签过（另一台设备签的 / 时区差异 / 本地缓存脏）：
-                   以服务端记录纠正本地状态，避免按钮“可点但一点就报错”的死循环 */
-                await resyncHistory();
-                signedToday = true;
-                updateCheckinButton();
-                Calendar.refreshSignDates();
-                await showCard(serverToday);
-                return;
-            }
-
-            statusEl.textContent = (result && result.message) || '签到失败，请稍后重试';
         } catch (e) {
-            statusEl.textContent = '网络错误，请稍后重试';
+            outcome = { ok: false, message: '网络错误，请稍后重试' };
         } finally {
+            UI.busy(checkinBtn, false);
             busy = false;
+        }
+
+        if (outcome && outcome.ok) {
+            setSignedState();
+            loadSignStats();
+            Calendar.refreshSignDates(outcome.signDates);
+            if (outcome.isNew) UI.toast('签到成功', 'success');
+
+            /* 卡片成败不再改变签到结果，也不会触发第二次签到。 */
+            await window.showCheckinCard(outcome.dateStr);
+            return;
+        }
+
+        /* 签到失败：保留未签到原状态，主按钮即为恢复入口，不盖印。 */
+        signedToday = false;
+        resetUnsignedState();
+        checkinBtn.disabled = false;
+        checkinBtn.removeAttribute('aria-disabled');
+        const message = (outcome && outcome.message) || '签到失败，请稍后重试';
+        setStatus(message + '，可再次点击签到', 'error');
+        UI.toast(message, 'error');
+    });
+
+    /* 卡片重试只重新加载卡片，不调用 API.checkin。 */
+    UI.bindRetry(cardState, function () {
+        const dateStr = cardState.dataset.date;
+        if (dateStr) window.showCheckinCard(dateStr);
+    });
+
+    /* 关闭卡片 */
+    cardClose.addEventListener('click', closeCard);
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeCard();
+    });
+
+    /* 点击封面（或键盘 Enter/空格）翻开内容面 */
+    flipCard.addEventListener('click', function (e) {
+        if (!cardReady || cardFlipped) return;
+        if (e.target.closest('button, a, input, textarea')) return;
+        flipCardOpen();
+    });
+
+    flipCard.addEventListener('keydown', function (e) {
+        if (!cardReady || cardFlipped) return;
+        if (e.target !== flipCard) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            flipCardOpen();
         }
     });
 
-    /* ---------- 签到状态相关工具 ---------- */
+    /* 暴露到全局，供日历点击调用，并统一处理今日卡片的状态文案。 */
+    window.showCheckinCard = async function (dateStr) {
+        const result = await showCard(dateStr);
+        if (dateStr === serverToday && signedToday) {
+            if (result === false) {
+                setStatus('签到成功，知识卡暂未加载', 'error');
+            } else if (result === true) {
+                setSignedState();
+            }
+        }
+        return result;
+    };
+
+    /* 进入页面立即确认；HTML 本身也已提供禁用与忙碌首屏，避免脚本加载前误点。 */
+    initialize();
+
+    /* ---------- 初始化与签到状态相关工具 ---------- */
+
+    async function initialize() {
+        if (initializing || busy) return;
+
+        const restoreRetryFocus = document.activeElement === checkinRetry;
+        initializing = true;
+        historyFailed = false;
+        signedToday = false;
+        checkinRetry.hidden = true;
+        checkinBtn.classList.remove('signed');
+        checkinBtn.setAttribute('aria-label', '正在确认签到状态');
+        setStatus('正在确认签到状态，请稍候', '');
+        UI.busy(checkinBtn, true, '正在确认签到状态');
+
+        var ready = false;
+        var history = null;
+
+        try {
+            /* 只拉一次签到记录：按钮状态、统计、日历三处共用。 */
+            history = user ? await fetchCheckinHistory() : null;
+            if (user && !applyHistory(history)) historyFailed = true;
+
+            /* 节气加载失败不会阻断日历和签到状态确认。 */
+            await Calendar.init({ history: history || { success: false }, today: serverToday });
+            if (historyFailed) throw new Error('签到状态确认失败');
+
+            /* 历史卡片回填是附加能力，失败不影响已经确认的签到状态。 */
+            try {
+                await backfillMissingCards();
+            } catch (e) {
+                /* 用户打开具体卡片时仍可单独加载与重试。 */
+            }
+            pruneCardData();
+            loadSignStats();
+            ready = true;
+        } catch (e) {
+            historyFailed = true;
+            signedToday = false;
+            loadSignStats();
+        } finally {
+            UI.busy(checkinBtn, false);
+            initializing = false;
+        }
+
+        if (ready) {
+            historyFailed = false;
+            checkinBtn.disabled = false;
+            checkinBtn.removeAttribute('aria-disabled');
+            updateCheckinButton();
+            if (restoreRetryFocus) checkinBtn.focus();
+        } else {
+            showInitializationError(restoreRetryFocus);
+        }
+    }
+
+    function showInitializationError(restoreFocus) {
+        resetUnsignedState();
+        checkinBtn.disabled = true;
+        checkinBtn.setAttribute('aria-disabled', 'true');
+        checkinBtn.setAttribute('aria-label', '签到状态确认失败，请重新确认');
+        setStatus('签到状态确认失败，请检查网络后重试', 'error');
+        checkinRetry.hidden = false;
+        if (restoreFocus) checkinRetry.focus();
+    }
 
     /* 拉签到记录，异常统一成 null */
     async function fetchCheckinHistory() {
@@ -141,9 +275,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         window.syncSignCache(result.data);
         serverToday = result.data.serverToday || window.localDate();
+        const dates = Array.isArray(result.data.signDates) ? result.data.signDates : [];
         signedToday = (typeof result.data.checkedInToday === 'boolean')
             ? result.data.checkedInToday
-            : (result.data.signDates || []).indexOf(serverToday) >= 0;
+            : dates.indexOf(serverToday) >= 0;
         return true;
     }
 
@@ -152,7 +287,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const latest = await fetchCheckinHistory();
         if (applyHistory(latest)) {
             historyFailed = false;
-            loadSignStats();
             return true;
         }
         return false;
@@ -176,6 +310,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function setStatus(message, type) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle('is_error', type === 'error');
+        statusEl.classList.toggle('is_ok', type === 'success');
+    }
+
     /* 渲染签到按钮的初始状态 */
     function updateCheckinButton() {
         if (signedToday) {
@@ -183,31 +323,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         resetUnsignedState();
-        statusEl.textContent = historyFailed
-            ? '签到状态加载失败，点击按钮即可签到'
-            : '点击按钮，获取今日养生知识卡片';
+        setStatus('点击按钮，获取今日养生知识卡片', '');
     }
 
-    /* 设置为已签到状态 */
+    /* 设置为已签到状态；按钮仍可点击查看今日卡片。 */
     function setSignedState() {
-        checkinBtn.querySelector('.checkin_btn_text').textContent = '已签到';
-        checkinBtn.querySelector('.checkin_btn_icon').textContent = '✓';
-        statusEl.textContent = '再次点击按钮查看今日卡片';
+        checkinBtn.classList.add('signed');
+        checkinBtn.innerHTML = '<span class="checkin_btn_text">已签到</span><span class="checkin_btn_icon" aria-hidden="true">' + UI.icon('check', 19, { strokeWidth: 2.2 }) + '</span>';
+        checkinBtn.setAttribute('aria-label', '今日已签到，查看今日养生知识卡片');
+        setStatus('已签到 · 点击按钮查看今日知识卡片', 'success');
     }
 
     /* 恢复为未签到状态 */
     function resetUnsignedState() {
-        checkinBtn.querySelector('.checkin_btn_text').textContent = '今日签到';
-        checkinBtn.querySelector('.checkin_btn_icon').textContent = '☯';
+        checkinBtn.classList.remove('signed');
+        checkinBtn.innerHTML = '<span class="checkin_btn_text">今日签到</span><span class="checkin_btn_icon" aria-hidden="true">' + UI.icon('yinyang', 19, { strokeWidth: 1.5 }) + '</span>';
+        checkinBtn.setAttribute('aria-label', '今日签到');
     }
 
     /* 加载签到统计数据 */
     function loadSignStats() {
-        document.getElementById('stat_streak').textContent = window.getSignStreak();
-        document.getElementById('stat_total').textContent = window.getTotalSigns();
+        try {
+            document.getElementById('stat_streak').textContent = window.getSignStreak();
+            document.getElementById('stat_total').textContent = window.getTotalSigns();
+        } catch (e) {
+            document.getElementById('stat_streak').textContent = '—';
+            document.getElementById('stat_total').textContent = '—';
+        }
     }
 
-    /* 生成今日卡片内容（仅当天首次签到调用） */
+    /* ---------- 知识卡片数据 ---------- */
+
+    /* 生成卡片内容 */
     async function generateCardContent(dateStr) {
         const solarTerms = await getSolarTermsOnce();
         const term = solarTerms.find(t => t.date === dateStr);
@@ -224,7 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             try {
                 const herbsResult = await API.getHerbs();
-                herbs = herbsResult.data || [];
+                herbs = (herbsResult && Array.isArray(herbsResult.data)) ? herbsResult.data : [];
             } catch (e) {
                 herbs = getFallbackHerbs();
             }
@@ -246,7 +393,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardIsTerm = false;
         }
 
-        return { title: cardTitle, text: cardText, tip: cardTip, image: cardImgPath, isTerm: cardIsTerm };
+        const cardData = { title: cardTitle, text: cardText, tip: cardTip, image: cardImgPath, isTerm: cardIsTerm };
+        if (!cardData.title || !cardData.text) throw new Error('知识卡内容不完整');
+        return cardData;
     }
 
     /* 获取当天卡片背景编号 */
@@ -315,71 +464,170 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    /* 展示卡片（3D翻转动画）dateStr 可选，默认今天 */
+    /* ---------- 知识卡片显示、独立错误与焦点管理 ---------- */
+
+    function prefersReducedMotion() {
+        return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function setCardBackHint(text) {
+        if (cardBackHint) cardBackHint.textContent = text || '';
+    }
+
+    function clearCardTimers() {
+        cardCloseTimers.forEach(clearTimeout);
+        cardCloseTimers = [];
+    }
+
+    function openCardDialog() {
+        clearCardTimers();
+        overlay.style.display = 'flex';
+        overlay.style.pointerEvents = 'auto';
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        if (!releaseCardFocus) {
+            releaseCardFocus = UI.trapFocus(flipCard, {
+                onEscape: closeCard,
+                initialFocus: flipCard
+            });
+        }
+    }
+
+    /* 点击封面翻开；内容未就绪或已翻开时忽略 */
+    function flipCardOpen() {
+        if (!cardReady || cardFlipped) return;
+        cardFlipped = true;
+        cardReady = false;
+        flipCard.classList.remove('can_flip');
+        flipCard.classList.add('flipped');
+        setCardBackHint('');
+        cardClose.focus({ preventScroll: true });
+    }
+
+    function showCardLoading(dateStr) {
+        cardReady = false;
+        cardFlipped = false;
+        flipCard.classList.remove('is_resolving', 'flipped', 'flyout', 'dropping', 'can_flip');
+        /* 直接弹出封面，不再先露出内容面；强制一次布局让上升动画正常开始 */
+        void flipCard.offsetWidth;
+        flipCard.classList.add('popped');
+        cardContent.hidden = true;
+        cardImage.hidden = true;
+        cardState.hidden = true;
+        cardState.dataset.date = dateStr;
+        cardState.innerHTML = '';
+        setCardBackHint('正在准备知识卡…');
+        flipCard.focus({ preventScroll: true });
+    }
+
+    function showCardError(dateStr) {
+        openCardDialog();
+        cardReady = false;
+        cardFlipped = false;
+        flipCard.classList.remove('popped', 'flipped', 'flyout', 'dropping', 'can_flip');
+        flipCard.classList.add('is_resolving');
+        cardContent.hidden = true;
+        cardImage.hidden = true;
+        cardState.hidden = false;
+        cardState.dataset.date = dateStr;
+        cardState.innerHTML = UI.stateHTML('error', {
+            text: '知识卡暂未加载',
+            hint: '签到结果不会受影响，可只重试当前卡片。',
+            actionText: '重试'
+        });
+        cardClose.focus();
+    }
+
+    /* 展示卡片（3D翻转动画）dateStr 可选，默认今天。
+       返回 true=成功，false=失败，null=重复请求或已被关闭/新请求取代。 */
     async function showCard(dateStr) {
+        if (cardLoading) return null;
+
         const todayStr = serverToday || window.localDate();
         dateStr = dateStr || todayStr;
         const isToday = (dateStr === todayStr);
+        const requestId = ++cardRequestId;
+        cardLoading = true;
 
-        const overlay = document.getElementById('card_overlay');
-        const flipCard = document.getElementById('flip_card');
-        const cardBack = flipCard.querySelector('.flip_card_back');
+        try {
+            openCardDialog();
+            showCardLoading(dateStr);
 
-        /* 获取或生成卡片数据：今天首次签到、或历史卡片还没回填时按需生成 */
-        var cardData = getStoredCardData(dateStr);
-        if (!cardData) {
-            cardData = await generateCardContent(dateStr);
-            cardData.bgIndex = isToday ? getTodayBgIndex() : (Math.floor(Math.random() * 4) + 1);
-            saveCardData(dateStr, cardData);
+            /* 获取或生成卡片数据：今天首次签到、或历史卡片还没回填时按需生成 */
+            var cardData = getStoredCardData(dateStr);
+            if (!cardData || !cardData.title || !cardData.text) {
+                cardData = await generateCardContent(dateStr);
+                cardData.bgIndex = isToday ? getTodayBgIndex() : (Math.floor(Math.random() * 4) + 1);
+                saveCardData(dateStr, cardData);
+            }
+            if (requestId !== cardRequestId) return null;
+
+            const cardBack = flipCard.querySelector('.flip_card_back');
+            var bgIndex = isToday ? getTodayBgIndex() : (cardData.bgIndex || 1);
+            cardBack.style.background = "url('/images/card_bg_" + bgIndex + ".png') center/cover no-repeat";
+
+            /* 设置卡片内容 */
+            document.getElementById('card_title').textContent = cardData.title;
+            document.getElementById('card_text').textContent = cardData.text;
+            document.getElementById('card_tip').textContent = cardData.tip || '';
+            cardImage.src = cardData.image || '';
+            cardImage.alt = cardData.title + '知识插图';
+            cardImage.style.objectFit = 'cover';
+            cardImage.hidden = !cardData.image;
+            cardState.hidden = true;
+            cardContent.hidden = false;
+
+            /* 数据就绪：停在封面，等待用户点击翻开 */
+            flipCard.classList.remove('is_resolving', 'flipped', 'flyout', 'dropping');
+            flipCard.classList.add('popped', 'can_flip');
+            cardReady = true;
+            cardFlipped = false;
+            setCardBackHint('轻触翻开');
+            return true;
+        } catch (e) {
+            if (requestId !== cardRequestId) return null;
+            showCardError(dateStr);
+            return false;
+        } finally {
+            if (requestId === cardRequestId) cardLoading = false;
         }
-
-        /* 应用卡片背景 */
-        var bgIndex = isToday ? getTodayBgIndex() : (cardData.bgIndex || 1);
-        cardBack.style.background = "url('/images/card_bg_" + bgIndex + ".png') center/cover no-repeat";
-
-        /* 设置卡片内容 */
-        document.getElementById('card_title').textContent = cardData.title;
-        document.getElementById('card_text').textContent = cardData.text;
-        document.getElementById('card_tip').textContent = cardData.tip;
-        const cardImage = document.getElementById('card_image');
-        cardImage.src = cardData.image;
-        cardImage.style.display = 'block';
-        cardImage.style.objectFit = 'cover';
-
-        /* 动画流程 */
-        overlay.style.display = 'flex';
-        flipCard.classList.remove('flipped', 'flyout', 'dropping');
-
-        requestAnimationFrame(() => {
-            flipCard.classList.add('popped');
-        });
-
-        setTimeout(() => {
-            flipCard.classList.add('flipped');
-        }, 900);
     }
 
-    /* 暴露到全局，供日历点击调用 */
-    window.showCheckinCard = showCard;
+    function closeCard() {
+        if (overlay.style.display === 'none') return;
 
-    /* 关闭卡片 */
-    document.getElementById('card_close').addEventListener('click', () => {
-        const flipCard = document.getElementById('flip_card');
-        const overlay = document.getElementById('card_overlay');
+        /* 使尚未完成的请求失效，避免关闭后旧结果重新改动弹窗。 */
+        cardRequestId++;
+        cardLoading = false;
+        clearCardTimers();
+        if (releaseCardFocus) {
+            releaseCardFocus();
+            releaseCardFocus = null;
+        }
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.style.pointerEvents = 'none';
+        overlay.classList.remove('show');
 
-        /* 翻转回去 */
-        flipCard.classList.add('flyout');
-
-        setTimeout(() => {
-            /* 下落消失 */
-            flipCard.classList.add('dropping');
-        }, 500);
-
-        setTimeout(() => {
+        function finishClose() {
             overlay.style.display = 'none';
-            flipCard.classList.remove('popped', 'flipped', 'flyout', 'dropping');
-        }, 1200);
-    });
+            cardReady = false;
+            cardFlipped = false;
+            flipCard.classList.remove('popped', 'flipped', 'flyout', 'dropping', 'is_resolving', 'can_flip');
+            setCardBackHint('轻触翻开');
+        }
+
+        if (prefersReducedMotion()) {
+            finishClose();
+            return;
+        }
+
+        flipCard.classList.add('flyout');
+        cardCloseTimers.push(setTimeout(() => {
+            flipCard.classList.add('dropping');
+        }, 500));
+        cardCloseTimers.push(setTimeout(finishClose, 1200));
+    }
 
     /* 回填历史缺失的卡片数据：只回填最近 BACKFILL_LIMIT 天。
        更早的日期在用户点开时按需生成（节气表已缓存，不会再发请求），
@@ -404,16 +652,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (m >= 6 && m <= 8) return 'summer';
         if (m >= 9 && m <= 11) return 'autumn';
         return 'winter';
-    }
-
-    function getTermEmoji(name) {
-        const map = { '立春':'🌱', '雨水':'🌧', '惊蛰':'⚡', '春分':'🌸', '清明':'🌿', '谷雨':'🌾', '立夏':'☀️', '小满':'🌾', '芒种':'🌾', '夏至':'🔥', '小暑':'🌡', '大暑':'🥵', '立秋':'🍂', '处暑':'🌤', '白露':'💧', '秋分':'🍁', '寒露':'❄', '霜降':'🌫', '立冬':'🥶', '小雪':'🌨', '大雪':'❄', '冬至':'☃️', '小寒':'🧊', '大寒':'🥶' };
-        return map[name] || '🌿';
-    }
-
-    function getHerbEmoji(name) {
-        const map = { '枸杞':'🔴', '当归':'🟤', '黄芪':'🟡', '菊花':'🌼', '金银花':'🌸', '山药':'🥔', '茯苓':'⬜', '薏苡仁':'⚪', '桂圆':'🟤', '百合':'🤍', '麦冬':'🌿', '莲子':'⚪', '陈皮':'🟠', '红枣':'🔴', '生姜':'🟡', '山楂':'🔴', '肉桂':'🟤', '银耳':'⚪', '党参':'🟡', '杜仲':'🟤' };
-        return map[name] || '🌿';
     }
 
     function getFallbackHerbs() {

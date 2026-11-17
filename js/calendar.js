@@ -11,6 +11,8 @@ const Calendar = (() => {
     let solarTerms = [];
     let loadedTermYears = new Set();
     let signDates = [];
+    let selectedDate = '';
+    let eventsBound = false;
     /* 服务端的“今天”（APP_TIMEZONE）。有值就优先用它，避免浏览器时区不同
        导致“签到按钮按服务端日期、日历高亮按本地日期”自相矛盾。 */
     let serverToday = '';
@@ -79,15 +81,31 @@ const Calendar = (() => {
         return month === 0 ? year - 1 : year;
     }
 
-    /* 按需加载某个节气年的节气，跨年浏览时自动补齐 */
+    /* 按需加载某个节气年的节气，跨年浏览时自动补齐。
+       节气是日历的附加信息，请求失败不阻断签到状态初始化，也不缓存失败。 */
     async function ensureTerms(year, month) {
         const termYear = termYearFor(year, month);
-        if (loadedTermYears.has(termYear)) return;
-        const result = await API.getSolarTerms(termYear);
-        if (result && result.success && Array.isArray(result.data)) {
-            solarTerms = solarTerms.concat(result.data);
-            loadedTermYears.add(termYear);
+        if (loadedTermYears.has(termYear)) return true;
+        try {
+            const result = await API.getSolarTerms(termYear);
+            if (result && result.success && Array.isArray(result.data)) {
+                solarTerms = solarTerms.concat(result.data);
+                loadedTermYears.add(termYear);
+                return true;
+            }
+        } catch (e) {
+            /* 再次进入该月份时会重试。 */
         }
+        return false;
+    }
+
+    function escapeHtml(value) {
+        if (window.UI && typeof window.UI.escapeHtml === 'function') {
+            return window.UI.escapeHtml(value == null ? '' : String(value));
+        }
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     /* 渲染日历 */
@@ -147,20 +165,37 @@ const Calendar = (() => {
             cells.push({ day: d, type: 'other_month' });
         }
 
-        /* 渲染 HTML */
+        /* 已签到日期使用原生 button，Enter/Space 与鼠标共用同一 click 路径。 */
         grid.innerHTML = cells.map(c => {
             let classes = ['calendar_cell'];
             if (c.type === 'other_month') classes.push('other_month');
             if (c.isToday) classes.push('today');
             if (c.isSigned) classes.push('signed');
 
-            return `
-                <div class="${classes.join(' ')}" data-date="${c.dateStr || ''}">
-                    <span class="calendar_day">${c.day}</span>
-                    ${c.lunarDay ? `<span class="calendar_lunar">${c.lunarDay}</span>` : ''}
-                    ${c.term ? `<span class="calendar_term">${c.term}</span>` : ''}
-                </div>
-            `;
+            const canOpen = c.type === 'current_month' && c.isSigned && c.dateStr;
+            const isSelected = canOpen && selectedDate === c.dateStr;
+            if (isSelected) classes.push('selected');
+
+            const markers =
+                (c.isToday ? '<span class="calendar_today_mark" aria-hidden="true">今</span>' : '') +
+                (c.isSigned ? '<span class="calendar_sign_mark" aria-hidden="true">' + (isSelected ? '选中' : '已签') + '</span>' : '');
+            const content = markers +
+                '<span class="calendar_day">' + c.day + '</span>' +
+                (c.lunarDay ? '<span class="calendar_lunar">' + escapeHtml(c.lunarDay) + '</span>' : '') +
+                (c.term ? '<span class="calendar_term">' + escapeHtml(c.term) + '</span>' : '');
+
+            if (canOpen) {
+                const ariaLabel = c.dateStr + '，已签到' +
+                    (c.isToday ? '，今天' : '') +
+                    (c.term ? '，' + c.term : '') +
+                    (isSelected ? '，当前选中' : '') + '，查看当天知识卡片';
+                return '<button type="button" class="' + classes.join(' ') + '" data-date="' + c.dateStr + '"' +
+                    ' aria-pressed="' + (isSelected ? 'true' : 'false') + '" aria-label="' + escapeHtml(ariaLabel) + '"' +
+                    ' title="查看 ' + c.dateStr + ' 的知识卡片">' + content + '</button>';
+            }
+
+            return '<div class="' + classes.join(' ') + '" data-date="' + (c.dateStr || '') + '"' +
+                (c.isToday ? ' aria-current="date" aria-label="' + c.dateStr + '，今天"' : '') + '>' + content + '</div>';
         }).join('');
 
         /* 签到格子重新触发动画（通过移除再添加 signed 类） */
@@ -187,8 +222,32 @@ const Calendar = (() => {
         }
     }
 
-    /* 绑定翻页事件 + 日历格子点击 */
+    function selectSignedCell(cell) {
+        const grid = document.getElementById('calendar_grid');
+        grid.querySelectorAll('.calendar_cell.selected').forEach(previous => {
+            previous.classList.remove('selected');
+            previous.setAttribute('aria-pressed', 'false');
+            const mark = previous.querySelector('.calendar_sign_mark');
+            if (mark) mark.textContent = '已签';
+            previous.setAttribute('aria-label', previous.getAttribute('aria-label').replace('，当前选中', ''));
+        });
+
+        selectedDate = cell.getAttribute('data-date') || '';
+        cell.classList.add('selected');
+        cell.setAttribute('aria-pressed', 'true');
+        const mark = cell.querySelector('.calendar_sign_mark');
+        if (mark) mark.textContent = '选中';
+        const ariaLabel = cell.getAttribute('aria-label') || '';
+        if (ariaLabel.indexOf('，当前选中') < 0) {
+            cell.setAttribute('aria-label', ariaLabel.replace('，查看当天知识卡片', '，当前选中，查看当天知识卡片'));
+        }
+    }
+
+    /* 绑定翻页事件 + 日历格子点击；初始化重试不会重复绑定。 */
     function bindEvents() {
+        if (eventsBound) return;
+        eventsBound = true;
+
         document.getElementById('cal_prev').addEventListener('click', async () => {
             currentMonth--;
             if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -203,12 +262,13 @@ const Calendar = (() => {
             render();
         });
 
-        /* 点击已签到日期查看当天卡片 */
+        /* 点击已签到日期查看当天卡片；原生按钮自带键盘触发能力。 */
         document.getElementById('calendar_grid').addEventListener('click', (e) => {
             const cell = e.target.closest('.calendar_cell.signed');
             if (!cell) return;
             const dateStr = cell.getAttribute('data-date');
             if (dateStr && window.showCheckinCard) {
+                selectSignedCell(cell);
                 window.showCheckinCard(dateStr);
             }
         });

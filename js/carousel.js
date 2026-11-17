@@ -13,6 +13,10 @@
     var cards = null;
     var indicators = null;
 
+    /* 尊重系统「减少动态效果」设置：不自动播放，仅保留手动切换 */
+    var reducedMotion = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     /**
      * 根据 activeIndex 计算每张卡片的视觉位置
      * 位置规则（环形）：
@@ -55,6 +59,7 @@
 
     function resetTimer() {
         clearInterval(timer);
+        if (reducedMotion) return;
         timer = setInterval(next, interval);
     }
 
@@ -68,11 +73,21 @@
         /* 初始状态 */
         updateCards();
 
-        /* 指示器点击 */
+        /* 指示器点击（补齐键盘可达与选中播报） */
         for (var i = 0; i < indicators.length; i++) {
             (function(idx) {
-                indicators[idx].addEventListener('click', function() {
+                var el = indicators[idx];
+                el.setAttribute('role', 'button');
+                el.setAttribute('tabindex', '0');
+                el.setAttribute('aria-label', '第 ' + (idx + 1) + ' 张');
+                el.addEventListener('click', function() {
                     goTo(idx);
+                });
+                el.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        goTo(idx);
+                    }
                 });
             })(i);
         }
@@ -86,12 +101,28 @@
             })(j);
         }
 
-        /* 自动播放 */
-        timer = setInterval(next, interval);
+        /* 自动播放（减少动态效果时关闭） */
+        if (!reducedMotion) timer = setInterval(next, interval);
 
         /* 鼠标悬停暂停 */
         track.addEventListener('mouseenter', function() { clearInterval(timer); });
-        track.addEventListener('mouseleave', function() { timer = setInterval(next, interval); });
+        track.addEventListener('mouseleave', function() { if (!reducedMotion) timer = setInterval(next, interval); });
+
+        /* 触摸滑动切换（不依赖 hover） */
+        var touchX = null;
+        track.addEventListener('touchstart', function(e) {
+            touchX = e.touches[0].clientX;
+            clearInterval(timer);
+        }, { passive: true });
+        track.addEventListener('touchend', function(e) {
+            if (touchX === null) return;
+            var dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 40) {
+                goTo((activeIndex + (dx < 0 ? 1 : totalSlides - 1)) % totalSlides);
+            }
+            touchX = null;
+            resetTimer();
+        }, { passive: true });
     }
 
     if (document.readyState === 'loading') {

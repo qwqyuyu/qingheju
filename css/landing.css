@@ -81,24 +81,43 @@
 }
 
 .hero_btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 14px 48px;
     font-size: 22px;
     color: var(--color-white);
-    background: var(--color-primary);
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 4px;
+    background:
+        linear-gradient(180deg, rgba(255, 236, 214, 0.24) 0%, transparent 44%),
+        linear-gradient(180deg, #A03312 0%, var(--color-primary) 55%, #6E1D00 100%);
+    border: 1px solid #6E1D00;
+    border-radius: var(--radius-sm);
     letter-spacing: 4px;
-    transition: all var(--transition);
-    animation: fadeInUp 1s ease-out 0.4s both, btnPulse 2.5s ease-in-out 1.4s infinite;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 228, 200, 0.36),
+        inset 0 -3px 0 rgba(60, 14, 0, 0.34),
+        0 3px 0 #561600,
+        0 10px 18px -8px rgba(62, 21, 8, 0.62);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    transition: filter var(--transition), transform var(--dur-press) ease,
+                box-shadow var(--dur-press) ease, border-color var(--transition);
+    animation: fadeInUp 1s ease-out 0.4s both;
 }
 
 .hero_btn:hover {
-    background: var(--color-primary-light);
-    border-color: rgba(255,255,255,0.6);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139,37,0,0.4);
-    animation: fadeInUp 1s ease-out 0.4s both;
+    filter: brightness(1.08);
+    border-color: rgba(255, 220, 170, 0.55);
+    transform: translateY(-1px);
+}
+
+.hero_btn:active {
+    transform: translateY(2px);
+    box-shadow: var(--shadow-pressed);
+}
+
+.hero_btn:focus-visible {
+    outline: 2px solid var(--color-gold-light);
+    outline-offset: 3px;
 }
 
 @keyframes btnPulse {
@@ -234,6 +253,19 @@
     background: rgba(255,255,255,0.4);
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
+}
+
+/* 扩大触摸/点击热区到 44px，不改变视觉尺寸 */
+.indicator::before {
+    content: '';
+    position: absolute;
+    inset: -17px;
+}
+
+.indicator:focus-visible {
+    outline: 2px solid var(--color-gold-light);
+    outline-offset: 4px;
 }
 
 .indicator.active {

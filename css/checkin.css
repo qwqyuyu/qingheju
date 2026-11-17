@@ -10,12 +10,15 @@
     align-items: start;
 }
 
-/* === 左侧日历 === */
+/* === 左侧日历：宣纸页与轻薄纸边 === */
 .checkin_left {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, var(--color-paper) 100%);
+    border: 1px solid var(--color-paper-edge);
+    border-bottom-width: 3px;
     border-radius: var(--radius);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-paper);
     overflow: hidden;
 }
 
@@ -41,18 +44,20 @@
 }
 
 .cal_nav {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
     border-radius: 50%;
-    background: transparent;
-    border: 1px solid var(--color-border);
+    background: linear-gradient(145deg, #FFFDF7, var(--color-paper));
+    border: 1px solid var(--color-paper-edge);
     color: var(--color-text);
-    font-size: 22px;
+    font-size: 24px;
     cursor: pointer;
-    transition: all var(--transition);
+    transition: transform var(--dur-press), background var(--transition), box-shadow var(--dur-press);
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 0 var(--color-paper-edge);
 }
 
 .cal_nav:hover {
@@ -61,10 +66,15 @@
     border-color: var(--color-primary);
 }
 
+.cal_nav:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
 /* 星期表头 */
 .calendar_weekdays {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     text-align: center;
     margin-bottom: 8px;
     font-size: 17px;
@@ -75,31 +85,46 @@
 /* 日期网格 */
 .calendar_grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 4px;
     text-align: center;
 }
 
 .calendar_cell {
     aspect-ratio: 1;
+    min-width: 0;
+    min-height: 44px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 8px 0 3px;
+    border: 1px solid transparent;
     border-radius: 6px;
+    background: transparent;
+    font-family: inherit;
     font-size: 18px;
     color: var(--color-text);
     position: relative;
     cursor: default;
-    transition: all var(--transition);
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--dur-press);
 }
 
-.calendar_cell:hover {
-    background: rgba(184,134,11,0.08);
+button.calendar_cell.signed {
+    cursor: pointer;
+}
+
+button.calendar_cell.signed:hover {
+    background: rgba(184,134,11,0.1);
+    border-color: rgba(184,134,11,0.45);
+}
+
+button.calendar_cell.signed:active {
+    box-shadow: var(--shadow-pressed);
 }
 
 .calendar_cell.other_month {
-    color: #ccc;
+    color: #B9AEA0;
 }
 
 .calendar_cell.today {
@@ -108,34 +133,88 @@
     color: var(--color-primary);
 }
 
-/* 签到后的红色毛笔圈效果 */
-.calendar_cell.signed {
-    position: relative;
+/* 今天与签到均有可见文字/形状，不只依赖颜色。 */
+.calendar_today_mark,
+.calendar_sign_mark {
+    position: absolute;
+    top: 2px;
+    z-index: 2;
+    line-height: 1.2;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+    border-radius: 3px;
+    pointer-events: none;
 }
 
+.calendar_today_mark {
+    left: 2px;
+    padding: 1px 3px;
+    color: var(--color-primary);
+    border: 1px solid currentColor;
+    background:
+        var(--texture-grain),
+        var(--color-paper);
+}
+
+.calendar_sign_mark {
+    right: 2px;
+    padding: 1px 3px;
+    color: #FFF8ED;
+    background: #A8372A;
+    border: 1px solid #8D281E;
+}
+
+.calendar_day,
+.calendar_lunar,
+.calendar_term {
+    position: relative;
+    z-index: 1;
+}
+
+.calendar_day {
+    line-height: 1.1;
+}
+
+/* 签到后的朱砂毛笔圈。只有服务端确认并刷新日期后才会出现。 */
 .calendar_cell.signed::after {
     content: '';
     position: absolute;
     inset: 2px;
-    border: 2px solid #c41e3a;
-    border-radius: 50%;
+    z-index: 0;
+    border: 2px solid #B53528;
+    border-radius: 48% 52% 46% 54%;
     opacity: 0;
+    pointer-events: none;
     animation: brushCircle 0.6s ease-out forwards;
+}
+
+.calendar_cell.selected {
+    border-color: var(--color-primary);
+    outline: 2px solid var(--color-primary);
+    outline-offset: -5px;
+    background: rgba(139,37,0,0.1);
+}
+
+.calendar_cell.selected .calendar_sign_mark {
+    color: #FFF8ED;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 @keyframes brushCircle {
     0% {
         opacity: 0;
-        transform: scale(0.3);
+        transform: scale(0.3) rotate(-8deg);
         border-width: 3px;
     }
     60% {
         opacity: 1;
-        transform: scale(1.05);
+        transform: scale(1.05) rotate(2deg);
     }
     100% {
         opacity: 0.85;
-        transform: scale(1);
+        transform: scale(1) rotate(0);
         border-width: 2px;
     }
 }
@@ -144,14 +223,14 @@
 .calendar_lunar {
     font-size: 14px;
     color: var(--color-text-light);
-    line-height: 1;
+    line-height: 1.1;
 }
 
 .calendar_term {
     font-size: 14px;
     color: var(--color-jade);
     font-weight: 500;
-    line-height: 1;
+    line-height: 1.1;
 }
 
 /* === 签到统计 === */
@@ -159,11 +238,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1px;
-    background: var(--color-border);
+    background: var(--color-paper-edge);
+    border-top: 1px solid var(--color-paper-edge);
 }
 
 .stat_item {
-    background: var(--color-white);
+    background: rgba(255,253,248,0.88);
     padding: 20px;
     text-align: center;
 }
@@ -189,16 +269,21 @@
 }
 
 .checkin_btn_area {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, var(--color-paper) 100%);
+    border: 1px solid var(--color-paper-edge);
+    border-bottom-width: 3px;
     border-radius: var(--radius);
     padding: 36px 24px;
     text-align: center;
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-paper);
 }
 
-/* 签到按钮 */
+/* 签到按钮：左上光源下的朱砂圆印 */
 .checkin_btn {
+    position: relative;
+    isolation: isolate;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -206,34 +291,77 @@
     width: 180px;
     height: 180px;
     margin: 0 auto;
+    padding: 18px;
     border-radius: 50%;
-    background: var(--color-primary);
-    color: var(--color-white);
-    border: 3px solid var(--color-gold);
-    box-shadow: 0 4px 20px rgba(139,37,0,0.3);
+    background:
+        radial-gradient(circle at 28% 20%, rgba(255,231,204,0.3), transparent 40%),
+        linear-gradient(145deg, #AE4130 0%, var(--color-primary) 58%, #742303 100%);
+    color: #FFF9EE;
+    border: 3px solid #C89B45;
+    box-shadow: 0 5px 0 #6E240F, 0 12px 24px rgba(77,34,15,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+    text-shadow: 0 1px 1px rgba(72,19,8,0.45);
     cursor: pointer;
-    transition: all var(--transition);
+    transition: transform var(--dur-press), box-shadow var(--dur-press), filter var(--transition);
     flex-direction: column;
 }
 
-.checkin_btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 28px rgba(139,37,0,0.45);
+.checkin_btn::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    z-index: -1;
+    border: 1px solid rgba(255,237,211,0.5);
+    border-radius: 49% 51% 48% 52%;
+    pointer-events: none;
 }
 
-.checkin_btn:active {
-    transform: scale(0.96);
+.checkin_btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: saturate(1.08);
+    box-shadow: 0 7px 0 #6E240F, 0 15px 28px rgba(77,34,15,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.checkin_btn:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #6E240F, 0 7px 15px rgba(77,34,15,0.22);
 }
 
 .checkin_btn.signed {
-    background: #999;
-    border-color: #bbb;
-    cursor: default;
-    box-shadow: none;
+    background:
+        radial-gradient(circle at 28% 20%, rgba(255,231,204,0.24), transparent 40%),
+        linear-gradient(145deg, #A83D2D, #8B2500 65%, #6F200C);
+    border-color: #D2AB5B;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #6E240F, 0 10px 20px rgba(77,34,15,0.22), inset 0 0 0 3px rgba(255,244,219,0.08);
 }
 
-.checkin_btn.signed:hover {
+.checkin_btn.signed .checkin_btn_icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    font-size: 25px;
+}
+
+.checkin_btn:disabled,
+.checkin_btn.is_busy {
+    cursor: wait;
+    opacity: 0.82;
+    filter: saturate(0.65);
     transform: none;
+    box-shadow: 0 3px 0 #806A58, 0 8px 16px rgba(77,34,15,0.16);
+}
+
+.checkin_btn:disabled {
+    cursor: not-allowed;
+}
+
+.checkin_btn.is_busy {
+    font-size: 17px;
+    line-height: 1.45;
 }
 
 .checkin_btn_text {
@@ -243,12 +371,39 @@
 
 .checkin_btn_icon {
     font-size: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkin_btn_icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
 }
 
 .checkin_status {
-    margin-top: 16px;
+    min-height: 58px;
+    margin-top: 18px;
     font-size: 18px;
+    line-height: 1.6;
     color: var(--color-text-light);
+}
+
+.checkin_status.is_error {
+    color: var(--color-error);
+}
+
+.checkin_status.is_ok {
+    color: var(--color-jade);
+}
+
+.checkin_retry {
+    margin: 10px auto 0;
+}
+
+.checkin_retry[hidden] {
+    display: none;
 }
 
 /* === 签到卡片弹出层（3D翻转） === */
@@ -257,7 +412,8 @@
     position: fixed;
     inset: 0;
     z-index: 3000;
-    background: rgba(0,0,0,0.7);
+    padding: 16px;
+    background: rgba(28,18,12,0.72);
     align-items: center;
     justify-content: center;
     perspective: 1200px;
@@ -267,10 +423,11 @@
     display: flex;
 }
 
-/* 翻转容器 */
+/* 翻转容器：限制在窄屏与短屏内，避免弹窗横向溢出。 */
 .flip_card {
-    width: 380px;
-    height: 520px;
+    width: min(380px, calc(100vw - 32px));
+    height: min(520px, calc(100vh - 32px));
+    flex: none;
     position: relative;
     transform-style: preserve-3d;
     transform: translateY(100vh);
@@ -283,6 +440,42 @@
 
 .flip_card.flipped {
     transform: translateY(0) rotateY(180deg);
+}
+
+.flip_card.is_resolving {
+    transform: translateY(0) rotateY(180deg);
+    transition: none;
+}
+
+/* 封面可翻开时的提示与指针 */
+.flip_card.can_flip .flip_card_back {
+    cursor: pointer;
+}
+
+.flip_card.can_flip:focus-visible {
+    outline: 2px solid var(--color-gold-light);
+    outline-offset: 4px;
+    border-radius: 16px;
+}
+
+.card_back_hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 34px;
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-calligraphy);
+    font-size: 21px;
+    letter-spacing: 6px;
+    color: rgba(255, 238, 196, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.card_back_hint:empty {
+    display: none;
 }
 
 .flip_card.flyout {
@@ -301,12 +494,12 @@
     inset: 0;
     backface-visibility: hidden;
     border-radius: 16px;
-    /* 卡片背景图 */
     background: url('../images/card_background.png') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    border: 1px solid var(--color-bronze);
+    box-shadow: var(--shadow-overlay);
     overflow: hidden;
 }
 
@@ -351,9 +544,13 @@
     inset: 0;
     backface-visibility: hidden;
     transform: rotateY(180deg);
-    background: var(--color-white);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, var(--color-paper) 100%);
+    border: 1px solid var(--color-paper-edge);
+    border-bottom-width: 3px;
     border-radius: 16px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    box-shadow: var(--shadow-overlay);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -364,13 +561,13 @@
     top: 10px;
     right: 14px;
     z-index: 10;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: rgba(0,0,0,0.4);
+    background: rgba(40,25,16,0.6);
     color: #fff;
-    font-size: 22px;
-    border: none;
+    font-size: 25px;
+    border: 1px solid rgba(255,255,255,0.4);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -379,21 +576,43 @@
 }
 
 .card_close_btn:hover {
-    background: rgba(0,0,0,0.7);
+    background: rgba(40,25,16,0.85);
 }
 
 .card_image {
     width: 100%;
     height: 260px;
+    flex: 0 0 260px;
     object-fit: cover;
     background: var(--color-bg-dark);
     display: block;
 }
 
+.card_image[hidden],
+.card_state[hidden],
+.card_content[hidden] {
+    display: none !important;
+}
+
 .card_info {
     flex: 1;
+    min-height: 0;
     padding: 20px 22px;
     overflow-y: auto;
+}
+
+.card_state {
+    display: flex;
+    min-height: 100%;
+}
+
+.card_state .state_block {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    padding: 28px 10px;
+    border-color: var(--color-paper-edge);
+    background: rgba(255,253,248,0.65);
 }
 
 .card_title {
@@ -408,6 +627,7 @@
     font-size: 18px;
     color: var(--color-text);
     line-height: 1.8;
+    overflow-wrap: anywhere;
 }
 
 .card_tip {
@@ -419,6 +639,7 @@
     font-size: 17px;
     color: var(--color-jade);
     line-height: 1.7;
+    overflow-wrap: anywhere;
 }
 
 /* === 响应式 === */
@@ -429,8 +650,8 @@
     }
 
     .flip_card {
-        width: 340px;
-        height: 460px;
+        width: min(340px, calc(100vw - 32px));
+        height: min(460px, calc(100vh - 32px));
     }
 }
 
@@ -439,18 +660,80 @@
         grid-template-columns: 1fr;
     }
 
+    .calendar_wrap {
+        padding: 16px 10px;
+    }
+
+    .calendar_grid {
+        gap: 2px;
+    }
+
+    .calendar_cell {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
     .checkin_btn {
         width: 140px;
         height: 140px;
     }
 
     .checkin_btn_text { font-size: 20px; }
+    .checkin_btn.is_busy { font-size: 15px; }
 
     .flip_card {
-        width: 300px;
-        height: 420px;
+        width: min(300px, calc(100vw - 32px));
+        height: min(420px, calc(100vh - 32px));
     }
 
-    .card_image { height: 200px; }
+    .card_image {
+        height: 200px;
+        flex-basis: 200px;
+    }
     .card_title { font-size: 24px; }
+    .card_info { padding: 18px; }
+}
+
+@media (max-width: 480px) {
+    .calendar_today_mark,
+    .calendar_sign_mark {
+        top: 1px;
+        font-size: 8px;
+        padding: 1px;
+    }
+
+    .calendar_today_mark { left: 1px; }
+    .calendar_sign_mark { right: 1px; }
+    .calendar_lunar,
+    .calendar_term { font-size: 11px; }
+}
+
+/* 页面专属动画降级：保留最终印记与正面内容，不播放扩散、翻转或位移动画。 */
+@media (prefers-reduced-motion: reduce) {
+    .calendar_cell.signed::after {
+        animation: none;
+        opacity: 0.85;
+        transform: none;
+    }
+
+    .cal_nav,
+    .calendar_cell,
+    .checkin_btn,
+    .card_close_btn,
+    .flip_card {
+        transition: none;
+    }
+
+    .cal_nav:active,
+    .checkin_btn:hover:not(:disabled),
+    .checkin_btn:active:not(:disabled) {
+        transform: none;
+    }
+
+    .flip_card,
+    .flip_card.popped,
+    .flip_card.flipped,
+    .flip_card.is_resolving {
+        transition: none;
+    }
 }

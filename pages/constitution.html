@@ -55,12 +55,22 @@
 
             <!-- 聊天区域 -->
             <div class="chat_window">
-                <div class="chat_messages" id="chat_messages">
-                    <!-- 由 JS 动态渲染 -->
+                <div class="chat_scroll_wrap">
+                    <div class="chat_messages" id="chat_messages" role="log" aria-label="与小清的对话" aria-relevant="additions">
+                        <!-- 由 JS 动态渲染 -->
+                    </div>
+                    <button type="button" class="chat_new_reply" id="chat_new_reply" hidden>有新回复 ↓</button>
+                </div>
+                <div class="chat_quick_questions" aria-label="快捷问题">
+                    <button type="button" class="chat_quick_btn" data-quick-question="最近失眠多梦怎么办？">失眠多梦怎么办</button>
+                    <button type="button" class="chat_quick_btn" data-quick-question="胃胀不消化有什么办法？">胃胀不消化</button>
+                    <button type="button" class="chat_quick_btn" data-quick-question="总感觉乏力没精神是什么原因？">乏力没精神</button>
                 </div>
                 <div class="chat_input_area">
-                    <input type="text" class="chat_input" id="chat_input" placeholder="输入你的问题，如「最近失眠多梦怎么办」...">
-                    <button class="chat_send_btn" id="chat_send_btn">发送</button>
+                    <label class="visually-hidden" for="chat_input">向小清提问</label>
+                    <input type="text" class="chat_input" id="chat_input" placeholder="输入你的问题，如「最近失眠多梦怎么办」..." autocomplete="off">
+                    <button type="button" class="chat_send_btn" id="chat_send_btn">发送</button>
+                    <button type="button" class="chat_stop_btn" id="chat_stop_btn" hidden>停止</button>
                 </div>
             </div>
         </div>
@@ -74,6 +84,7 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script src="/js/constitution.js?v=20261030-md"></script>
 </body>
 </html>

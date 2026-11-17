@@ -747,7 +747,10 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 30px;
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -916,4 +919,373 @@ body {
 
     .culture_intro { padding: 20px; }
     .culture_intro p { font-size: 18px; text-indent: 1em; }
+}
+
+/* ==========================================
+   柜体木纹与抽屉状态细化
+   ========================================== */
+
+.cabinet_grid > .state_block {
+    grid-column: 1 / -1;
+}
+
+/* 柜体木纹与内阴影：高光统一来自左上 */
+.cabinet_frame {
+    background:
+        repeating-linear-gradient(91deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 7px),
+        repeating-linear-gradient(88deg, transparent 0 23px, rgba(58,31,14,0.045) 24px, transparent 26px),
+        repeating-linear-gradient(2.4deg, transparent 0 12px, rgba(62,39,21,0.085) 13px, transparent 15px),
+        radial-gradient(ellipse at 18% -10%, rgba(255,232,192,0.22), transparent 55%),
+        linear-gradient(135deg, #B8895B 0%, #96623D 48%, #744526 100%);
+    border-color: #5C361F;
+    box-shadow:
+        inset 2px 2px 0 rgba(255,241,213,0.20),
+        inset -3px -3px 7px rgba(45,24,10,0.30),
+        0 4px 0 #4D2B18,
+        0 12px 26px rgba(44,26,12,0.24);
+}
+
+.cabinet_cornice {
+    background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px),
+        linear-gradient(180deg, var(--color-wood-light), var(--color-wood));
+    border-bottom: 2px solid var(--color-bronze);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 3px 5px rgba(36,20,9,0.32);
+}
+
+.cabinet_base {
+    background: linear-gradient(180deg, #674128 0%, #392113 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 7px rgba(36,20,9,0.32);
+}
+
+.cabinet_grid {
+    padding: 7px;
+    background: rgba(53,30,15,0.38);
+    border: 1px solid rgba(56,31,15,0.72);
+    box-shadow:
+        inset 3px 4px 9px rgba(27,14,6,0.48),
+        inset -1px -1px 0 rgba(255,233,197,0.12);
+}
+
+/* 原生按钮药屉：即时按压、连贯开合与明确选中标记 */
+.drawer_item {
+    width: 100%;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.drawer_item:focus-visible {
+    outline: 3px solid var(--color-gold-light);
+    outline-offset: 3px;
+}
+
+.drawer_item:active {
+    transform: translateY(2px);
+    transition-duration: var(--dur-press);
+}
+
+.drawer_item.pressed {
+    transform: translateY(3px);
+}
+
+.drawer_face {
+    display: block;
+    background:
+        linear-gradient(115deg, rgba(255,244,218,0.20) 0%, transparent 32%, rgba(52,27,12,0.10) 100%),
+        repeating-linear-gradient(88deg, rgba(255,255,255,0.032) 0 1px, transparent 1px 7px),
+        repeating-linear-gradient(87.5deg, transparent 0 27px, rgba(74,39,17,0.05) 28px, transparent 30px),
+        repeating-linear-gradient(4deg, transparent 0 9px, rgba(74,39,17,0.055) 10px, transparent 12px),
+        linear-gradient(135deg, #D2A770 0%, #B78150 55%, #9A633B 100%);
+    border: 1px solid #704426;
+    border-bottom: 3px solid #5C321C;
+    box-shadow:
+        inset 2px 2px 0 rgba(255,239,205,0.24),
+        inset 0 -3px 5px rgba(62,32,14,0.20),
+        0 3px 0 #55301B,
+        3px 5px 8px rgba(31,16,7,0.24);
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.drawer_item:hover .drawer_face {
+    border-color: var(--color-bronze);
+    box-shadow:
+        inset 2px 2px 0 rgba(255,239,205,0.24),
+        inset -2px -2px 4px rgba(62,32,14,0.16),
+        0 2px 0 #55301B,
+        3px 7px 12px rgba(31,16,7,0.26);
+}
+
+.drawer_item.pressed .drawer_face {
+    transform: translateY(3px);
+    border-color: var(--color-bronze);
+    border-bottom-width: 1px;
+    box-shadow:
+        inset 3px 4px 7px rgba(62,32,14,0.2),
+        inset -1px -1px 0 rgba(255,239,205,0.14),
+        1px 2px 4px rgba(31,16,7,0.2);
+}
+
+/* 古铜底座与铜环 */
+.drawer_ring_wrap {
+    position: relative;
+    width: 42px;
+    min-height: 34px;
+    margin-right: auto;
+    margin-left: auto;
+    align-items: center;
+}
+
+.drawer_ring_wrap::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 50%;
+    width: 24px;
+    height: 12px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(145deg, #C7A35B, var(--color-bronze) 58%, #554019);
+    border: 1px solid #62491F;
+    box-shadow: inset 1px 1px 1px rgba(255,244,191,0.48), 0 2px 2px rgba(42,25,10,0.3);
+}
+
+.drawer_ring {
+    display: block;
+    position: relative;
+    border-color: var(--color-bronze);
+    background:
+        radial-gradient(circle at 32% 26%, rgba(255,244,190,0.68) 0%, transparent 26%),
+        linear-gradient(145deg, #D4B46A 0%, #9A7736 48%, #5D451F 100%);
+    box-shadow:
+        inset 1px 1px 2px rgba(255,246,196,0.65),
+        inset -2px -2px 3px rgba(65,43,15,0.42),
+        1px 3px 4px rgba(42,25,10,0.36);
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.drawer_ring::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: #6D5123;
+    box-shadow: inset 1px 1px 1px rgba(255,235,168,0.45);
+}
+
+.drawer_item:hover .drawer_ring {
+    border-color: #C6A35C;
+    transform: translateY(1px) rotate(4deg);
+}
+
+.drawer_item.pressed .drawer_ring {
+    transform: translateY(3px) rotate(8deg) scale(0.96);
+    box-shadow: inset 2px 2px 3px rgba(65,43,15,0.4), 0 1px 2px rgba(42,25,10,0.24);
+}
+
+/* 抽屉文字直接刻在木面上：不铺纸签底色，用阴刻的暗部和亮边表现深度 */
+.drawer_label {
+    display: table;
+    min-width: 68px;
+    margin: 0 auto;
+    padding: 5px 7px 4px;
+    background: linear-gradient(180deg, rgba(58, 31, 14, 0.10) 0%, rgba(255, 240, 210, 0.04) 100%);
+    color: #3B2210;
+    border: 1px solid rgba(58, 31, 14, 0.16);
+    border-bottom-color: rgba(255, 238, 205, 0.22);
+    border-radius: 3px;
+    box-shadow:
+        inset 0 1px 2px rgba(46, 24, 10, 0.22),
+        inset 0 -1px 0 rgba(255, 238, 205, 0.14);
+    text-shadow:
+        0 1px 0 rgba(255, 235, 200, 0.28),
+        0 -1px 1px rgba(26, 13, 5, 0.30);
+    transition: color 220ms ease, border-color 220ms ease;
+}
+
+.drawer_item:focus-visible .drawer_label,
+.drawer_item:hover .drawer_label {
+    color: #6B1A0A;
+    border-color: rgba(255, 238, 205, 0.30);
+}
+
+.drawer_item.pressed .drawer_label {
+    color: var(--color-primary);
+    border-color: var(--color-bronze);
+    font-weight: 700;
+}
+
+.drawer_stamp {
+    z-index: 1;
+    background: rgba(251,238,210,0.32);
+}
+
+/* 内联详情抽屉按纸笺弹窗统一材质，开合约 240ms */
+.drawer_panel.paper_dialog {
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF7 0%, var(--color-paper) 72%, #EEE2CF 100%);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-bottom: 3px solid var(--color-paper-edge);
+    box-shadow: none;
+    transition: max-height 240ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.drawer_panel.open.paper_dialog {
+    border-color: var(--color-bronze);
+    border-top-color: transparent;
+    box-shadow: var(--shadow-paper);
+}
+
+.drawer_panel_inner {
+    transition: opacity 140ms ease, transform 180ms ease;
+}
+
+.drawer_panel.open .drawer_panel_inner {
+    transition: opacity 180ms ease 50ms, transform 220ms ease 40ms;
+}
+
+.drawer_panel_close {
+    width: 44px;
+    height: 44px;
+    top: 10px;
+    right: 10px;
+    padding: 0 0 3px;
+    background: var(--color-paper);
+    color: var(--color-text-light);
+    border: 1px solid rgba(140,106,47,0.42);
+    border-bottom: 2px solid var(--color-bronze);
+    box-shadow: var(--shadow-raised);
+    font-size: 28px;
+    line-height: 1;
+    transition: color var(--dur-press) ease, background var(--dur-press) ease,
+                transform var(--dur-press) ease, box-shadow var(--dur-press) ease;
+}
+
+.drawer_panel_close:hover {
+    color: var(--color-primary);
+    background: #FFF9EB;
+}
+
+.drawer_panel_close:active {
+    transform: translateY(2px);
+    box-shadow: var(--shadow-pressed);
+}
+
+.drawer_panel_image {
+    padding: 6px;
+    background:
+        var(--texture-paper),
+        var(--color-paper);
+    border: 1px solid var(--color-paper-edge);
+    box-shadow: var(--shadow-paper);
+}
+
+.drawer_panel_quote {
+    background: rgba(251,247,238,0.72);
+    border-left-color: var(--color-bronze);
+    border-top: 1px solid rgba(200,184,157,0.5);
+    border-bottom: 1px solid rgba(200,184,157,0.5);
+}
+
+.drawer_video_frame:focus-visible {
+    outline: 3px solid var(--color-gold-light);
+    outline-offset: 3px;
+}
+
+.drawer_video_frame.is_empty {
+    cursor: pointer;
+    border-color: var(--color-bronze);
+}
+
+.drawer_video_frame.is_empty:hover {
+    border-color: var(--color-gold-light);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.5), 0 4px 16px rgba(140,106,47,0.24);
+}
+
+.drawer_video_frame.is_empty .drawer_video_play {
+    opacity: 0.86;
+    border-color: rgba(212,167,69,0.62);
+}
+
+.drawer_video_frame.is_empty .drawer_video_play::after {
+    content: 'i';
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 0;
+    color: rgba(255,244,213,0.9);
+    font: 700 26px/1 Georgia, serif;
+}
+
+.drawer_video_badge {
+    color: #FFF4D6;
+    border-color: rgba(212,167,69,0.48);
+}
+
+.drawer_video_btn {
+    min-height: 44px;
+}
+
+.culture_intro {
+    background:
+        var(--texture-paper),
+        var(--color-paper);
+    border-bottom: 3px solid var(--color-paper-edge);
+    box-shadow: var(--shadow-paper);
+}
+
+@media (max-width: 767px) {
+    .cabinet_grid {
+        padding: 5px;
+    }
+
+    .drawer_label {
+        min-width: 58px;
+        padding: 4px 5px 3px;
+    }
+}
+
+/* 页面专属减少动态效果：保留状态文字和纸面，不保留位移/旋转 */
+@media (prefers-reduced-motion: reduce) {
+    .ink_mist,
+    .drawer_item,
+    .drawer_face,
+    .drawer_ring,
+    .drawer_label,
+    .drawer_panel,
+    .drawer_panel_inner,
+    .drawer_panel_image img,
+    .drawer_panel_close,
+    .drawer_video_frame,
+    .drawer_video_play {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .drawer_item,
+    .drawer_item:hover,
+    .drawer_item:active,
+    .drawer_item.pressed,
+    .drawer_face,
+    .drawer_item.pressed .drawer_face,
+    .drawer_ring,
+    .drawer_item:hover .drawer_ring,
+    .drawer_item.pressed .drawer_ring,
+    .drawer_panel_inner,
+    .drawer_panel.open .drawer_panel_inner,
+    .drawer_panel_close:active {
+        transform: none !important;
+    }
 }

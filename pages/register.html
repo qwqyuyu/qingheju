@@ -36,25 +36,29 @@
             <h2 class="auth_title">加入我们</h2>
             <p class="auth_subtitle">创建账号，开启您的养生之旅</p>
 
-            <form id="register_form" class="auth_form">
+            <form id="register_form" class="auth_form" novalidate>
                 <div class="form_group">
                     <label for="username">用户名</label>
-                    <input type="text" id="username" class="form_input" placeholder="请输入用户名" required>
+                    <input type="text" id="username" class="form_input" placeholder="请输入用户名" autocomplete="username" maxlength="20" aria-describedby="username_error" required>
+                    <div class="form_field_error" id="username_error"></div>
                 </div>
                 <div class="form_group">
                     <label for="email">邮箱</label>
-                    <input type="email" id="email" class="form_input" placeholder="请输入邮箱" required>
+                    <input type="email" id="email" class="form_input" placeholder="请输入邮箱" autocomplete="email" maxlength="100" aria-describedby="email_error" required>
+                    <div class="form_field_error" id="email_error"></div>
                 </div>
                 <div class="form_group">
                     <label for="password">密码</label>
-                    <input type="password" id="password" class="form_input" placeholder="请设置密码（至少6位）" required minlength="6">
+                    <input type="password" id="password" class="form_input" placeholder="请设置密码（至少6位）" autocomplete="new-password" required minlength="6" maxlength="64" aria-describedby="password_error">
+                    <div class="form_field_error" id="password_error"></div>
                 </div>
                 <div class="form_group">
                     <label for="confirm_password">确认密码</label>
-                    <input type="password" id="confirm_password" class="form_input" placeholder="请再次输入密码" required>
+                    <input type="password" id="confirm_password" class="form_input" placeholder="请再次输入密码" autocomplete="new-password" required maxlength="64" aria-describedby="confirm_password_error">
+                    <div class="form_field_error" id="confirm_password_error"></div>
                 </div>
-                <div class="form_error" id="register_error"></div>
-                <button type="submit" class="btn btn_primary auth_btn">注 册</button>
+                <div class="form_error" id="register_error" role="alert" aria-live="assertive"></div>
+                <button type="submit" class="btn btn_primary auth_btn" id="register_btn">注 册</button>
             </form>
 
             <p class="auth_switch">已有账号？<a href="login.html">立即登录</a></p>
@@ -69,41 +73,93 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script>
         /* ========== 注册页脚本 ========== */
-        document.getElementById('register_form').addEventListener('submit', async (e) => {
+        const registerForm = document.getElementById('register_form');
+        const registerButton = document.getElementById('register_btn');
+        const registerError = document.getElementById('register_error');
+        const fields = {
+            username: document.getElementById('username'),
+            email: document.getElementById('email'),
+            password: document.getElementById('password'),
+            confirm_password: document.getElementById('confirm_password')
+        };
+
+        function setFieldError(input, message) {
+            document.getElementById(input.id + '_error').textContent = message || '';
+            if (message) input.setAttribute('aria-invalid', 'true');
+            else input.removeAttribute('aria-invalid');
+        }
+
+        Object.keys(fields).forEach(function (key) {
+            fields[key].addEventListener('input', function () {
+                setFieldError(fields[key], '');
+                if (key === 'password') setFieldError(fields.confirm_password, '');
+                registerError.textContent = '';
+            });
+        });
+
+        function validUsername(value) {
+            return /^[\p{L}\p{N}_-]{2,20}$/u.test(value);
+        }
+
+        function focusFirstInvalid() {
+            const invalid = registerForm.querySelector('[aria-invalid="true"]');
+            if (invalid) invalid.focus();
+        }
+
+        registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const errorEl = document.getElementById('register_error');
+            if (registerButton.classList.contains('is_busy')) return;
 
-            /* 前端校验 */
-            if (!username || !email || !password || !confirmPassword) {
-                errorEl.textContent = '请填写所有字段';
-                return;
-            }
-            if (password.length < 6) {
-                errorEl.textContent = '密码至少需要6位';
-                return;
-            }
-            if (password !== confirmPassword) {
-                errorEl.textContent = '两次输入的密码不一致';
+            const username = fields.username.value.trim();
+            const email = fields.email.value.trim();
+            const password = fields.password.value;
+            const confirmPassword = fields.confirm_password.value;
+            Object.keys(fields).forEach(function (key) { setFieldError(fields[key], ''); });
+            registerError.textContent = '';
+
+            if (!username) setFieldError(fields.username, '请输入用户名');
+            else if (!validUsername(username)) setFieldError(fields.username, '用户名需为 2-20 位中文、字母、数字、下划线或短横线');
+            if (!email) setFieldError(fields.email, '请输入邮箱');
+            else if (!fields.email.validity.valid) setFieldError(fields.email, '请输入有效的邮箱地址');
+            if (!password) setFieldError(fields.password, '请设置密码');
+            else if (password.length < 6 || password.length > 64) setFieldError(fields.password, '密码需为 6-64 位');
+            if (!confirmPassword) setFieldError(fields.confirm_password, '请再次输入密码');
+            else if (password !== confirmPassword) setFieldError(fields.confirm_password, '两次输入的密码不一致');
+
+            if (registerForm.querySelector('[aria-invalid="true"]')) {
+                focusFirstInvalid();
                 return;
             }
 
-            /* 调用模拟注册接口 */
-            const result = await API.register(username, email, password);
-            if (result.success) {
-                errorEl.textContent = '';
-                /* 注册成功后服务端已经发好 token，直接进首页（原来多绕一次登录页，
-                   而登录页又会因为“已登录”自动跳走） */
-                alert('注册成功！');
-                window.location.href = 'index.html';
-            } else {
-                errorEl.textContent = result.message || '注册失败，请稍后重试';
-            }
+            await UI.run(registerButton, async function () {
+                try {
+                    const result = await API.register(username, email, password);
+                    if (result && result.success) {
+                        UI.toast('注册成功！', 'success');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    const message = (result && (result.message || result.msg)) || '注册失败，请稍后重试';
+                    if (/用户名/.test(message)) {
+                        setFieldError(fields.username, message);
+                        fields.username.focus();
+                    } else if (/邮箱/.test(message)) {
+                        setFieldError(fields.email, message);
+                        fields.email.focus();
+                    } else if (/密码/.test(message)) {
+                        setFieldError(fields.password, message);
+                        fields.password.focus();
+                    } else {
+                        registerError.textContent = message;
+                    }
+                } catch (err) {
+                    registerError.textContent = '网络连接失败，请检查网络后重试';
+                    UI.toast(registerError.textContent, 'error');
+                }
+            }, '注册中…');
         });
 
         /* 已登录时不再展示注册页：否则会在没退出登录的情况下直接顶掉当前账号 */

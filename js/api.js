@@ -277,8 +277,13 @@ const API = (() => {
         return await post('/api/ai/chat', { messages: messages });
     }
 
-    /* 流式 AI：服务端返回 SSE 时逐段回调 onDelta；AI_STREAM=false 时自动按 JSON 处理 */
-    async function aiChatStream(messages, onDelta) {
+    /* 流式 AI：服务端返回 SSE 时逐段回调 onDelta；AI_STREAM=false 时自动按 JSON 处理。
+       options.signal 可传入 AbortSignal 用于“主动停止”。
+       返回结果区分：completed（收到 done，完整回复）、stopped（用户主动停止）、
+       interrupted（网络/服务端中断，半截回复）。半截回复 success 仍为 true（保留已收到文字），
+       但 completed=false，页面必须标记“未完成”并提供重试，不能显示为正常成功。 */
+    async function aiChatStream(messages, onDelta, options) {
+        const signal = options && options.signal;
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'text/event-stream'
@@ -291,16 +296,21 @@ const API = (() => {
             res = await fetch(BASE + '/api/ai/chat', {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ messages: messages })
+                body: JSON.stringify({ messages: messages }),
+                signal: signal
             });
         } catch (e) {
+            if (e && e.name === 'AbortError') {
+                return { success: false, stopped: true, msg: '已停止' };
+            }
             return { success: false, msg: '网络错误，请稍后重试' };
         }
 
-        /* 未登录 / token 过期：交给页面跳转登录 */
+        /* 未登录 / token 过期：与普通接口统一走身份清理与安全回跳 */
         if (res.status === 401) {
             const data = await res.json().catch(function () { return null; });
-            return { success: false, needLogin: true, msg: (data && data.message) || '请先登录' };
+            handleUnauthorized();
+            return { success: false, needLogin: true, msg: (data && data.message) || '登录已过期，请重新登录' };
         }
 
         const type = (res.headers.get('content-type') || '').toLowerCase();
@@ -310,7 +320,7 @@ const API = (() => {
             const data = await res.json().catch(function () { return null; });
             if (data && data.code === 200 && data.data) {
                 if (typeof onDelta === 'function') onDelta(data.data.reply || '');
-                return { success: true, data: data.data };
+                return { success: true, completed: true, data: data.data };
             }
             return { success: false, msg: (data && data.msg) || 'AI 服务暂时不可用' };
         }
@@ -325,6 +335,18 @@ const API = (() => {
         let reply = '';
         let meta = {};
         let errorMsg = '';
+        let gotDone = false;
+        let stopped = false;
+
+        /* 主动停止：中断读取，保留已收到文字 */
+        function onAbort() {
+            stopped = true;
+            reader.cancel().catch(function () { /* ignore */ });
+        }
+        if (signal) {
+            if (signal.aborted) onAbort();
+            else signal.addEventListener('abort', onAbort, { once: true });
+        }
 
         try {
             while (true) {
@@ -352,19 +374,45 @@ const API = (() => {
                             errorMsg = event.error;
                         } else if (event.done) {
                             meta = event;
+                            gotDone = true;
                         }
                     }
                 }
             }
         } catch (e) {
-            errorMsg = '网络中断，请稍后重试';
+            if (stopped || (e && e.name === 'AbortError')) {
+                stopped = true;
+            } else {
+                errorMsg = '网络中断，回复未完成';
+            }
+        } finally {
+            if (signal) signal.removeEventListener('abort', onAbort);
         }
 
-        if (errorMsg && !reply) return { success: false, msg: errorMsg };
+        if (stopped) {
+            /* 主动停止：保留已收到文字，明确标记非完整回复 */
+            if (reply) {
+                return { success: true, completed: false, stopped: true, msg: '已停止，回复未完成',
+                    data: { reply: reply, model: meta.model, format: meta.format } };
+            }
+            return { success: false, stopped: true, msg: '已停止' };
+        }
+
+        if (errorMsg && !reply) return { success: false, interrupted: true, msg: errorMsg };
         if (!reply) return { success: false, msg: errorMsg || 'AI 返回内容为空' };
+
+        if (errorMsg || !gotDone) {
+            /* 半截回复：保留文字但必须标记未完成 */
+            return {
+                success: true, completed: false, interrupted: true,
+                msg: errorMsg || '连接中断，回复未完成',
+                data: { reply: reply, model: meta.model, format: meta.format }
+            };
+        }
 
         return {
             success: true,
+            completed: true,
             data: { reply: reply, model: meta.model, format: meta.format }
         };
     }

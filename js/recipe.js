@@ -337,7 +337,7 @@ var RECIPES = [
 /* ══════════════════════════════════════════
    页面初始化
    ══════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
 
     /* 更新导航登录状态 */
     const user = API.getCurrentUser();
@@ -346,11 +346,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (navLink) { navLink.textContent = '我的'; navLink.href = 'profile.html'; }
     }
 
-    /* 初始化板块一：药材百科 */
-    await initHerbSection();
-
-    /* 初始化板块二：时令食谱 */
+    /* 两个数据区独立初始化，局部失败不会阻断另一板块 */
+    initHerbSection();
     initRecipeSection();
+
+    function syncBodyModalLock() {
+        const hasOpenModal = document.querySelector('.modal_overlay.show, .recipe_modal_overlay.show');
+        document.body.style.overflow = hasOpenModal ? 'hidden' : '';
+    }
 
     /* ──────────────────────────────────────
        板块一：药材百科
@@ -358,108 +361,165 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initHerbSection() {
         var allHerbs = [];
         var currentHerbCategory = 'all';
+        var herbSearchTimeout;
+        var herbLoading = false;
+        var releaseHerbFocus = null;
+
+        const grid = document.getElementById('herb_grid');
+        const searchInput = document.getElementById('herb_search_input');
+        const resultCount = document.getElementById('herb_result_count');
+        const filterButtons = Array.from(document.querySelectorAll('#herb_filter_categories .herb_filter_btn'));
+        const modal = document.getElementById('herb_modal');
+        const modalCard = modal.querySelector('.modal_card');
 
         /* 当前季节 */
         const currentSeason = getSeason();
         const seasonNames = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
-        const seasonIcons = { spring: '🌸', summer: '☀️', autumn: '🍂', winter: '❄️' };
-
-        /* 显示季节提示 */
-        document.getElementById('herb_season_icon').textContent = seasonIcons[currentSeason];
+        const seasonIcons = {
+            spring: UI.icon('sprout', 20),
+            summer: UI.icon('sun', 20),
+            autumn: UI.icon('leaf', 20),
+            winter: UI.icon('snowflake', 20)
+        };
+        document.getElementById('herb_season_icon').innerHTML = seasonIcons[currentSeason];
         document.getElementById('herb_season_text').textContent = '当前' + seasonNames[currentSeason] + '：以下展示' + seasonNames[currentSeason] + '时令建议';
 
-        /* 加载药材数据 */
-        await loadHerbs();
+        /* 状态块按钮：错误时重试；筛选无结果时恢复全部 */
+        UI.bindRetry(grid, () => {
+            if (grid.querySelector('.state_error')) {
+                loadHerbs().then(() => {
+                    const target = grid.querySelector('.herb_card, [data-ui-retry]');
+                    if (target) target.focus();
+                });
+                return;
+            }
+            clearHerbFilters();
+            const allButton = filterButtons.find(btn => btn.dataset.category === 'all');
+            if (allButton) allButton.focus();
+        });
 
-        /* 分类筛选 */
-        document.querySelectorAll('#herb_filter_categories .herb_filter_btn').forEach(btn => {
+        /* 卡片使用原生按钮， click 同时覆盖鼠标、触摸与键盘激活 */
+        grid.addEventListener('click', (e) => {
+            const card = e.target.closest('.herb_card');
+            if (!card || !grid.contains(card)) return;
+            const id = parseInt(card.dataset.id, 10);
+            const herb = allHerbs.find(h => h.id === id);
+            if (herb) {
+                card.focus({ preventScroll: true });
+                showHerbModal(herb);
+            }
+        });
+
+        filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('#herb_filter_categories .herb_filter_btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentHerbCategory = btn.getAttribute('data-category');
+                currentHerbCategory = btn.dataset.category;
+                updateHerbFilterButtons();
                 herbFilterAndRender();
             });
         });
 
-        /* 搜索 */
-        var herbSearchTimeout;
-        document.getElementById('herb_search_input').addEventListener('input', () => {
+        searchInput.addEventListener('input', () => {
             clearTimeout(herbSearchTimeout);
-            herbSearchTimeout = setTimeout(() => {
-                herbFilterAndRender();
-            }, 300);
+            herbSearchTimeout = setTimeout(herbFilterAndRender, 300);
         });
-
-        /* 弹窗关闭 */
-        document.getElementById('herb_modal_close').addEventListener('click', closeHerbModal);
-        document.getElementById('herb_modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('herb_modal')) {
-                closeHerbModal();
+        searchInput.addEventListener('keydown', (e) => {
+            if (UI.isComposing(e)) return;
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(herbSearchTimeout);
+                herbFilterAndRender();
+            } else if (e.key === 'Escape' && searchInput.value) {
+                e.preventDefault();
+                searchInput.value = '';
+                clearTimeout(herbSearchTimeout);
+                herbFilterAndRender();
             }
         });
+
+        document.getElementById('herb_modal_close').addEventListener('click', closeHerbModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeHerbModal();
+        });
+
+        updateHerbFilterButtons();
+        await loadHerbs();
 
         async function loadHerbs() {
-            document.getElementById('herb_loading').style.display = 'block';
-            document.getElementById('herb_grid').innerHTML = '';
+            if (herbLoading) return;
+            herbLoading = true;
+            grid.setAttribute('aria-busy', 'true');
+            grid.innerHTML = UI.stateHTML('loading', { text: '正在加载药材数据…' });
+            resultCount.textContent = '正在加载药材…';
 
             try {
+                /* 保持 API 模块现有的本地数据获取方式 */
                 const result = await API.getHerbs();
-                if (result.success) {
-                    allHerbs = result.data;
-                    renderHerbs(allHerbs);
-                } else {
-                    document.getElementById('herb_grid').innerHTML = '<p class="herb_no_result">暂无药材数据</p>';
+                if (!result || !result.success || !Array.isArray(result.data)) {
+                    throw new Error((result && result.msg) || '药材数据不可用');
                 }
-            } catch (e) {
-                document.getElementById('herb_grid').innerHTML = '<p class="herb_no_result">暂无药材数据</p>';
+                allHerbs = result.data;
+                herbFilterAndRender();
+            } catch (error) {
+                resultCount.textContent = '药材暂未加载';
+                grid.innerHTML = UI.stateHTML('error', {
+                    text: '药材数据加载失败',
+                    hint: '筛选条件已保留，请重试',
+                    actionText: '重试'
+                });
+            } finally {
+                grid.removeAttribute('aria-busy');
+                herbLoading = false;
             }
+        }
 
-            document.getElementById('herb_loading').style.display = 'none';
+        function updateHerbFilterButtons() {
+            filterButtons.forEach(btn => {
+                const selected = btn.dataset.category === currentHerbCategory;
+                btn.classList.toggle('active', selected);
+                btn.setAttribute('aria-pressed', String(selected));
+            });
+        }
+
+        function clearHerbFilters() {
+            clearTimeout(herbSearchTimeout);
+            currentHerbCategory = 'all';
+            searchInput.value = '';
+            updateHerbFilterButtons();
+            herbFilterAndRender();
         }
 
         function renderHerbs(herbs) {
-            const grid = document.getElementById('herb_grid');
+            const list = Array.isArray(herbs) ? herbs : [];
+            resultCount.textContent = '共 ' + list.length + ' 味药材';
 
-            if (!herbs || herbs.length === 0) {
-                grid.innerHTML = '<p class="herb_no_result">没有找到匹配的药材</p>';
+            if (!list.length) {
+                const hasFilters = currentHerbCategory !== 'all' || !!searchInput.value.trim();
+                grid.innerHTML = UI.stateHTML('empty', {
+                    text: hasFilters ? '没有找到匹配的药材' : '暂无药材数据',
+                    hint: hasFilters ? '可更换分类或搜索词，也可以清除筛选' : '药材数据暂未收录',
+                    actionText: hasFilters ? '清除筛选' : undefined
+                });
                 return;
             }
 
-            grid.innerHTML = herbs.map(h => {
+            grid.innerHTML = list.map(h => {
                 const seasonTip = h.seasonalTips ? h.seasonalTips[currentSeason] || '' : '';
                 const imgSrc = h.image || ('/images/herbs/' + h.pinyin + '.svg');
+                const name = UI.escapeHtml(h.name);
 
                 return `
-                    <div class="herb_card" data-id="${h.id}" data-category="${h.category}">
-                        <img class="herb_card_image" src="${imgSrc}" alt="${h.name}">
-                        <div class="herb_card_body">
-                            <h3 class="herb_card_name">${h.name}</h3>
-                            <p class="herb_card_nature">${h.nature} · ${h.meridian}</p>
-                            <p class="herb_card_effect">${h.effect}</p>
-                            ${seasonTip ? '<p class="herb_card_season">' + seasonNames[currentSeason] + '：' + seasonTip + '</p>' : ''}
-                            <span class="herb_card_detail" data-id="${h.id}">查看详情 →</span>
-                        </div>
-                    </div>
+                    <button type="button" class="herb_card card_interactive" data-id="${UI.escapeHtml(h.id)}" data-category="${UI.escapeHtml(h.category)}" aria-label="查看${name}详情">
+                        <span class="herb_card_photo"><img class="herb_card_image" src="${UI.escapeHtml(imgSrc)}" alt="${name}" loading="lazy"></span>
+                        <span class="herb_card_body">
+                            <span class="herb_card_name">${name}</span>
+                            <span class="herb_card_nature">${UI.escapeHtml(h.nature)} · ${UI.escapeHtml(h.meridian)}</span>
+                            <span class="herb_card_effect">${UI.escapeHtml(h.effect)}</span>
+                            ${seasonTip ? '<span class="herb_card_season">' + seasonNames[currentSeason] + '：' + UI.escapeHtml(seasonTip) + '</span>' : ''}
+                            <span class="herb_card_detail" aria-hidden="true">查看详情 →</span>
+                        </span>
+                    </button>
                 `;
             }).join('');
-
-            /* 绑定事件 */
-            grid.querySelectorAll('.herb_card_detail').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = parseInt(link.getAttribute('data-id'));
-                    const herb = allHerbs.find(h => h.id === id);
-                    if (herb) showHerbModal(herb);
-                });
-            });
-
-            grid.querySelectorAll('.herb_card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const id = parseInt(card.getAttribute('data-id'));
-                    const herb = allHerbs.find(h => h.id === id);
-                    if (herb) showHerbModal(herb);
-                });
-            });
         }
 
         function showHerbModal(herb) {
@@ -472,23 +532,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('herb_modal_effect').textContent = herb.effect;
 
             const seasonDiv = document.getElementById('herb_modal_season');
+            seasonDiv.innerHTML = '';
             if (herb.seasonalTips) {
-                const sIcons = { spring: '🌸', summer: '☀️', autumn: '🍂', winter: '❄️' };
+                const sIcons = {
+                    spring: UI.icon('sprout', 18),
+                    summer: UI.icon('sun', 18),
+                    autumn: UI.icon('leaf', 18),
+                    winter: UI.icon('snowflake', 18)
+                };
                 seasonDiv.innerHTML = Object.entries(herb.seasonalTips).map(([s, tip]) =>
-                    '<div class="modal_season_item">' + (sIcons[s] || '') + ' ' + seasonNames[s] + '：' + tip + '</div>'
+                    '<div class="modal_season_item">' + (sIcons[s] || '') + ' ' + seasonNames[s] + '：' + UI.escapeHtml(tip) + '</div>'
                 ).join('');
             }
 
             document.getElementById('herb_modal_ref').textContent = '参考来源：' + (herb.reference || '《中国药典》');
-            document.getElementById('herb_modal').classList.add('show');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            syncBodyModalLock();
+            if (releaseHerbFocus) releaseHerbFocus();
+            releaseHerbFocus = UI.trapFocus(modalCard, {
+                onEscape: closeHerbModal,
+                initialFocus: document.getElementById('herb_modal_close')
+            });
         }
 
         function closeHerbModal() {
-            document.getElementById('herb_modal').classList.remove('show');
+            if (!modal.classList.contains('show')) return;
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+            if (releaseHerbFocus) {
+                releaseHerbFocus();
+                releaseHerbFocus = null;
+            }
+            syncBodyModalLock();
         }
 
         function herbFilterAndRender() {
-            const keyword = document.getElementById('herb_search_input').value.trim().toLowerCase();
+            const keyword = searchInput.value.trim().toLowerCase();
             var filtered = allHerbs;
 
             if (currentHerbCategory !== 'all') {
@@ -496,10 +576,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (keyword) {
                 filtered = filtered.filter(h =>
-                    h.name.includes(keyword) ||
-                    h.effect.includes(keyword) ||
-                    h.nature.includes(keyword) ||
-                    h.pinyin.includes(keyword)
+                    String(h.name || '').toLowerCase().includes(keyword) ||
+                    String(h.effect || '').toLowerCase().includes(keyword) ||
+                    String(h.nature || '').toLowerCase().includes(keyword) ||
+                    String(h.pinyin || '').toLowerCase().includes(keyword)
                 );
             }
             renderHerbs(filtered);
@@ -511,61 +591,97 @@ document.addEventListener('DOMContentLoaded', async () => {
        ────────────────────────────────────── */
     function initRecipeSection() {
         var currentRecipeCategory = 'all';
+        var recipeSearchTimeout;
+        var releaseRecipeFocus = null;
+
+        const grid = document.getElementById('recipe_grid');
+        const searchInput = document.getElementById('recipe_search_input');
+        const resultCount = document.getElementById('recipe_result_count');
+        const filterButtons = Array.from(document.querySelectorAll('#recipe_filter_categories .recipe_filter_btn'));
+        const modal = document.getElementById('recipe_modal');
+        const modalCard = modal.querySelector('.recipe_modal_card');
 
         /* 更新时令推荐栏 */
         const m = new Date().getMonth() + 1;
         var icon, label, desc;
         if (m >= 3 && m <= 5) {
-            icon = '🌸'; label = '春季生发'; desc = '宜养肝护肝、升发阳气，推荐以下时令食谱';
+            icon = UI.icon('sprout', 20); label = '春季生发'; desc = '宜养肝护肝、升发阳气，推荐以下时令食谱';
         } else if (m >= 6 && m <= 8) {
-            icon = '☀️'; label = '夏季暑热'; desc = '宜清热解暑、健脾祛湿，推荐以下时令食谱';
+            icon = UI.icon('sun', 20); label = '夏季暑热'; desc = '宜清热解暑、健脾祛湿，推荐以下时令食谱';
         } else if (m >= 9 && m <= 11) {
-            icon = '🍂'; label = '秋季干燥'; desc = '宜滋阴润燥、养肺生津，推荐以下时令食谱';
+            icon = UI.icon('leaf', 20); label = '秋季干燥'; desc = '宜滋阴润燥、养肺生津，推荐以下时令食谱';
         } else {
-            icon = '❄️'; label = '冬季寒冷'; desc = '宜温补阳气、补肾藏精，推荐以下时令食谱';
+            icon = UI.icon('snowflake', 20); label = '冬季寒冷'; desc = '宜温补阳气、补肾藏精，推荐以下时令食谱';
         }
-        document.getElementById('recipe_season_icon').textContent = icon;
+        document.getElementById('recipe_season_icon').innerHTML = icon;
         document.getElementById('recipe_season_label').textContent = label;
         document.getElementById('recipe_season_desc').textContent = desc;
 
-        /* 渲染食谱卡片 */
-        renderRecipes(RECIPES);
-        document.getElementById('recipe_loading').style.display = 'none';
-
-        /* 每日推荐食谱推送 */
+        /* 本地食谱同步渲染，仍使用共享状态块统一加载、空结果与异常反馈 */
+        grid.innerHTML = UI.stateHTML('loading', { text: '正在准备时令食谱…' });
+        updateRecipeFilterButtons();
+        recipeFilterAndRender();
         initDailyPush();
 
-        /* 分类筛选 */
-        document.querySelectorAll('#recipe_filter_categories .recipe_filter_btn').forEach(btn => {
+        UI.bindRetry(grid, () => {
+            if (grid.querySelector('.state_error')) {
+                recipeFilterAndRender();
+            } else {
+                clearRecipeFilters();
+            }
+            const target = grid.querySelector('.recipe_card, [data-ui-retry]') ||
+                filterButtons.find(btn => btn.dataset.category === 'all');
+            if (target) target.focus();
+        });
+
+        grid.addEventListener('click', (e) => {
+            const card = e.target.closest('.recipe_card');
+            if (!card || !grid.contains(card)) return;
+            const id = parseInt(card.dataset.id, 10);
+            const recipe = RECIPES.find(r => r.id === id);
+            if (recipe) {
+                card.focus({ preventScroll: true });
+                showRecipeModal(recipe);
+            }
+        });
+
+        filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('#recipe_filter_categories .recipe_filter_btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentRecipeCategory = btn.getAttribute('data-category');
+                currentRecipeCategory = btn.dataset.category;
+                updateRecipeFilterButtons();
                 recipeFilterAndRender();
             });
         });
 
-        /* 搜索 */
-        var recipeSearchTimeout;
-        document.getElementById('recipe_search_input').addEventListener('input', () => {
+        searchInput.addEventListener('input', () => {
             clearTimeout(recipeSearchTimeout);
-            recipeSearchTimeout = setTimeout(() => {
+            recipeSearchTimeout = setTimeout(recipeFilterAndRender, 300);
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if (UI.isComposing(e)) return;
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(recipeSearchTimeout);
                 recipeFilterAndRender();
-            }, 300);
+            } else if (e.key === 'Escape' && searchInput.value) {
+                e.preventDefault();
+                searchInput.value = '';
+                clearTimeout(recipeSearchTimeout);
+                recipeFilterAndRender();
+            }
         });
 
-        /* 弹窗关闭 */
         document.getElementById('recipe_modal_close').addEventListener('click', closeRecipeModal);
-        document.getElementById('recipe_modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('recipe_modal')) {
-                closeRecipeModal();
-            }
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeRecipeModal();
         });
 
         /* 每日推荐 — 基于日期确定性选取一道食谱 */
         function initDailyPush() {
             const dayNum = new Date().getDate();
             const dailyRecipe = RECIPES[dayNum % RECIPES.length];
+            const dailyPush = document.getElementById('daily_push');
+            const dailyButton = document.getElementById('daily_push_btn');
 
             document.getElementById('daily_push_image').src = dailyRecipe.image || '/images/recipes/placeholder.svg';
             document.getElementById('daily_push_image').alt = dailyRecipe.name;
@@ -575,68 +691,104 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('daily_push_time').textContent = '⏱ ' + dailyRecipe.time;
             document.getElementById('daily_push_season').textContent = getRecipeSeasonLabel(dailyRecipe.season);
 
-            document.getElementById('daily_push_btn').addEventListener('click', (e) => {
+            dailyButton.addEventListener('click', (e) => {
                 e.stopPropagation();
+                dailyButton.focus({ preventScroll: true });
                 showRecipeModal(dailyRecipe);
             });
 
             /* 点击整个推送条也可查看 */
-            document.getElementById('daily_push').addEventListener('click', () => {
+            dailyPush.addEventListener('click', () => {
+                dailyPush.focus({ preventScroll: true });
                 showRecipeModal(dailyRecipe);
             });
+            dailyPush.addEventListener('keydown', (e) => {
+                if (e.target !== dailyPush || UI.isComposing(e)) return;
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    showRecipeModal(dailyRecipe);
+                }
+            });
+        }
+
+        function updateRecipeFilterButtons() {
+            filterButtons.forEach(btn => {
+                const selected = btn.dataset.category === currentRecipeCategory;
+                btn.classList.toggle('active', selected);
+                btn.setAttribute('aria-pressed', String(selected));
+            });
+        }
+
+        function clearRecipeFilters() {
+            clearTimeout(recipeSearchTimeout);
+            currentRecipeCategory = 'all';
+            searchInput.value = '';
+            updateRecipeFilterButtons();
+            recipeFilterAndRender();
         }
 
         function renderRecipes(recipes) {
-            const grid = document.getElementById('recipe_grid');
-            if (!recipes || recipes.length === 0) {
-                grid.innerHTML = '<p class="recipe_no_result">暂无该分类的食谱，敬请期待</p>';
+            const list = Array.isArray(recipes) ? recipes : [];
+            resultCount.textContent = '共 ' + list.length + ' 道食谱';
+            if (!list.length) {
+                const hasFilters = currentRecipeCategory !== 'all' || !!searchInput.value.trim();
+                grid.innerHTML = UI.stateHTML('empty', {
+                    text: hasFilters ? '没有找到匹配的食谱' : '暂无食谱数据',
+                    hint: hasFilters ? '可更换分类或搜索词，也可以清除筛选' : '食谱正在整理中',
+                    actionText: hasFilters ? '清除筛选' : undefined
+                });
                 return;
             }
 
-            grid.innerHTML = recipes.map(r => {
+            grid.innerHTML = list.map(r => {
                 var imgSrc = r.image || '/images/recipes/placeholder.svg';
+                const name = UI.escapeHtml(r.name);
                 return `
-                    <div class="recipe_card" data-id="${r.id}">
-                        <img class="recipe_card_image" src="${imgSrc}" alt="${r.name}" loading="lazy">
-                        <div class="recipe_card_body">
-                            <h3 class="recipe_card_name">${r.name}</h3>
-                            <div class="recipe_card_meta">
-                                <span class="recipe_difficulty">${r.difficulty}</span>
-                                <span class="recipe_time">⏱ ${r.time}</span>
+                    <button type="button" class="recipe_card card_interactive" data-id="${UI.escapeHtml(r.id)}" aria-label="查看${name}的详细做法">
+                        <span class="recipe_card_photo"><img class="recipe_card_image" src="${UI.escapeHtml(imgSrc)}" alt="${name}" loading="lazy"></span>
+                        <span class="recipe_card_body">
+                            <span class="recipe_card_name">${name}</span>
+                            <span class="recipe_card_meta">
+                                <span class="recipe_difficulty">${UI.escapeHtml(r.difficulty)}</span>
+                                <span class="recipe_time">⏱ ${UI.escapeHtml(r.time)}</span>
                                 <span class="recipe_season_tag">${getRecipeSeasonLabel(r.season)}</span>
-                            </div>
-                            <p class="recipe_card_desc">${r.desc}</p>
-                            <span class="recipe_card_arrow">查看详细做法 →</span>
-                        </div>
-                    </div>
+                            </span>
+                            <span class="recipe_card_desc">${UI.escapeHtml(r.desc)}</span>
+                            <span class="recipe_card_arrow" aria-hidden="true">查看详细做法 →</span>
+                        </span>
+                    </button>
                 `;
             }).join('');
-
-            grid.querySelectorAll('.recipe_card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const id = parseInt(card.getAttribute('data-id'));
-                    const recipe = RECIPES.find(r => r.id === id);
-                    if (recipe) showRecipeModal(recipe);
-                });
-            });
         }
 
         function recipeFilterAndRender() {
-            const keyword = document.getElementById('recipe_search_input').value.trim().toLowerCase();
-            var filtered = RECIPES;
+            grid.setAttribute('aria-busy', 'true');
+            try {
+                const keyword = searchInput.value.trim().toLowerCase();
+                var filtered = RECIPES;
 
-            if (currentRecipeCategory !== 'all') {
-                filtered = filtered.filter(r => r.category === currentRecipeCategory);
+                if (currentRecipeCategory !== 'all') {
+                    filtered = filtered.filter(r => r.category === currentRecipeCategory);
+                }
+                if (keyword) {
+                    filtered = filtered.filter(r =>
+                        String(r.name || '').toLowerCase().includes(keyword) ||
+                        String(r.desc || '').toLowerCase().includes(keyword) ||
+                        String(r.benefit || '').toLowerCase().includes(keyword) ||
+                        r.ingredients.some(ing => String(ing.name || '').toLowerCase().includes(keyword))
+                    );
+                }
+                renderRecipes(filtered);
+            } catch (error) {
+                resultCount.textContent = '食谱暂未加载';
+                grid.innerHTML = UI.stateHTML('error', {
+                    text: '食谱渲染失败',
+                    hint: '筛选条件已保留，请重试',
+                    actionText: '重试'
+                });
+            } finally {
+                grid.removeAttribute('aria-busy');
             }
-            if (keyword) {
-                filtered = filtered.filter(r =>
-                    r.name.includes(keyword) ||
-                    r.desc.includes(keyword) ||
-                    r.benefit.includes(keyword) ||
-                    r.ingredients.some(ing => ing.name.includes(keyword))
-                );
-            }
-            renderRecipes(filtered);
         }
 
         function showRecipeModal(recipe) {
@@ -648,22 +800,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('recipe_modal_season_tag').textContent = getRecipeSeasonLabel(recipe.season);
 
             document.getElementById('recipe_modal_ingredients').innerHTML = recipe.ingredients.map(ing =>
-                '<li><span class="ingredient_name">' + ing.name + '</span><span class="ingredient_amount">' + ing.amount + '</span></li>'
+                '<li><span class="ingredient_name">' + UI.escapeHtml(ing.name) + '</span><span class="ingredient_amount">' + UI.escapeHtml(ing.amount) + '</span></li>'
             ).join('');
 
             document.getElementById('recipe_modal_steps').innerHTML = recipe.steps.map(step =>
-                '<li>' + step + '</li>'
+                '<li>' + UI.escapeHtml(step) + '</li>'
             ).join('');
 
             document.getElementById('recipe_modal_benefit').textContent = recipe.benefit;
 
-            document.getElementById('recipe_modal').classList.add('show');
-            document.body.style.overflow = 'hidden';
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            syncBodyModalLock();
+            if (releaseRecipeFocus) releaseRecipeFocus();
+            releaseRecipeFocus = UI.trapFocus(modalCard, {
+                onEscape: closeRecipeModal,
+                initialFocus: document.getElementById('recipe_modal_close')
+            });
         }
 
         function closeRecipeModal() {
-            document.getElementById('recipe_modal').classList.remove('show');
-            document.body.style.overflow = '';
+            if (!modal.classList.contains('show')) return;
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+            if (releaseRecipeFocus) {
+                releaseRecipeFocus();
+                releaseRecipeFocus = null;
+            }
+            syncBodyModalLock();
         }
 
         function getRecipeSeasonLabel(seasons) {
@@ -700,7 +864,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const target = document.getElementById(targetId);
             if (target) {
                 const top = target.getBoundingClientRect().top + window.pageYOffset - navBarHeight - 52;
-                window.scrollTo({ top: top, behavior: 'smooth' });
+                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                window.scrollTo({ top: top, behavior: reduceMotion ? 'auto' : 'smooth' });
             }
         });
     });
@@ -721,29 +886,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const scrollTop = window.pageYOffset + navBarHeight + 60;
         const recipeTop = recipeSection.getBoundingClientRect().top + window.pageYOffset;
 
-        subNavLinks.forEach(link => link.classList.remove('active'));
+        subNavLinks.forEach(link => {
+            link.classList.remove('active');
+            link.removeAttribute('aria-current');
+        });
 
-        if (scrollTop >= recipeTop) {
-            /* 滚动到食谱区域 */
-            subNavLinks[1].classList.add('active');
-        } else {
-            /* 还在药材区域 */
-            subNavLinks[0].classList.add('active');
-        }
+        const activeLink = scrollTop >= recipeTop ? subNavLinks[1] : subNavLinks[0];
+        activeLink.classList.add('active');
+        activeLink.setAttribute('aria-current', 'location');
     }
 
-    /* ESC 键关闭弹窗 */
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const herbModal = document.getElementById('herb_modal');
-            if (herbModal.classList.contains('show')) {
-                herbModal.classList.remove('show');
-            }
-            const recipeModal = document.getElementById('recipe_modal');
-            if (recipeModal.classList.contains('show')) {
-                recipeModal.classList.remove('show');
-                document.body.style.overflow = '';
-            }
-        }
-    });
+    /* 弹窗 Esc、Tab 循环与焦点返回均由 UI.trapFocus 管理 */
 });

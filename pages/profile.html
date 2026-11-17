@@ -38,14 +38,16 @@
 
         <!-- 用户信息卡片 -->
         <div class="profile_header" id="profile_header">
-            <div class="profile_avatar_wrap" id="avatar_wrap">
-                <img class="profile_avatar" id="profile_avatar" src="/images/ui/default_avatar.svg" alt="头像">
-                <div class="profile_avatar_overlay">更换头像</div>
-            </div>
-            <input type="file" id="avatar_input" accept="image/*" style="display:none;">
+            <button class="profile_avatar_wrap" id="avatar_wrap" type="button" aria-label="更换头像" aria-describedby="avatar_status">
+                <img class="profile_avatar" id="profile_avatar" src="/images/ui/default_avatar.svg" alt="当前头像">
+                <span class="profile_avatar_overlay" id="avatar_overlay">更换头像</span>
+            </button>
+            <label class="visually-hidden" for="avatar_input">选择头像图片</label>
+            <input type="file" id="avatar_input" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
             <div class="profile_info">
                 <h2 class="profile_name" id="profile_name">未登录</h2>
                 <p class="profile_since" id="profile_since"></p>
+                <p class="inline_result" id="avatar_status" role="status" aria-live="polite"></p>
             </div>
             <button class="btn btn_outline" id="logout_btn" style="display:none;">退出登录</button>
         </div>
@@ -59,7 +61,8 @@
         <!-- 签到统计 -->
         <div class="profile_section" id="profile_stats" style="display:none;">
             <h3 class="profile_section_title">签到统计</h3>
-            <div class="profile_stats_grid">
+            <div id="profile_stats_state"></div>
+            <div class="profile_stats_grid" id="profile_stats_grid" style="display:none;">
                 <div class="profile_stat_card">
                     <span class="profile_stat_num" id="p_streak">0</span>
                     <span class="profile_stat_label">连续签到（天）</span>
@@ -78,53 +81,69 @@
         <!-- 账号设置：用户名 -->
         <div class="settings_section" id="settings_username" style="display:none;">
             <h3 class="settings_section_title">用户名</h3>
-            <!-- 显示模式 -->
             <div class="settings_display" id="username_display">
                 <span class="settings_value" id="current_username"></span>
-                <button class="btn btn_outline btn_sm" id="edit_username_btn">修改</button>
+                <button class="btn btn_outline btn_sm" id="edit_username_btn" type="button">修改</button>
             </div>
-            <!-- 编辑模式（默认隐藏） -->
-            <div class="settings_edit" id="username_edit" style="display:none;">
-                <div class="settings_row">
-                    <span class="settings_label">新用户名</span>
-                    <input type="text" class="settings_input" id="input_username" placeholder="请输入新用户名" maxlength="20">
-                </div>
-                <p class="settings_hint">修改后，已发布的帖子和评论将同步更新</p>
-                <div class="settings_actions">
-                    <button class="btn btn_outline btn_sm" id="cancel_username">取消</button>
-                    <button class="btn btn_primary btn_sm" id="save_username">保存</button>
-                </div>
-                <div class="settings_msg" id="msg_username"></div>
+            <div class="settings_msg" id="msg_username" role="status" aria-live="polite"></div>
+            <div class="settings_edit" id="username_edit" role="dialog" aria-modal="true" aria-labelledby="username_dialog_title" hidden>
+                <form class="settings_dialog_panel paper_dialog" id="username_form" novalidate>
+                    <h4 class="settings_dialog_title" id="username_dialog_title">修改用户名</h4>
+                    <div class="settings_row">
+                        <label class="settings_label" for="input_username">新用户名</label>
+                        <div class="settings_field">
+                            <input type="text" class="settings_input" id="input_username" placeholder="请输入新用户名" maxlength="20" autocomplete="username" aria-describedby="input_username_error">
+                            <div class="form_field_error" id="input_username_error"></div>
+                        </div>
+                    </div>
+                    <p class="settings_hint">修改后，已发布的帖子和评论将同步更新</p>
+                    <div class="form_error settings_form_error" id="username_form_error" role="alert"></div>
+                    <div class="settings_actions">
+                        <button class="btn btn_outline btn_sm" id="cancel_username" type="button">取消</button>
+                        <button class="btn btn_primary btn_sm" id="save_username" type="submit">保存</button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <!-- 账号设置：密码 -->
         <div class="settings_section" id="settings_password" style="display:none;">
             <h3 class="settings_section_title">密码</h3>
-            <!-- 显示模式 -->
             <div class="settings_display" id="password_display">
                 <span class="settings_value">********</span>
-                <button class="btn btn_outline btn_sm" id="edit_password_btn">修改</button>
+                <button class="btn btn_outline btn_sm" id="edit_password_btn" type="button">修改</button>
             </div>
-            <!-- 编辑模式（默认隐藏） -->
-            <div class="settings_edit" id="password_edit" style="display:none;">
-                <div class="settings_row">
-                    <span class="settings_label">旧密码</span>
-                    <input type="password" class="settings_input" id="input_old_pwd" placeholder="请输入当前密码">
-                </div>
-                <div class="settings_row">
-                    <span class="settings_label">新密码</span>
-                    <input type="password" class="settings_input" id="input_new_pwd" placeholder="请输入新密码" minlength="6">
-                </div>
-                <div class="settings_row">
-                    <span class="settings_label">确认密码</span>
-                    <input type="password" class="settings_input" id="input_confirm_pwd" placeholder="请再次输入新密码">
-                </div>
-                <div class="settings_actions">
-                    <button class="btn btn_outline btn_sm" id="cancel_password">取消</button>
-                    <button class="btn btn_primary btn_sm" id="save_password">保存</button>
-                </div>
-                <div class="settings_msg" id="msg_password"></div>
+            <div class="settings_msg" id="msg_password" role="status" aria-live="polite"></div>
+            <div class="settings_edit" id="password_edit" role="dialog" aria-modal="true" aria-labelledby="password_dialog_title" hidden>
+                <form class="settings_dialog_panel paper_dialog" id="password_form" novalidate>
+                    <h4 class="settings_dialog_title" id="password_dialog_title">修改密码</h4>
+                    <div class="settings_row">
+                        <label class="settings_label" for="input_old_pwd">旧密码</label>
+                        <div class="settings_field">
+                            <input type="password" class="settings_input" id="input_old_pwd" placeholder="请输入当前密码" autocomplete="current-password" aria-describedby="input_old_pwd_error">
+                            <div class="form_field_error" id="input_old_pwd_error"></div>
+                        </div>
+                    </div>
+                    <div class="settings_row">
+                        <label class="settings_label" for="input_new_pwd">新密码</label>
+                        <div class="settings_field">
+                            <input type="password" class="settings_input" id="input_new_pwd" placeholder="请输入新密码" minlength="6" maxlength="64" autocomplete="new-password" aria-describedby="input_new_pwd_error">
+                            <div class="form_field_error" id="input_new_pwd_error"></div>
+                        </div>
+                    </div>
+                    <div class="settings_row">
+                        <label class="settings_label" for="input_confirm_pwd">确认密码</label>
+                        <div class="settings_field">
+                            <input type="password" class="settings_input" id="input_confirm_pwd" placeholder="请再次输入新密码" maxlength="64" autocomplete="new-password" aria-describedby="input_confirm_pwd_error">
+                            <div class="form_field_error" id="input_confirm_pwd_error"></div>
+                        </div>
+                    </div>
+                    <div class="form_error settings_form_error" id="password_form_error" role="alert"></div>
+                    <div class="settings_actions">
+                        <button class="btn btn_outline btn_sm" id="cancel_password" type="button">取消</button>
+                        <button class="btn btn_primary btn_sm" id="save_password" type="submit">保存</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -134,7 +153,7 @@
             <div class="profile_post_list" id="profile_post_list">
                 <!-- 由 JS 动态渲染 -->
             </div>
-            <p class="no_data" id="no_posts">暂无帖子</p>
+            <p class="no_data" id="no_posts" style="display:none;">暂无帖子</p>
         </div>
     </main>
 
@@ -145,23 +164,20 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const user = API.getCurrentUser();
             const navLink = document.getElementById('nav_user_link');
 
             if (!user) {
                 document.getElementById('login_prompt').style.display = 'block';
                 document.getElementById('profile_name').textContent = '未登录';
-                /* 未登录时导航要显示「登录」，否则会一直写着「我的」 */
                 if (navLink) { navLink.textContent = '登录'; navLink.href = 'login.html'; }
                 return;
             }
 
-            /* 已登录：导航与资料一致 */
             if (navLink) { navLink.textContent = '我的'; navLink.href = 'profile.html'; }
-
-            /* 已登录：显示各区块 */
             document.getElementById('login_prompt').style.display = 'none';
             document.getElementById('profile_stats').style.display = 'block';
             document.getElementById('settings_username').style.display = 'block';
@@ -171,80 +187,250 @@
             document.getElementById('profile_avatar').src = user.avatar || '/images/ui/default_avatar.svg';
             document.getElementById('profile_since').textContent = '养生修行者';
             document.getElementById('current_username').textContent = user.username;
-            document.getElementById('input_username').value = user.username;
 
-            /* === 用户名：显示/编辑切换 === */
-            document.getElementById('edit_username_btn').addEventListener('click', () => {
-                document.getElementById('username_display').style.display = 'none';
-                document.getElementById('username_edit').style.display = 'block';
-                document.getElementById('input_username').value = document.getElementById('current_username').textContent;
-            });
-            document.getElementById('cancel_username').addEventListener('click', () => {
-                document.getElementById('username_edit').style.display = 'none';
-                document.getElementById('username_display').style.display = 'flex';
-                document.getElementById('msg_username').className = 'settings_msg';
-            });
+            function setFieldError(input, message) {
+                const error = document.getElementById(input.id + '_error');
+                if (error) error.textContent = message || '';
+                if (message) input.setAttribute('aria-invalid', 'true');
+                else input.removeAttribute('aria-invalid');
+            }
 
-            /* === 密码：显示/编辑切换 === */
-            document.getElementById('edit_password_btn').addEventListener('click', () => {
-                document.getElementById('password_display').style.display = 'none';
-                document.getElementById('password_edit').style.display = 'block';
-            });
-            document.getElementById('cancel_password').addEventListener('click', () => {
-                document.getElementById('password_edit').style.display = 'none';
-                document.getElementById('password_display').style.display = 'flex';
-                document.getElementById('input_old_pwd').value = '';
-                document.getElementById('input_new_pwd').value = '';
-                document.getElementById('input_confirm_pwd').value = '';
-                document.getElementById('msg_password').className = 'settings_msg';
-            });
+            function clearFormErrors(form) {
+                form.querySelectorAll('.settings_input').forEach(function (input) { setFieldError(input, ''); });
+                form.querySelectorAll('.settings_form_error').forEach(function (el) { el.textContent = ''; });
+            }
 
-            /* 加载签到统计 */
-            try {
-                const history = await API.getCheckinHistory();
-                if (history.success) {
-                    document.getElementById('p_streak').textContent = history.data.streak || 0;
-                    document.getElementById('p_total').textContent = history.data.total || 0;
+            function showMsg(id, text, type) {
+                const el = document.getElementById(id);
+                window.clearTimeout(el._hideTimer);
+                el.textContent = text;
+                el.className = 'settings_msg ' + type;
+                el._hideTimer = window.setTimeout(function () {
+                    el.textContent = '';
+                    el.className = 'settings_msg';
+                }, type === 'success' ? 3600 : 5000);
+            }
+
+            const dialogs = {
+                username: {
+                    el: document.getElementById('username_edit'),
+                    form: document.getElementById('username_form'),
+                    save: document.getElementById('save_username'),
+                    cancel: document.getElementById('cancel_username'),
+                    first: document.getElementById('input_username')
+                },
+                password: {
+                    el: document.getElementById('password_edit'),
+                    form: document.getElementById('password_form'),
+                    save: document.getElementById('save_password'),
+                    cancel: document.getElementById('cancel_password'),
+                    first: document.getElementById('input_old_pwd')
                 }
-            } catch (e) {}
+            };
 
-            /* 加载我的帖子 */
-            try {
-                const result = await API.getPosts({ username: user.username, pageSize: 50 });
-                const payload = result.data || {};
-                const myPosts = payload.items || [];
-                document.getElementById('p_posts').textContent = payload.total || 0;
+            function setDialogBusy(dialog, on) {
+                dialog.el.dataset.busy = on ? 'true' : 'false';
+                if (on) dialog.el.setAttribute('aria-busy', 'true');
+                else dialog.el.removeAttribute('aria-busy');
+                dialog.cancel.disabled = on;
+                dialog.form.querySelectorAll('input').forEach(function (input) { input.disabled = on; });
+                if (!on) {
+                    /* 后端校验失败时字段在请求期间曾禁用，恢复后再移动焦点。 */
+                    const invalid = dialog.form.querySelector('[aria-invalid="true"]');
+                    if (invalid) invalid.focus();
+                }
+            }
 
-                if (myPosts.length > 0) {
-                    document.getElementById('profile_posts_section').style.display = 'block';
-                    document.getElementById('no_posts').style.display = 'none';
-                    document.getElementById('profile_post_list').innerHTML = myPosts.map(p => `
-                        <div class="profile_post_item">
-                            <h4>${escapeHtml(p.title)}</h4>
-                            <span class="post_meta">${escapeHtml(p.time)} · ♥ ${p.likes || 0} · 💬 ${p.commentCount || 0}</span>
-                        </div>
-                    `).join('');
+            function closeDialog(name, force) {
+                const dialog = dialogs[name];
+                if (!dialog || (!force && dialog.el.dataset.busy === 'true')) return;
+                if (dialog.release) {
+                    dialog.release();
+                    dialog.release = null;
+                }
+                dialog.el.classList.remove('is_open');
+                dialog.el.hidden = true;
+            }
+
+            function openDialog(name) {
+                const dialog = dialogs[name];
+                Object.keys(dialogs).forEach(function (key) {
+                    if (key !== name) closeDialog(key, true);
+                });
+                clearFormErrors(dialog.form);
+                if (name === 'username') {
+                    dialog.first.value = document.getElementById('current_username').textContent;
                 } else {
-                    document.getElementById('profile_posts_section').style.display = 'block';
-                    document.getElementById('no_posts').style.display = 'block';
+                    dialog.form.querySelectorAll('input[type="password"]').forEach(function (input) { input.value = ''; });
                 }
-            } catch (e) {}
+                dialog.el.hidden = false;
+                dialog.el.classList.add('is_open');
+                dialog.release = UI.trapFocus(dialog.el, {
+                    onEscape: function () { closeDialog(name); },
+                    initialFocus: dialog.first
+                });
+            }
 
-            /* ========== 头像更换 ========== */
+            Object.keys(dialogs).forEach(function (name) {
+                const dialog = dialogs[name];
+                document.getElementById('edit_' + name + '_btn').addEventListener('click', function () { openDialog(name); });
+                dialog.cancel.addEventListener('click', function () { closeDialog(name); });
+                dialog.el.addEventListener('click', function (e) {
+                    if (e.target === dialog.el) closeDialog(name);
+                });
+                dialog.form.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && UI.isComposing(e)) e.preventDefault();
+                });
+                dialog.form.querySelectorAll('input').forEach(function (input) {
+                    input.addEventListener('input', function () {
+                        setFieldError(input, '');
+                        const general = dialog.form.querySelector('.settings_form_error');
+                        if (general) general.textContent = '';
+                    });
+                });
+            });
+
+            /* ========== 用户名修改 ========== */
+            dialogs.username.form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const dialog = dialogs.username;
+                if (dialog.el.dataset.busy === 'true') return;
+                const input = document.getElementById('input_username');
+                const newUsername = input.value.trim();
+                clearFormErrors(dialog.form);
+
+                if (!newUsername) setFieldError(input, '用户名不能为空');
+                else if (newUsername === user.username) setFieldError(input, '新用户名与当前用户名相同');
+                else if (!/^[\p{L}\p{N}_-]{2,20}$/u.test(newUsername)) {
+                    setFieldError(input, '用户名需为 2-20 位中文、字母、数字、下划线或短横线');
+                }
+                if (input.getAttribute('aria-invalid') === 'true') { input.focus(); return; }
+
+                await UI.run(dialog.save, async function () {
+                    setDialogBusy(dialog, true);
+                    try {
+                        const result = await API.updateUsername(newUsername);
+                        if (result && result.success) {
+                            user.username = newUsername;
+                            document.getElementById('profile_name').textContent = newUsername;
+                            document.getElementById('current_username').textContent = newUsername;
+                            showMsg('msg_username', '用户名已更新', 'success');
+                            UI.toast('用户名已更新', 'success');
+                            closeDialog('username', true);
+                        } else {
+                            const message = (result && (result.message || result.msg)) || '用户名更新失败，请重试';
+                            if (/用户名/.test(message)) {
+                                setFieldError(input, message);
+                                input.focus();
+                            } else {
+                                document.getElementById('username_form_error').textContent = message;
+                            }
+                        }
+                    } catch (err) {
+                        const message = '网络连接失败，用户名未更新，请重试';
+                        document.getElementById('username_form_error').textContent = message;
+                        UI.toast(message, 'error');
+                    } finally {
+                        setDialogBusy(dialog, false);
+                    }
+                }, '保存中…');
+            });
+
+            /* ========== 密码修改：API 成功后仍按原逻辑保存新 token ========== */
+            dialogs.password.form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const dialog = dialogs.password;
+                if (dialog.el.dataset.busy === 'true') return;
+                const oldInput = document.getElementById('input_old_pwd');
+                const newInput = document.getElementById('input_new_pwd');
+                const confirmInput = document.getElementById('input_confirm_pwd');
+                const oldPwd = oldInput.value;
+                const newPwd = newInput.value;
+                const confirmPwd = confirmInput.value;
+                clearFormErrors(dialog.form);
+
+                if (!oldPwd) setFieldError(oldInput, '请输入当前密码');
+                if (!newPwd) setFieldError(newInput, '请输入新密码');
+                else if (Array.from(newPwd).length < 6 || Array.from(newPwd).length > 64) {
+                    setFieldError(newInput, '新密码需为 6-64 位');
+                }
+                if (!confirmPwd) setFieldError(confirmInput, '请再次输入新密码');
+                else if (newPwd !== confirmPwd) setFieldError(confirmInput, '两次输入的新密码不一致');
+                const invalid = dialog.form.querySelector('[aria-invalid="true"]');
+                if (invalid) { invalid.focus(); return; }
+
+                await UI.run(dialog.save, async function () {
+                    setDialogBusy(dialog, true);
+                    try {
+                        const result = await API.updatePassword(oldPwd, newPwd);
+                        if (result && result.success) {
+                            oldInput.value = '';
+                            newInput.value = '';
+                            confirmInput.value = '';
+                            showMsg('msg_password', '密码已更新，当前登录状态已保持', 'success');
+                            UI.toast('密码已更新', 'success');
+                            closeDialog('password', true);
+                        } else {
+                            const message = (result && (result.message || result.msg)) || '密码修改失败，请重试';
+                            if (/当前密码|旧密码/.test(message)) {
+                                setFieldError(oldInput, message);
+                                oldInput.focus();
+                            } else if (/新密码/.test(message)) {
+                                setFieldError(newInput, message);
+                                newInput.focus();
+                            } else {
+                                document.getElementById('password_form_error').textContent = message;
+                            }
+                        }
+                    } catch (err) {
+                        const message = '网络连接失败，密码未修改，请重试';
+                        document.getElementById('password_form_error').textContent = message;
+                        UI.toast(message, 'error');
+                    } finally {
+                        setDialogBusy(dialog, false);
+                    }
+                }, '保存中…');
+            });
+
+            /* ========== 头像更换：校验、读取、压缩、上传均可恢复 ========== */
             const avatarWrap = document.getElementById('avatar_wrap');
             const avatarInput = document.getElementById('avatar_input');
             const avatarImg = document.getElementById('profile_avatar');
+            const avatarOverlay = document.getElementById('avatar_overlay');
+            const avatarStatus = document.getElementById('avatar_status');
+            let avatarUploading = false;
 
-            avatarWrap.addEventListener('click', () => avatarInput.click());
+            function showAvatarStatus(text, type) {
+                window.clearTimeout(avatarStatus._hideTimer);
+                avatarStatus.textContent = text;
+                avatarStatus.className = 'inline_result' + (type ? ' is_' + type : '');
+                if (type === 'ok') {
+                    avatarStatus._hideTimer = window.setTimeout(function () {
+                        avatarStatus.textContent = '';
+                        avatarStatus.className = 'inline_result';
+                    }, 4000);
+                }
+            }
 
-            /* 上传前压缩到 256px，避免 base64 过大写库失败 */
-            function makeAvatar(file) {
+            function setAvatarBusy(on) {
+                avatarWrap.disabled = on;
+                avatarInput.disabled = on;
+                avatarWrap.classList.toggle('is_busy', on);
+                if (on) avatarWrap.setAttribute('aria-busy', 'true');
+                else avatarWrap.removeAttribute('aria-busy');
+                avatarOverlay.innerHTML = on
+                    ? '<span class="btn_spinner" aria-hidden="true"></span><span>上传中…</span>'
+                    : '更换头像';
+            }
+
+            avatarWrap.addEventListener('click', function () {
+                if (!avatarUploading) avatarInput.click();
+            });
+
+            async function makeAvatar(file) {
+                /* 先走共享 FileReader 助手，读取失败会明确 reject。 */
+                const source = await UI.readImageFile(file);
                 return new Promise((resolve, reject) => {
-                    if (!file.type || !file.type.startsWith('image/')) {
-                        reject(new Error('请选择图片文件'));
-                        return;
-                    }
-                    const url = URL.createObjectURL(file);
                     const img = new Image();
                     img.onload = () => {
                         try {
@@ -256,117 +442,123 @@
                             canvas.width = w;
                             canvas.height = h;
                             const ctx = canvas.getContext('2d');
+                            if (!ctx) throw new Error('当前浏览器无法处理图片，请更换图片');
                             ctx.fillStyle = '#fff';
                             ctx.fillRect(0, 0, w, h);
                             ctx.drawImage(img, 0, 0, w, h);
                             let data = canvas.toDataURL('image/webp', 0.85);
-                            if (!data.startsWith('data:image/webp')) {
-                                data = canvas.toDataURL('image/jpeg', 0.85);
-                            }
+                            if (!data.startsWith('data:image/webp')) data = canvas.toDataURL('image/jpeg', 0.85);
                             resolve(data);
                         } catch (err) {
-                            reject(err);
-                        } finally {
-                            URL.revokeObjectURL(url);
+                            reject(new Error(err.message || '图片处理失败，请重新选择'));
                         }
                     };
-                    img.onerror = () => {
-                        URL.revokeObjectURL(url);
-                        reject(new Error('图片读取失败'));
-                    };
-                    img.src = url;
+                    img.onerror = () => reject(new Error('图片内容无法读取，请重新选择'));
+                    img.src = source;
                 });
             }
 
-            avatarInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
+            avatarInput.addEventListener('change', async function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file || avatarUploading) return;
+                const validation = UI.validateImageFile(file, 5);
+                if (!validation.ok) {
+                    showAvatarStatus(validation.message, 'error');
+                    UI.toast(validation.message, 'error');
+                    avatarInput.value = '';
+                    return;
+                }
+
+                const originalSrc = avatarImg.src;
+                avatarUploading = true;
+                setAvatarBusy(true);
+                showAvatarStatus('正在读取并上传头像…', '');
                 try {
                     const imageData = await makeAvatar(file);
                     const result = await API.updateAvatar(imageData);
-                    if (result.success) {
-                        avatarImg.src = (result.data && result.data.avatar) || imageData;
-                        showMsg('msg_username', '头像已更新', 'success');
-                    } else {
-                        showMsg('msg_username', result.message || '头像更新失败，请重试', 'error');
+                    if (!result || !result.success) {
+                        throw new Error((result && (result.message || result.msg)) || '头像更新失败，请重试');
                     }
+                    const nextSrc = (result.data && result.data.avatar) || imageData;
+                    avatarImg.src = nextSrc;
+                    user.avatar = nextSrc;
+                    showAvatarStatus('头像已更新', 'ok');
+                    UI.toast('头像已更新', 'success');
                 } catch (err) {
-                    showMsg('msg_username', err.message || '图片处理失败', 'error');
+                    avatarImg.src = originalSrc;
+                    const message = err.message || '图片处理失败，请重新选择';
+                    showAvatarStatus(message + '，原头像已保留', 'error');
+                    UI.toast('头像未更新：' + message, 'error');
                 } finally {
+                    avatarUploading = false;
+                    setAvatarBusy(false);
                     avatarInput.value = '';
                 }
             });
 
-            /* ========== 用户名修改 ========== */
-            document.getElementById('save_username').addEventListener('click', async () => {
-                const newUsername = document.getElementById('input_username').value.trim();
-                if (!newUsername) { showMsg('msg_username', '用户名不能为空', 'error'); return; }
-                if (newUsername === user.username) { showMsg('msg_username', '新用户名与当前用户名相同', 'error'); return; }
-                if (newUsername.length < 2) { showMsg('msg_username', '用户名至少2个字符', 'error'); return; }
+            /* ========== 数据区域：加载 / 空内容 / 失败重试 ========== */
+            const statsState = document.getElementById('profile_stats_state');
+            const statsGrid = document.getElementById('profile_stats_grid');
+            const postList = document.getElementById('profile_post_list');
 
-                const result = await API.updateUsername(newUsername);
-                if (result.success) {
-                    document.getElementById('profile_name').textContent = newUsername;
-                    document.getElementById('current_username').textContent = newUsername;
-                    /* 更新 nav 中的用户名显示 */
-                    const navLink = document.getElementById('nav_user_link');
-                    if (navLink) navLink.textContent = '我的';
-                    /* 切回显示模式 */
-                    document.getElementById('username_edit').style.display = 'none';
-                    document.getElementById('username_display').style.display = 'flex';
-                    showMsg('msg_username', '用户名已更新', 'success');
-                } else {
-                    showMsg('msg_username', result.message || '用户名更新失败，请重试', 'error');
+            async function loadCheckinStats() {
+                statsState.innerHTML = UI.stateHTML('loading', { text: '正在加载签到统计…' });
+                statsGrid.style.display = 'none';
+                try {
+                    const history = await API.getCheckinHistory();
+                    if (!history || !history.success) throw new Error((history && history.message) || '签到统计加载失败');
+                    document.getElementById('p_streak').textContent = (history.data && history.data.streak) || 0;
+                    document.getElementById('p_total').textContent = (history.data && history.data.total) || 0;
+                    statsState.innerHTML = '';
+                    statsGrid.style.display = 'grid';
+                } catch (err) {
+                    statsState.innerHTML = UI.stateHTML('error', {
+                        text: err.message || '签到统计加载失败', actionText: '重试'
+                    });
                 }
-            });
+            }
 
-            /* ========== 密码修改 ========== */
-            document.getElementById('save_password').addEventListener('click', async () => {
-                const oldPwd = document.getElementById('input_old_pwd').value;
-                const newPwd = document.getElementById('input_new_pwd').value;
-                const confirmPwd = document.getElementById('input_confirm_pwd').value;
-
-                if (!oldPwd) { showMsg('msg_password', '请输入当前密码', 'error'); return; }
-                if (!newPwd) { showMsg('msg_password', '请输入新密码', 'error'); return; }
-                if (newPwd.length < 6) { showMsg('msg_password', '新密码至少6位', 'error'); return; }
-                if (newPwd !== confirmPwd) { showMsg('msg_password', '两次输入的新密码不一致', 'error'); return; }
-
-                const result = await API.updatePassword(oldPwd, newPwd);
-                if (result.success) {
-                    document.getElementById('input_old_pwd').value = '';
-                    document.getElementById('input_new_pwd').value = '';
-                    document.getElementById('input_confirm_pwd').value = '';
-                    /* 切回显示模式 */
-                    document.getElementById('password_edit').style.display = 'none';
-                    document.getElementById('password_display').style.display = 'flex';
-                    showMsg('msg_password', '密码已更新', 'success');
-                } else {
-                    showMsg('msg_password', result.message || '密码修改失败，请重试', 'error');
+            async function loadMyPosts() {
+                document.getElementById('profile_posts_section').style.display = 'block';
+                document.getElementById('no_posts').style.display = 'none';
+                postList.innerHTML = UI.stateHTML('loading', { text: '正在加载我的帖子…' });
+                try {
+                    const result = await API.getPosts({ username: user.username, pageSize: 50 });
+                    if (!result || !result.success) throw new Error((result && result.message) || '帖子加载失败');
+                    const payload = result.data || {};
+                    const myPosts = payload.items || [];
+                    document.getElementById('p_posts').textContent = payload.total || 0;
+                    if (myPosts.length > 0) {
+                        postList.innerHTML = myPosts.map(p => `
+                            <div class="profile_post_item">
+                                <h4>${UI.escapeHtml(p.title)}</h4>
+                                <span class="post_meta">${UI.escapeHtml(p.time)} · ${UI.icon('heart', 14)} ${p.likes || 0} · ${UI.icon('comment', 14)} ${p.commentCount || 0}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        postList.innerHTML = UI.stateHTML('empty', {
+                            text: '暂无帖子', hint: '你发布的帖子会显示在这里'
+                        });
+                    }
+                } catch (err) {
+                    document.getElementById('p_posts').textContent = '—';
+                    postList.innerHTML = UI.stateHTML('error', {
+                        text: err.message || '帖子加载失败', actionText: '重试'
+                    });
                 }
-            });
+            }
 
-            /* ========== 退出登录 ========== */
+            UI.bindRetry(statsState, loadCheckinStats);
+            UI.bindRetry(postList, loadMyPosts);
+            loadCheckinStats();
+            loadMyPosts();
+
+            /* ========== 退出登录：保留现有流程 ========== */
             document.getElementById('logout_btn').addEventListener('click', () => {
                 API.logout();
                 window.location.reload();
             });
         });
-
-        function escapeHtml(text) {
-            return String(text == null ? '' : text)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        function showMsg(id, text, type) {
-            const el = document.getElementById(id);
-            el.textContent = text;
-            el.className = 'settings_msg ' + type;
-            setTimeout(() => { el.className = 'settings_msg'; }, 3000);
-        }
     </script>
 </body>
 </html>

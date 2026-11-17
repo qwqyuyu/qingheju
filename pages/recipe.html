@@ -38,12 +38,12 @@
 
         <!-- 板块内导航 -->
         <nav class="sub_nav" id="sub_nav">
-            <a href="#herb_section" class="sub_nav_link active">药材百科</a>
+            <a href="#herb_section" class="sub_nav_link active" aria-current="location">药材百科</a>
             <a href="#recipe_section" class="sub_nav_link">时令食谱</a>
         </nav>
 
         <!-- 每日推荐食谱 -->
-        <div class="daily_push" id="daily_push">
+        <div class="daily_push card_interactive" id="daily_push" role="button" tabindex="0" aria-labelledby="daily_push_name">
             <div class="daily_push_tag">今日推荐</div>
             <img class="daily_push_image" id="daily_push_image" src="/images/recipes/placeholder.svg" alt="">
             <div class="daily_push_body">
@@ -67,23 +67,25 @@
 
         <!-- 药材筛选栏 -->
         <div class="herb_filter_bar">
-            <div class="herb_filter_categories" id="herb_filter_categories">
-                <button class="herb_filter_btn active" data-category="all">全部</button>
-                <button class="herb_filter_btn" data-category="补血类">补血类</button>
-                <button class="herb_filter_btn" data-category="补气类">补气类</button>
-                <button class="herb_filter_btn" data-category="清热类">清热类</button>
-                <button class="herb_filter_btn" data-category="祛湿类">祛湿类</button>
-                <button class="herb_filter_btn" data-category="滋阴类">滋阴类</button>
-                <button class="herb_filter_btn" data-category="温阳类">温阳类</button>
+            <div class="herb_filter_categories" id="herb_filter_categories" role="group" aria-label="按药材分类筛选">
+                <button type="button" class="herb_filter_btn active" data-category="all" aria-pressed="true">全部</button>
+                <button type="button" class="herb_filter_btn" data-category="补血类" aria-pressed="false">补血类</button>
+                <button type="button" class="herb_filter_btn" data-category="补气类" aria-pressed="false">补气类</button>
+                <button type="button" class="herb_filter_btn" data-category="清热类" aria-pressed="false">清热类</button>
+                <button type="button" class="herb_filter_btn" data-category="祛湿类" aria-pressed="false">祛湿类</button>
+                <button type="button" class="herb_filter_btn" data-category="滋阴类" aria-pressed="false">滋阴类</button>
+                <button type="button" class="herb_filter_btn" data-category="温阳类" aria-pressed="false">温阳类</button>
             </div>
             <div class="herb_filter_search">
-                <input type="text" class="form_input" id="herb_search_input" placeholder="搜索药材名称或功效...">
+                <label class="visually-hidden" for="herb_search_input">搜索药材名称或功效</label>
+                <input type="search" class="form_input" id="herb_search_input" placeholder="搜索药材名称或功效..." aria-controls="herb_grid" autocomplete="off">
             </div>
         </div>
+        <p class="filter_result_count" id="herb_result_count" role="status" aria-live="polite">正在加载药材…</p>
 
         <!-- 药材季节提示 -->
         <div class="season_tip">
-            <span class="season_icon" id="herb_season_icon">☀️</span>
+            <span class="season_icon" id="herb_season_icon"><svg class="ui_icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
             <span id="herb_season_text">当前夏季：以下展示夏季时令建议</span>
         </div>
 
@@ -92,13 +94,13 @@
             <!-- 由 JS 动态渲染 -->
         </div>
 
-        <!-- 药材加载提示 -->
-        <div class="herb_loading" id="herb_loading">正在加载药材数据...</div>
+        <!-- 药材加载状态由网格内的共享状态块呈现 -->
+        <div class="herb_loading" id="herb_loading" hidden></div>
 
         <!-- 药材详情弹窗 -->
-        <div class="modal_overlay" id="herb_modal">
-            <div class="modal_card">
-                <button class="modal_close" id="herb_modal_close">&times;</button>
+        <div class="modal_overlay" id="herb_modal" aria-hidden="true">
+            <div class="modal_card paper_dialog" role="dialog" aria-modal="true" aria-labelledby="herb_modal_name" aria-describedby="herb_modal_effect">
+                <button type="button" class="modal_close" id="herb_modal_close" aria-label="关闭药材详情">&times;</button>
                 <img class="modal_image" id="herb_modal_image" src="" alt="">
                 <h2 class="modal_name" id="herb_modal_name"></h2>
                 <p class="modal_nature" id="herb_modal_nature"></p>
@@ -126,7 +128,7 @@
 
         <!-- 时令推荐栏 -->
         <div class="recipe_season_banner" id="recipe_season_banner">
-            <div class="recipe_season_banner_icon" id="recipe_season_icon">☀️</div>
+            <div class="recipe_season_banner_icon" id="recipe_season_icon"><svg class="ui_icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></div>
             <div class="recipe_season_banner_text">
                 <span id="recipe_season_label">夏季暑热</span>
                 <span id="recipe_season_desc">宜清热解暑、健脾祛湿，推荐以下时令食谱</span>
@@ -135,32 +137,34 @@
 
         <!-- 食谱筛选栏 -->
         <div class="recipe_filter_bar">
-            <div class="recipe_filter_categories" id="recipe_filter_categories">
-                <button class="recipe_filter_btn active" data-category="all">全部</button>
-                <button class="recipe_filter_btn" data-category="汤羹">汤羹</button>
-                <button class="recipe_filter_btn" data-category="粥品">粥品</button>
-                <button class="recipe_filter_btn" data-category="炒菜">炒菜</button>
-                <button class="recipe_filter_btn" data-category="凉拌">凉拌</button>
-                <button class="recipe_filter_btn" data-category="茶饮">茶饮</button>
-                <button class="recipe_filter_btn" data-category="甜品">甜品</button>
+            <div class="recipe_filter_categories" id="recipe_filter_categories" role="group" aria-label="按食谱分类筛选">
+                <button type="button" class="recipe_filter_btn active" data-category="all" aria-pressed="true">全部</button>
+                <button type="button" class="recipe_filter_btn" data-category="汤羹" aria-pressed="false">汤羹</button>
+                <button type="button" class="recipe_filter_btn" data-category="粥品" aria-pressed="false">粥品</button>
+                <button type="button" class="recipe_filter_btn" data-category="炒菜" aria-pressed="false">炒菜</button>
+                <button type="button" class="recipe_filter_btn" data-category="凉拌" aria-pressed="false">凉拌</button>
+                <button type="button" class="recipe_filter_btn" data-category="茶饮" aria-pressed="false">茶饮</button>
+                <button type="button" class="recipe_filter_btn" data-category="甜品" aria-pressed="false">甜品</button>
             </div>
             <div class="recipe_filter_search">
-                <input type="text" class="form_input" id="recipe_search_input" placeholder="搜索食谱名称或功效...">
+                <label class="visually-hidden" for="recipe_search_input">搜索食谱名称或功效</label>
+                <input type="search" class="form_input" id="recipe_search_input" placeholder="搜索食谱名称或功效..." aria-controls="recipe_grid" autocomplete="off">
             </div>
         </div>
+        <p class="filter_result_count" id="recipe_result_count" role="status" aria-live="polite">共 12 道食谱</p>
 
         <!-- 食谱卡片网格 -->
         <div class="recipe_grid" id="recipe_grid">
             <!-- 由 JS 动态渲染 -->
         </div>
 
-        <!-- 食谱加载提示 -->
-        <div class="recipe_loading" id="recipe_loading">正在加载食谱数据...</div>
+        <!-- 食谱加载状态由网格内的共享状态块呈现 -->
+        <div class="recipe_loading" id="recipe_loading" hidden></div>
 
         <!-- 食谱详情弹窗 -->
-        <div class="recipe_modal_overlay" id="recipe_modal">
-            <div class="recipe_modal_card">
-                <button class="recipe_modal_close" id="recipe_modal_close">&times;</button>
+        <div class="recipe_modal_overlay" id="recipe_modal" aria-hidden="true">
+            <div class="recipe_modal_card paper_dialog" role="dialog" aria-modal="true" aria-labelledby="recipe_modal_name" aria-describedby="recipe_modal_benefit">
+                <button type="button" class="recipe_modal_close" id="recipe_modal_close" aria-label="关闭食谱详情">&times;</button>
                 <img class="recipe_modal_image" id="recipe_modal_image" src="" alt="">
                 <div class="recipe_modal_header">
                     <h2 class="recipe_modal_name" id="recipe_modal_name"></h2>
@@ -194,6 +198,7 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script src="/js/recipe.js"></script>
 </body>
 </html>

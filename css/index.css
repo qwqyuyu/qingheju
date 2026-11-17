@@ -99,23 +99,43 @@
 }
 
 .hero_btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 12px 40px;
     font-size: 20px;
     color: var(--color-white);
-    background: var(--color-primary);
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 4px;
+    background:
+        linear-gradient(180deg, rgba(255, 236, 214, 0.24) 0%, transparent 44%),
+        linear-gradient(180deg, #A03312 0%, var(--color-primary) 55%, #6E1D00 100%);
+    border: 1px solid #6E1D00;
+    border-radius: var(--radius-sm);
     letter-spacing: 3px;
-    transition: all var(--transition);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 228, 200, 0.36),
+        inset 0 -3px 0 rgba(60, 14, 0, 0.34),
+        0 3px 0 #561600,
+        0 10px 18px -8px rgba(62, 21, 8, 0.62);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    transition: filter var(--transition), transform var(--dur-press) ease,
+                box-shadow var(--dur-press) ease, border-color var(--transition);
     animation: fadeInUp 1s ease-out 0.4s both;
 }
 
 .hero_btn:hover {
-    background: var(--color-primary-light);
-    border-color: rgba(255,255,255,0.6);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139,37,0,0.4);
+    filter: brightness(1.08);
+    border-color: rgba(255, 220, 170, 0.55);
+    transform: translateY(-1px);
+}
+
+.hero_btn:active {
+    transform: translateY(2px);
+    box-shadow: var(--shadow-pressed);
+}
+
+.hero_btn:focus-visible {
+    outline: 2px solid var(--color-gold-light);
+    outline-offset: 3px;
 }
 
 /* === 毛笔字标语（半遮半显，非对称全区域散布） === */
@@ -675,11 +695,33 @@
 
 /* ── 段内元素 ── */
 .ring_icon {
-    font-size: 44px;
-    margin-bottom: 10px;
-    display: block;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-calligraphy);
+    font-size: 27px;
+    line-height: 1;
+    color: var(--color-primary);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, #F3EAD7 100%);
+    border: 1px solid var(--color-bronze);
+    border-radius: 50%;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 2px 0 rgba(140, 106, 47, 0.20),
+        0 5px 10px -4px rgba(62, 39, 21, 0.35);
+    text-shadow: 0 1px 0 rgba(255, 235, 200, 0.40);
     transition: transform 0.4s ease;
+}
+
+.ring_icon svg {
+    width: 30px;
+    height: 30px;
+    display: block;
 }
 
 .ring_segment:hover .ring_icon {
@@ -794,12 +836,17 @@
     height: 220px;
     border-radius: 50%;
     z-index: 10;
-    background: radial-gradient(circle at center,
-        rgba(201, 169, 110, 0.18) 0%,
-        rgba(201, 169, 110, 0.06) 60%,
-        transparent 100%
-    );
-    animation: taijiGlow 4s ease-in-out infinite;
+    background:
+        var(--texture-paper),
+        radial-gradient(circle at center,
+            rgba(201, 169, 110, 0.20) 0%,
+            rgba(201, 169, 110, 0.07) 60%,
+            transparent 100%
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 2px 0 rgba(140, 106, 47, 0.14),
+        0 10px 24px -12px rgba(62, 39, 21, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -821,10 +868,11 @@
     border-radius: 50%;
     background: linear-gradient(to right, #F5F0E8 50%, #2C2C2C 50%);
     position: relative;
-    animation: taijiSpin 20s linear infinite;
     box-shadow:
         0 0 0 2px rgba(201, 169, 110, 0.5),
-        inset 0 0 20px rgba(0, 0, 0, 0.08);
+        inset 0 0 20px rgba(0, 0, 0, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 6px 16px -8px rgba(30, 18, 8, 0.42);
 }
 
 /* 太极 S 曲线 — 上半暗色圆（在亮半区顶部） */
@@ -1000,8 +1048,32 @@
 }
 
 .wellness_date_icon {
-    font-size: 82px;
+    width: 64px;
+    height: 64px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-calligraphy);
+    font-size: 32px;
     line-height: 1;
+    color: var(--color-primary);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, #F3EAD7 100%);
+    border: 1px solid var(--color-bronze);
+    border-radius: 50%;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 2px 0 rgba(140, 106, 47, 0.20),
+        0 6px 12px -5px rgba(62, 39, 21, 0.32);
+    text-shadow: 0 1px 0 rgba(255, 235, 200, 0.40);
+}
+
+.wellness_date_icon svg {
+    width: 58%;
+    height: 58%;
+    display: block;
 }
 
 .wellness_date_info {
@@ -1284,7 +1356,10 @@
     align-items: center;
     gap: 16px;
     padding: 14px 20px;
-    background: var(--color-white);
+    background:
+        var(--texture-grain),
+        var(--texture-paper),
+        var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     transition: all var(--transition);
@@ -1408,7 +1483,7 @@
     .done_check svg { width: 52px; height: 39px; }
     .done_text { font-size: 18px; }
     .wellness_date_text { font-size: 40px; }
-    .wellness_date_icon { font-size: 68px; }
+    .wellness_date_icon { width: 56px; height: 56px; font-size: 28px; }
 }
 
 @media (max-width: 767px) {
@@ -1514,7 +1589,7 @@
     .sticky_note::after { border-width: 0 0 36px 36px; }
 
     .wellness_date_text { font-size: 34px; }
-    .wellness_date_icon { font-size: 52px; }
+    .wellness_date_icon { width: 48px; height: 48px; font-size: 25px; }
 
     .post_preview_item {
         flex-wrap: wrap;
@@ -1523,5 +1598,491 @@
 
     .post_preview_title {
         flex: 0 0 100%;
+    }
+}
+
+/* ==========================================
+   首页拟物材质、状态反馈与可访问性增强
+   ========================================== */
+
+/* 环形入口：默认即有清楚边缘，不依赖 hover 才能辨认。 */
+.feature_section {
+    overflow: hidden;
+}
+
+.ring_wrapper::before {
+    border-color: rgba(140, 106, 47, 0.52);
+    box-shadow:
+        0 0 0 5px rgba(140, 106, 47, 0.08),
+        inset 0 0 0 3px rgba(140, 106, 47, 0.14),
+        3px 5px 14px rgba(62, 39, 21, 0.10);
+}
+
+.ring_segment {
+    min-width: 0;
+    border: 2px solid rgba(140, 106, 47, 0.48);
+    box-shadow: var(--shadow-inset), var(--shadow-raised);
+    transition-duration: var(--dur-panel);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ring_segment::before {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    z-index: 0;
+    border: 1px solid rgba(140, 106, 47, 0.30);
+    border-radius: inherit;
+    background: var(--texture-paper);
+    box-shadow: var(--shadow-inset);
+    pointer-events: none;
+}
+
+.ring_segment > * {
+    position: relative;
+    z-index: 1;
+}
+
+.ring_segment:hover {
+    transform: scale(1.025);
+    z-index: 5;
+    border-color: var(--color-bronze);
+    box-shadow: var(--shadow-inset), var(--shadow-raised), 0 10px 28px rgba(62, 39, 21, 0.16);
+    filter: brightness(1.025);
+}
+
+.ring_segment:focus-visible {
+    outline: 3px solid var(--color-bronze);
+    outline-offset: 4px;
+    transform: scale(1.025);
+    z-index: 6;
+    border-color: var(--color-primary);
+    box-shadow: var(--focus-ring), var(--shadow-inset), var(--shadow-raised);
+}
+
+.ring_segment:active {
+    transform: scale(0.985);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-pressed), var(--shadow-inset);
+    transition-duration: var(--dur-press);
+}
+
+.ring_segment:focus-visible .ring_name,
+.ring_segment:active .ring_name {
+    color: var(--color-primary);
+}
+
+.ring_center {
+    pointer-events: none;
+}
+
+.ring_name,
+.ring_desc {
+    overflow-wrap: anywhere;
+}
+
+/* 节气与热帖各自保留独立、尺寸稳定的三态区域。 */
+.wellness_state {
+    max-width: 900px;
+    margin: 0 auto 28px;
+}
+
+.wellness_state:empty {
+    display: none;
+}
+
+.wellness_state .state_loading {
+    min-height: 420px;
+}
+
+.wellness_state .state_empty,
+.wellness_state .state_error {
+    min-height: 120px;
+    padding: 24px 20px;
+}
+
+.wellness_content[hidden] {
+    display: none;
+}
+
+.wellness_progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: -20px 0 30px;
+    color: var(--color-text-light);
+    font-size: 17px;
+    text-align: center;
+}
+
+.wellness_progress strong {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 4px 16px;
+    color: var(--color-jade);
+    background: rgba(46, 107, 74, 0.07);
+    border: 1px solid rgba(46, 107, 74, 0.38);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+/* 便签统一宣纸、厚度与图钉光源；透明原生按钮覆盖整张便签。 */
+.sticky_notes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sticky_note {
+    min-width: 0;
+    background-image:
+        var(--texture-paper),
+        linear-gradient(175deg, #FFFEF8 0%, #FFF9E6 40%, #FFF3D6 100%);
+    border: 1px solid var(--color-paper-edge);
+    border-bottom: 3px solid #D8C7A7;
+    box-shadow: var(--shadow-paper);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sticky_note:hover,
+.sticky_note:focus-within {
+    border-color: var(--color-bronze);
+    box-shadow: var(--shadow-paper), 4px 8px 18px rgba(62, 39, 21, 0.10);
+}
+
+.sticky_note_action {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.sticky_note_action:focus-visible {
+    outline: 3px solid var(--color-bronze);
+    outline-offset: 4px;
+}
+
+.sticky_note_action:active {
+    background: rgba(140, 106, 47, 0.08);
+    box-shadow: var(--shadow-inset);
+}
+
+.note_icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    vertical-align: -3px;
+    color: var(--color-primary);
+    opacity: 0.85;
+}
+
+.note_top h4,
+.note_bottom p {
+    overflow-wrap: anywhere;
+}
+
+.pushpin {
+    background: radial-gradient(circle at 32% 28%,
+        #FF9A8A 0%,
+        #D95B4B 30%,
+        #A43528 65%,
+        #742318 100%);
+    box-shadow:
+        2px 3px 5px rgba(62, 39, 21, 0.26),
+        0 0 0 2px rgba(140, 106, 47, 0.12),
+        inset 1px 1px 1px rgba(255, 255, 255, 0.38);
+}
+
+.sticky_note::after {
+    border-color: transparent transparent rgba(180, 151, 111, 0.48) transparent;
+    filter: drop-shadow(-2px -2px 2px rgba(62, 39, 21, 0.12));
+}
+
+.done_note {
+    background-image:
+        var(--texture-paper),
+        linear-gradient(175deg, #FFFFFA 0%, #FFFCF0 40%, #FFF8E4 100%);
+    border: 1px solid rgba(140, 106, 47, 0.26);
+    /* 完成内容整体下移到撕裂线下方，避免横穿勾选印章 */
+    justify-content: flex-start;
+    padding: 165px 18px 20px;
+}
+
+@media (max-width: 1199px) {
+    .done_note {
+        padding-top: 148px;
+    }
+}
+
+@media (max-width: 767px) {
+    .done_note {
+        padding-top: 130px;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 380px) {
+    .done_note {
+        padding-top: 120px;
+    }
+}
+
+.done_check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 82px;
+    height: 82px;
+    border: 3px double var(--color-primary);
+    border-radius: 50%;
+    transform: rotate(-8deg);
+    background: rgba(139, 37, 0, 0.025);
+}
+
+.done_check path {
+    stroke: var(--color-primary);
+}
+
+.done_text {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.done_undo {
+    color: var(--color-jade);
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.sticky_note.done {
+    border-color: rgba(46, 107, 74, 0.58);
+}
+
+.sticky_note.done .note_top h4 {
+    text-decoration: line-through;
+    text-decoration-color: rgba(140, 106, 47, 0.72);
+    text-decoration-thickness: 2px;
+}
+
+/* 热帖纸卡及独立的加载、空内容、失败状态。 */
+.post_preview_list {
+    width: 100%;
+}
+
+.post_preview_list .state_block {
+    min-height: 240px;
+}
+
+.post_preview_item {
+    min-width: 0;
+    min-height: 64px;
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF7 0%, var(--color-paper) 100%);
+    border-bottom: 3px solid var(--color-paper-edge);
+    box-shadow: var(--shadow-paper);
+}
+
+.post_preview_item:hover,
+.post_preview_item:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--color-bronze);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.post_preview_item:active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-pressed);
+    transition-duration: var(--dur-press);
+}
+
+.post_preview_title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* 窄屏：控制最小内容宽度，长标题、用户名和日期均可换行。 */
+@media (max-width: 767px) {
+    .ring_wrapper {
+        max-width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ring_segment {
+        border-width: 2px;
+        border-color: rgba(140, 106, 47, 0.58);
+        box-shadow: var(--shadow-inset), var(--shadow-raised);
+    }
+
+    .ring_segment::before {
+        inset: 5px;
+    }
+
+    .ring_segment:hover {
+        transform: translateY(-2px);
+    }
+
+    .ring_segment:focus-visible {
+        transform: none;
+        outline-offset: 2px;
+    }
+
+    .sticky_notes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .wellness_state .state_loading {
+        min-height: 520px;
+    }
+
+    .wellness_progress {
+        margin-top: -18px;
+        font-size: 16px;
+    }
+
+    .wellness_date_info {
+        align-items: center;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .wellness_date_text {
+        max-width: 100%;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+
+    .term_period_tag {
+        max-width: 100%;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+
+    .wellness_desc {
+        overflow-wrap: anywhere;
+    }
+
+    .post_preview_meta {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 380px) {
+    .sticky_notes {
+        gap: 18px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .note_top h4 {
+        font-size: 22px;
+        letter-spacing: 2px;
+    }
+
+    .note_bottom {
+        padding-right: 14px;
+        padding-left: 14px;
+    }
+
+    .ring_segment {
+        padding-right: 10px !important;
+        padding-left: 10px !important;
+    }
+
+    .ring_name {
+        font-size: 22px;
+    }
+
+    .ring_desc {
+        font-size: 15px;
+    }
+
+    .wellness_date_text {
+        font-size: 30px;
+        letter-spacing: 2px;
+    }
+}
+
+/* 触摸设备上即使出现粘滞 hover，也保留清晰的按下反馈。 */
+@media (hover: none) {
+    .ring_segment:hover {
+        border-color: rgba(140, 106, 47, 0.58);
+    }
+
+    .ring_segment:active {
+        border-color: var(--color-primary);
+        box-shadow: var(--shadow-pressed), var(--shadow-inset);
+    }
+}
+
+/* 页面专属减少动态效果：关闭墨迹、太极、粒子、撕纸及位移动画。 */
+@media (prefers-reduced-motion: reduce) {
+    .hero_title,
+    .hero_subtitle,
+    .hero_btn,
+    .ring_center,
+    .taiji,
+    .particle,
+    .sticky_note.done .done_check path,
+    .sticky_note.done .tear_edge .tear_line,
+    .sticky_note.done .tear_edge .tear_shadow {
+        animation: none !important;
+    }
+
+    .feature_section circle,
+    .quadrant_photo_wrap,
+    .carousel_card,
+    .indicator,
+    .ring_segment,
+    .ring_icon,
+    .sticky_note,
+    .done_note,
+    .note_bottom,
+    .tear_edge,
+    .post_preview_item {
+        transition: none !important;
+    }
+
+    .quadrant_photo_wrap,
+    .particle {
+        display: none;
+    }
+
+    .taiji,
+    .ring_segment:hover,
+    .ring_segment:focus-visible,
+    .ring_segment:active,
+    .sticky_note:hover,
+    .sticky_note.done:hover,
+    .sticky_note.done .note_bottom,
+    .post_preview_item:hover,
+    .post_preview_item:focus-visible,
+    .post_preview_item:active {
+        transform: none !important;
+    }
+
+    .sticky_note.done .done_note {
+        opacity: 1;
+    }
+
+    .sticky_note.done .done_check path,
+    .sticky_note.done .tear_edge .tear_line,
+    .sticky_note.done .tear_edge .tear_shadow {
+        stroke-dashoffset: 0 !important;
     }
 }

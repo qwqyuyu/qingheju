@@ -2,41 +2,68 @@
    solarterms.css — 二十四节气养生页样式
    ========================================== */
 
-/* === 当前节气 Hero === */
+/* === 当前节气 Hero：宣纸阅读面 === */
 .term_hero {
-    background: var(--color-white);
+    min-width: 0;
+    max-width: 100%;
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, var(--color-paper) 100%);
     border: 1px solid var(--color-gold);
+    border-bottom: 3px solid var(--color-paper-edge);
     border-radius: var(--radius);
     padding: 36px;
     margin-bottom: 48px;
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-paper);
     display: flex;
     gap: 36px;
     align-items: center;
 }
 
-/* 3:2 —— 与原图比例一致，几乎不裁切（原为 160×160 contain，图上书法字看不清） */
+.term_hero > .state_block {
+    width: 100%;
+    min-height: 220px;
+    background: rgba(255,253,248,0.65);
+}
+
+/* 3:2 —— 与原图比例一致，几乎不裁切 */
 .term_hero_img {
     width: 240px;
+    max-width: 100%;
     height: 160px;
     flex-shrink: 0;
     object-fit: cover;
+    border: 1px solid var(--color-paper-edge);
     border-radius: 8px;
+    background: var(--color-bg-dark);
+    box-shadow: 3px 4px 0 rgba(184,134,11,0.1);
 }
 
 .term_hero_body {
     flex: 1;
+    min-width: 0;
+}
+
+.term_hero_tag,
+.term_current_tag,
+.term_selected_tag {
+    display: inline-block;
+    color: var(--color-white);
+    font-size: 15px;
+    line-height: 1.4;
+    padding: 4px 13px;
+    border: 1px solid rgba(105,32,14,0.35);
+    border-radius: 4px;
+    background: var(--color-primary);
+    box-shadow: 0 2px 0 rgba(105,32,14,0.25);
+    letter-spacing: 1px;
 }
 
 .term_hero_tag {
-    display: inline-block;
-    background: var(--color-primary);
-    color: var(--color-white);
+    margin-bottom: 10px;
     font-size: 16px;
     padding: 3px 14px;
     border-radius: 20px;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
 }
 
 .term_hero_name {
@@ -45,12 +72,14 @@
     color: var(--color-primary);
     margin-bottom: 6px;
     letter-spacing: 4px;
+    overflow-wrap: anywhere;
 }
 
 .term_hero_date {
     font-size: 18px;
     color: var(--color-text-light);
     margin-bottom: 14px;
+    overflow-wrap: anywhere;
 }
 
 .term_hero_desc {
@@ -58,16 +87,18 @@
     color: var(--color-text);
     line-height: 1.9;
     margin-bottom: 14px;
+    overflow-wrap: anywhere;
 }
 
 .term_hero_tip {
-    background: var(--color-bg-dark);
+    background: rgba(246,240,226,0.88);
     border-left: 3px solid var(--color-gold);
     padding: 14px 18px;
     font-size: 19px;
     color: var(--color-text);
     line-height: 1.8;
     border-radius: 0 6px 6px 0;
+    overflow-wrap: anywhere;
 }
 
 .term_hero_tip_label {
@@ -88,68 +119,110 @@
 
 .term_grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
+    min-width: 0;
+    max-width: 100%;
 }
 
-/* === 节气卡片 === */
+.term_grid > .state_block {
+    grid-column: 1 / -1;
+    min-height: 260px;
+}
+
+/* === 节气卡片：原生 button + 可点击纸卡 === */
 .term_card {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
+    width: 100%;
+    min-width: 0;
+    appearance: none;
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, var(--color-paper) 100%);
+    border: 1px solid var(--color-paper-edge);
+    border-bottom-width: 3px;
     border-radius: var(--radius);
-    /* 底部留白放在卡片上，不能放在 .term_card_desc 上：
-       被 -webkit-line-clamp 截断的元素加 padding-bottom 时，
-       多出来的那行会渗进 padding 区域，被卡片边缘切掉 */
+    /* 底部留白放在卡片上，避免截断文字渗进 padding */
     padding: 0 0 20px;
     text-align: center;
-    box-shadow: var(--shadow-card);
-    transition: all var(--transition);
+    font-family: inherit;
+    color: var(--color-text);
+    box-shadow: var(--shadow-paper);
+    transition: transform var(--dur-panel), box-shadow var(--dur-panel), border-color var(--transition);
     cursor: pointer;
     position: relative;
     overflow: hidden;
 }
 
 .term_card:hover {
-    box-shadow: var(--shadow-card-hover);
+    box-shadow: var(--shadow-raised);
     transform: translateY(-3px);
     border-color: var(--color-gold);
+}
+
+.term_card:active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-pressed);
 }
 
 .term_card.current {
     border-color: var(--color-gold);
     border-width: 2px;
-    background: linear-gradient(180deg, rgba(184, 134, 11, 0.06) 0%, var(--color-white) 30%);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, rgba(184,134,11,0.1) 0%, var(--color-paper) 34%);
 }
 
-.term_card.current::before {
-    content: '当前节气';
+.term_current_tag,
+.term_selected_tag {
     position: absolute;
-    top: 10px;
-    right: -28px;
-    background: var(--color-gold);
-    color: #fff;
-    font-size: 13px;
-    padding: 2px 32px;
-    transform: rotate(45deg);
-    letter-spacing: 1px;
+    top: 9px;
+    z-index: 2;
+    pointer-events: none;
 }
 
-/* 3:2 —— 原图普遍是 1.34~1.81，用 3:2 容器裁切量从 19~28% 降到 0~4%
-   （原为 height:140px，260 宽下相当于 1.86:1，会切掉画面上下内容） */
+.term_current_tag {
+    right: 9px;
+}
+
+.term_selected_tag {
+    left: 9px;
+    display: none;
+    background: var(--color-jade);
+    border-color: rgba(26,74,48,0.4);
+    box-shadow: 0 2px 0 rgba(26,74,48,0.22);
+}
+
+.term_card.selected {
+    border-color: var(--color-jade);
+    outline: 2px solid var(--color-jade);
+    outline-offset: 3px;
+    box-shadow: var(--shadow-raised);
+}
+
+.term_card.selected .term_selected_tag {
+    display: inline-block;
+}
+
+/* 3:2 容器减少原图裁切 */
 .term_card_img {
     width: 100%;
+    max-width: 100%;
     aspect-ratio: 3 / 2;
     height: auto;
     object-fit: cover;
     display: block;
     margin: 0;
+    background: var(--color-bg-dark);
+    border-bottom: 1px solid rgba(184,134,11,0.18);
 }
 
 /* 节气名已在图里，卡片不再重复写一遍，避免“两套字”打架 */
 .term_card_date {
+    display: block;
     font-size: 16px;
     color: var(--color-text-light);
     margin: 16px 18px 10px;
+    overflow-wrap: anywhere;
 }
 
 .term_card_desc {
@@ -162,6 +235,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 /* === 节气详情弹窗（由远及近） === */
@@ -169,7 +243,8 @@
     position: fixed;
     inset: 0;
     z-index: 3000;
-    background: rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    background: rgba(28,18,12,0.58);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -183,18 +258,20 @@
 }
 
 .term_modal_box {
-    background: var(--color-white);
-    border: 1px solid var(--color-gold);
-    border-radius: 12px;
+    min-width: 0;
     max-width: 520px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
     padding: 0 0 28px;
     position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    background:
+        var(--texture-paper),
+        linear-gradient(180deg, #FFFDF8 0%, var(--color-paper) 100%);
+    border-color: var(--color-gold);
+    box-shadow: var(--shadow-overlay);
     transform: scale(0.6);
-    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform var(--dur-panel) cubic-bezier(0.34, 1.25, 0.64, 1);
 }
 
 .term_modal_overlay.show .term_modal_box {
@@ -205,33 +282,34 @@
     position: absolute;
     top: 10px;
     right: 14px;
-    font-size: 30px;
+    font-size: 29px;
     color: #fff;
-    background: rgba(0, 0, 0, 0.35);
-    border: none;
+    background: rgba(40,25,16,0.58);
+    border: 1px solid rgba(255,255,255,0.4);
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
-    line-height: 36px;
+    line-height: 1;
     text-align: center;
     transition: background var(--transition);
     z-index: 10;
 }
 
 .term_modal_close:hover {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(40,25,16,0.85);
 }
 
-/* 3:2 —— 原为 height:180px，520 宽下是 2.89:1，会把图拦腰裁掉约一半 */
 .term_modal_img {
     width: 100%;
+    max-width: 100%;
     aspect-ratio: 3 / 2;
     height: auto;
     object-fit: cover;
     margin: 0;
     display: block;
     border-radius: 12px 12px 0 0;
+    background: var(--color-bg-dark);
 }
 
 .term_modal_name {
@@ -241,6 +319,7 @@
     text-align: center;
     margin: 20px 32px 8px;
     letter-spacing: 4px;
+    overflow-wrap: anywhere;
 }
 
 .term_modal_date {
@@ -248,6 +327,7 @@
     color: var(--color-text-light);
     text-align: center;
     margin: 0 32px 18px;
+    overflow-wrap: anywhere;
 }
 
 .term_modal_desc {
@@ -255,10 +335,11 @@
     color: var(--color-text);
     line-height: 2;
     margin: 0 32px 18px;
+    overflow-wrap: anywhere;
 }
 
 .term_modal_tip {
-    background: var(--color-bg-dark);
+    background: rgba(246,240,226,0.88);
     border-left: 3px solid var(--color-gold);
     padding: 14px 18px;
     margin: 0 32px;
@@ -266,6 +347,7 @@
     color: var(--color-text);
     line-height: 1.9;
     border-radius: 0 6px 6px 0;
+    overflow-wrap: anywhere;
 }
 
 .term_modal_tip_label {
@@ -277,7 +359,7 @@
 /* === 响应式 === */
 @media (max-width: 1199px) {
     .term_grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .term_hero {
         padding: 24px;
@@ -294,7 +376,7 @@
 
 @media (max-width: 767px) {
     .term_grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
     }
     .term_hero {
@@ -329,11 +411,52 @@
         padding-left: 12px;
         padding-right: 12px;
     }
+    .term_current_tag,
+    .term_selected_tag {
+        top: 6px;
+        padding: 3px 8px;
+        font-size: 13px;
+    }
+    .term_current_tag { right: 6px; }
+    .term_selected_tag { left: 6px; }
+    .term_modal_overlay { padding: 12px; }
+    .term_modal_box { max-height: 90vh; }
 }
 
 @media (max-width: 480px) {
     .term_grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+    }
+    .term_hero {
+        padding: 16px;
+        gap: 16px;
+    }
+    .term_modal_name,
+    .term_modal_date,
+    .term_modal_desc,
+    .term_modal_tip {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+    .term_modal_name { font-size: 30px; }
+    .term_modal_desc,
+    .term_modal_tip { font-size: 18px; }
+}
+
+/* 页面专属动画降级：不做平滑滚动、卡片浮动或弹窗缩放。 */
+@media (prefers-reduced-motion: reduce) {
+    .term_card,
+    .term_modal_overlay,
+    .term_modal_box,
+    .term_modal_close {
+        transition: none;
+    }
+
+    .term_card:hover,
+    .term_card:active,
+    .term_modal_box,
+    .term_modal_overlay.show .term_modal_box {
+        transform: none;
     }
 }

@@ -59,9 +59,9 @@
                 <div class="cabinet_base"></div>
             </div>
 
-            <!-- 展开的知识抽屉面板 -->
-            <div class="drawer_panel" id="drawer_panel">
-                <button class="drawer_panel_close" id="drawer_close" aria-label="关闭">&times;</button>
+            <!-- 展开的知识抽屉面板：保留内联布局，按详情弹窗管理焦点 -->
+            <div class="drawer_panel paper_dialog" id="drawer_panel" role="dialog" aria-modal="true" aria-labelledby="drawer_name" aria-hidden="true" inert>
+                <button type="button" class="drawer_panel_close" id="drawer_close" aria-label="关闭中医文化详情">&times;</button>
                 <div class="drawer_panel_inner">
                     <div class="drawer_panel_top">
                         <div class="drawer_panel_image">
@@ -80,7 +80,7 @@
                     <!-- 科普教学视频区：点击画面后内嵌 B站 播放器 -->
                     <div class="drawer_video_area">
                         <div class="drawer_video_frame" id="drawer_video_frame" role="button" tabindex="0"
-                             aria-label="播放科普教学视频">
+                             aria-label="播放科普教学视频" aria-describedby="drawer_video_desc">
                             <div class="drawer_video_play"></div>
                             <span class="drawer_video_label">科普教学</span>
                             <span class="drawer_video_badge" id="drawer_video_badge" hidden>视频待配置</span>
@@ -115,6 +115,7 @@
 
     <script src="/js/common.js?v=20261030-p2"></script>
     <script src="/js/api.js?v=20261030-p2"></script>
+    <script src="/js/ui.js"></script>
     <script src="/js/culture.js"></script>
 </body>
 </html>
