@@ -1,0 +1,341 @@
+/* ==========================================
+   solarterms-scene.css — 节气长卷
+   画布 Hero + 底部节气索引 + 纸卡联动
+   ========================================== */
+
+.scene_hero {
+    position: relative;
+    height: clamp(460px, 64vh, 640px);
+    margin: 8px 0 32px;
+    border: 1px solid var(--color-bronze);
+    border-radius: var(--radius-lg);
+    background: #dfe6dc;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 2px 0 rgba(140, 106, 47, 0.18),
+        0 18px 36px -18px rgba(62, 39, 21, 0.45);
+    overflow: hidden;
+    isolation: isolate;
+    scroll-margin-top: calc(var(--nav-height) + 16px);
+}
+
+.scene_canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 纸纹与四角压暗，让画布和全站宣纸材质衔接 */
+.scene_grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--texture-paper);
+    opacity: 0.28;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+}
+
+.scene_hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 248, 232, 0.22),
+        inset 0 -80px 90px -60px rgba(20, 14, 8, 0.45);
+    pointer-events: none;
+}
+
+/* ---------- 右上竖排题字 ---------- */
+.scene_text {
+    position: absolute;
+    top: clamp(18px, 3.6vw, 38px);
+    right: clamp(16px, 3.2vw, 42px);
+    z-index: 3;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: clamp(12px, 2vw, 30px);
+    color: var(--scene-ink, #25352e);
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+    text-shadow: 0 1px 3px rgba(20, 14, 8, 0.18);
+}
+
+.scene_text.out {
+    opacity: 0;
+}
+
+.scene_head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(10px, 1.8vh, 20px);
+}
+
+.scene_name {
+    writing-mode: vertical-rl;
+    font-family: var(--font-calligraphy);
+    font-weight: 900;
+    font-size: clamp(52px, 7.4vw, 92px);
+    line-height: 1;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.scene_name span {
+    display: inline-block;
+}
+
+.scene_seal {
+    display: grid;
+    place-items: center;
+    width: clamp(28px, 3.6vh, 44px);
+    aspect-ratio: 1;
+    background: #c3372b;
+    color: #fbf4e6;
+    font-family: var(--font-calligraphy);
+    font-weight: 900;
+    font-size: clamp(16px, 2.1vh, 26px);
+    line-height: 1;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255, 244, 220, 0.25);
+}
+
+.scene_hou {
+    writing-mode: vertical-rl;
+    list-style: none;
+    margin: 0;
+    padding: 0.3em 0 0;
+    font-family: var(--font-calligraphy);
+    font-size: clamp(14px, 1.5vw, 19px);
+    line-height: 2.1;
+    letter-spacing: 0.32em;
+    opacity: 0.92;
+}
+
+.scene_hou li {
+    white-space: nowrap;
+}
+
+.scene_hou small {
+    display: inline-block;
+    margin-bottom: 1.3em;
+    font-family: var(--font-body);
+    font-size: 0.58em;
+    letter-spacing: 0.26em;
+    opacity: 0.62;
+}
+
+.scene_meta {
+    writing-mode: vertical-rl;
+    margin: 0;
+    padding-top: 0.4em;
+    font-size: clamp(11px, 1.05vw, 14px);
+    line-height: 2;
+    letter-spacing: 0.28em;
+    opacity: 0.78;
+}
+
+.scene_meta span {
+    display: block;
+    white-space: nowrap;
+}
+
+/* ---------- 底部居中节气索引 ---------- */
+.scene_bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    padding: 34px clamp(12px, 3vw, 40px) 12px;
+    background: linear-gradient(0deg, rgba(18, 16, 12, 0.46) 0%, rgba(18, 16, 12, 0.18) 55%, transparent 100%);
+    display: flex;
+    justify-content: center;
+}
+
+.scene_idx {
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    align-items: end;
+    width: min(100%, 980px);
+    margin: 0 auto;
+    color: #f6f1e3;
+    overflow-x: auto;
+    scrollbar-width: none;
+    text-shadow: 0 1px 3px rgba(20, 14, 8, 0.35);
+}
+
+.scene_idx::-webkit-scrollbar {
+    display: none;
+}
+
+.scene_idx button {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 12px 0 4px;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    opacity: 0.52;
+    transition: opacity 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.scene_idx button span {
+    writing-mode: vertical-rl;
+    font-size: clamp(10px, 0.95vw, 13px);
+    line-height: 1;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+}
+
+.scene_idx button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.5;
+}
+
+.scene_idx button::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 12%;
+    right: 12%;
+    height: 3px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.35s ease;
+}
+
+.scene_idx button:hover {
+    opacity: 0.85;
+}
+
+.scene_idx button[aria-current="true"] {
+    opacity: 1;
+    color: #fff;
+    font-weight: 700;
+}
+
+.scene_idx button[aria-current="true"]::before {
+    opacity: 1;
+}
+
+.scene_idx button[aria-current="true"]::after {
+    transform: scaleX(1);
+    background: var(--color-gold-light, #d4a745);
+}
+
+.scene_idx button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* ---------- 下方当前节气纸卡 ---------- */
+.term_panel {
+    margin-bottom: 44px;
+}
+
+.term_panel .state_block {
+    width: 100%;
+    min-height: 180px;
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 900px) {
+    .scene_hero {
+        height: clamp(400px, 58vh, 520px);
+    }
+
+    .scene_text {
+        gap: 14px;
+    }
+
+    .scene_name {
+        font-size: clamp(44px, 9vw, 66px);
+    }
+
+    .scene_hou {
+        font-size: 14px;
+    }
+
+    .scene_meta {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .scene_hero {
+        height: 420px;
+        border-radius: var(--radius-md);
+    }
+
+    .scene_text {
+        top: 14px;
+        right: 12px;
+        gap: 10px;
+    }
+
+    .scene_name {
+        font-size: 42px;
+    }
+
+    .scene_seal {
+        width: 26px;
+        height: 26px;
+        font-size: 15px;
+    }
+
+    .scene_hou {
+        display: none;
+    }
+
+    .scene_bar {
+        padding: 26px 8px 8px;
+        justify-content: flex-start;
+    }
+
+    .scene_idx {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .scene_idx button {
+        flex: 0 0 auto;
+        width: 30px;
+        min-width: 30px;
+    }
+
+    .scene_idx button span {
+        font-size: 10px;
+        letter-spacing: 0.06em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scene_text,
+    .scene_idx button,
+    .scene_idx button::after {
+        transition: none !important;
+    }
+}

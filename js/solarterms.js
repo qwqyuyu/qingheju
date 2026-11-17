@@ -4,6 +4,10 @@
 
 let activeTermModal = null;
 
+/* 长卷与卡片共用的选中/当前索引（页面级状态） */
+let currentIndex = 0;
+let selectedIndex = 0;
+
 document.addEventListener('DOMContentLoaded', () => {
 
     /* 更新导航登录状态 */
@@ -15,8 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const hero = document.getElementById('term_hero');
     const grid = document.getElementById('term_grid');
-    let loading = false;
+    const scene = window.SolarTermScene;
     let terms = [];
+    let loading = false;
+
+    /* 画卷索引切换：同步纸卡与下方卡片选中态 */
+    if (scene && typeof scene.setOnChange === 'function') {
+        scene.setOnChange((index) => {
+            if (!terms.length) return;
+            selectedIndex = index;
+            renderPanel(terms[index], index === currentIndex);
+            syncCards();
+        });
+    }
 
     /* 两个区域各自保留状态块与重试入口，重渲染后委托仍然有效。 */
     UI.bindRetry(hero, loadSolarTerms);
@@ -60,14 +75,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
             /* 找到当前节气（最近一个日期 <= 今天的节气） */
             let currentTerm = null;
+            currentIndex = 0;
             for (let i = terms.length - 1; i >= 0; i--) {
-                if (terms[i].date <= today) { currentTerm = terms[i]; break; }
+                if (terms[i].date <= today) { currentTerm = terms[i]; currentIndex = i; break; }
             }
             /* 兜底：如果没有（比如年初），取第一个 */
-            if (!currentTerm) currentTerm = terms[0];
+            if (!currentTerm) { currentTerm = terms[0]; currentIndex = 0; }
+            selectedIndex = currentIndex;
 
-            renderHero(currentTerm);
+            /* 长卷与纸卡、网格共用同一份接口数据 */
+            const meta = {};
+            terms.forEach((term) => {
+                meta[term.name] = {
+                    date: termDate(term),
+                    lunarDate: term.lunarDate || ''
+                };
+            });
+            if (scene && typeof scene.setMeta === 'function') scene.setMeta(meta);
+
             renderGrid(terms, currentTerm);
+            renderPanel(currentTerm, true);
+            syncCards();
+
+            /* 长卷默认停在当前节气（不再自动轮播） */
+            if (scene && typeof scene.setIndex === 'function') scene.setIndex(currentIndex);
         } catch (e) {
             showLoadError(e && e.message ? e.message : '节气数据加载失败，请检查网络');
         } finally {
@@ -90,17 +121,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* 卡片点击 → 放大详情；原生 button 同时支持 Enter 与 Space。 */
+    /* 卡片点击 → 同步长卷 + 纸卡，然后打开详情弹窗。 */
     grid.addEventListener('click', (e) => {
         const card = e.target.closest('.term_card');
         if (!card) return;
         const termName = card.dataset.term;
-        const term = terms.find(t => t.name === termName);
-        if (term) {
-            selectTermCard(card);
-            card.focus();
-            showTermModal(term);
-        }
+        const index = terms.findIndex(t => t.name === termName);
+        if (index < 0) return;
+        const term = terms[index];
+        selectedIndex = index;
+        if (scene && typeof scene.setIndex === 'function') scene.setIndex(index);
+        renderPanel(term, index === currentIndex);
+        syncCards();
+        card.focus();
+        showTermModal(term);
     });
 
     loadSolarTerms();
@@ -119,12 +153,12 @@ function termImage(term) {
     return term.image || (term.pinyin ? '/images/solarterms/' + term.pinyin + '.svg' : '');
 }
 
-function renderHero(term) {
+/* 画卷下方的纸卡：展示当前或选读节气的完整说明 */
+function renderPanel(term, isCurrent) {
     const hero = document.getElementById('term_hero');
     hero.innerHTML = `
-        <img class="term_hero_img" src="${esc(termImage(term))}" alt="${esc(term.name)}" onerror="this.style.opacity='0.4';this.removeAttribute('onerror')">
         <div class="term_hero_body">
-            <span class="term_hero_tag">当前节气</span>
+            <span class="term_hero_tag">${isCurrent ? '当前节气' : '长卷选读'}</span>
             <h2 class="term_hero_name">${esc(term.name)}</h2>
             <p class="term_hero_date">公历 ${esc(termDate(term))}　农历 ${esc(term.lunarDate || '暂缺')}</p>
             <p class="term_hero_desc">${esc(term.description || '暂无节气介绍')}</p>
@@ -151,25 +185,17 @@ function renderGrid(terms, currentTerm) {
             </button>
         `;
     }).join('');
-
-    /* 滚动到当前节气；减少动态效果时直接定位。 */
-    const currentCard = grid.querySelector('.term_card.current');
-    if (currentCard) {
-        setTimeout(() => {
-            const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            currentCard.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-        }, 400);
-    }
 }
 
-function selectTermCard(selected) {
+/* 卡片选中态与长卷索引保持一致 */
+function syncCards() {
     const grid = document.getElementById('term_grid');
-    grid.querySelectorAll('.term_card.selected').forEach(card => {
-        card.classList.remove('selected');
-        card.setAttribute('aria-pressed', 'false');
+    if (!grid) return;
+    grid.querySelectorAll('.term_card').forEach((card, index) => {
+        const active = index === selectedIndex;
+        card.classList.toggle('selected', active);
+        card.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
-    selected.classList.add('selected');
-    selected.setAttribute('aria-pressed', 'true');
 }
 
 function showTermModal(term) {
